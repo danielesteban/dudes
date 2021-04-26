@@ -4,8 +4,6 @@ import Physics from './physics.js';
 import Player from './player.js';
 import SFX from './sfx.js';
 
-// A VR scene base class
-
 class World extends Scene {
   constructor({
     renderer: {

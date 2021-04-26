@@ -15,8 +15,6 @@ import Hand from '../renderables/hand.js';
 import Marker from '../renderables/translocation.js';
 import Pointer from '../renderables/pointer.js';
 
-// Player controller
-
 class Player extends Group {
   constructor({
     camera,
