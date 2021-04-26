@@ -1,0 +1,6 @@
+[submodule "vendor/AStar"]
+	path = vendor/AStar
+	url = https://github.com/BigZaphod/AStar
+[submodule "vendor/wasi-libc"]
+	path = vendor/wasi-libc
+	url = https://github.com/WebAssembly/wasi-libc
