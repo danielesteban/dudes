@@ -246,6 +246,11 @@ class Gameplay extends Group {
     });
     physics.addMesh(projectiles, { mass: 1 });
 
+    const loading = document.getElementById('loading');
+    if (loading) {
+      loading.parentNode.removeChild(loading);
+    }
+
     this.hasLoaded = true;
   }
 
