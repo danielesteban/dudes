@@ -16,8 +16,8 @@ class Dudes extends Group {
     this.selectionMarker = new Selected();
     this.world = world;
     this.worldScale = worldScale;
+    const spec = Dude.defaultSpec;
     for (let i = 0; i < count; i += 1) {
-      const spec = Dude.defaultSpec;
       const height = 1.4 + Math.random() * 0.6;
       const head = (0.75 + Math.random() * 0.25);
       const legs = (0.5 + Math.random() * 0.5);
