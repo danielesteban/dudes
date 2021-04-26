@@ -14,10 +14,13 @@ const renderer = new Renderer({
   scenes,
 });
 
-router.addEventListener('update', ({ route, params }) => {
+router.addEventListener('update', ({ route }) => {
   switch (route) {
-    default:
+    case '':
       renderer.world.load('Gameplay');
+      break;
+    default:
+      router.replace('/');
   }
 });
 router.update();
