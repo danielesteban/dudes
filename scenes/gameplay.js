@@ -8,6 +8,7 @@ import Clouds from '../renderables/clouds.js';
 import Dude from '../renderables/dude.js';
 import Explosion from '../renderables/explosion.js';
 import Ocean from '../renderables/ocean.js';
+import Rain from '../renderables/rain.js';
 import Spheres from '../renderables/spheres.js';
 import Starfield from '../renderables/starfield.js';
 import VoxelChunk from '../renderables/chunk.js';
@@ -43,6 +44,10 @@ class Gameplay extends Group {
           url: '/sounds/wind.ogg',
           from: 0.5,
           to: 1.5,
+        },
+        {
+          url: 'sounds/rain.ogg',
+          enabled: false,
         },
       ],
     });
@@ -122,17 +127,28 @@ class Gameplay extends Group {
         })
     ))).then((sfx) => { this.plops = sfx; });
 
-    const toggle = document.getElementById('light');
-    [...toggle.getElementsByTagName('svg')].forEach((svg, i) => {
-      const target = i === 0 ? 1 : 0;
-      svg.addEventListener('click', () => {
-        if (this.light !== this.targetLight) {
-          return;
-        }
-        this.targetLight = target;
-        toggle.className = target >= 0.5 ? 'day' : 'night';
+    {
+      const toggle = document.getElementById('light');
+      [...toggle.getElementsByTagName('svg')].forEach((svg, i) => {
+        const target = i === 0 ? 1 : 0;
+        svg.addEventListener('click', () => {
+          if (this.light !== this.targetLight) {
+            return;
+          }
+          this.targetLight = target;
+          toggle.className = target >= 0.5 ? 'day' : 'night';
+        }, false);
+      });
+    }
+
+    {
+      const toggle = document.getElementById('rain');
+      toggle.addEventListener('click', () => {
+        if (!this.rain) return;
+        this.updateRain(!this.rain.visible);
+        toggle.className = this.rain.visible ? 'enabled' : '';
       }, false);
-    });
+    }
 
     Promise.all([
       world.getPhysics(),
@@ -196,12 +212,14 @@ class Gameplay extends Group {
       ...origin,
       y: 3.2,
     });
+    this.rain = new Rain({ anchor: this.player, world, worldScale: scale });
     const starfield = new Starfield(origin);
 
     this.add(voxels);
     this.add(this.dudes);
     this.add(projectiles);
     this.add(this.clouds);
+    this.add(this.rain);
     this.add(starfield);
     this.add(dome);
     this.add(this.birds);
@@ -259,10 +277,12 @@ class Gameplay extends Group {
       ambient,
       birds,
       dudes,
+      rain,
     } = this;
     ambient.dispose();
     birds.dispose();
     dudes.dispose();
+    rain.dispose();
   }
 
   onAnimationTick({ animation }) {
@@ -278,6 +298,7 @@ class Gameplay extends Group {
       physics,
       player,
       plops,
+      rain,
       targetLight,
       worldScale: scale,
     } = this;
@@ -293,6 +314,7 @@ class Gameplay extends Group {
     dudes.animate(animation, player.head.position);
     explosions.forEach((explosion) => explosion.animate(animation));
     Ocean.animate(animation);
+    rain.animate(animation);
     if (light !== targetLight) {
       this.updateLight(
         light + Math.min(Math.max(targetLight - light, -animation.delta), animation.delta)
@@ -512,12 +534,25 @@ class Gameplay extends Group {
     Clouds.material.color.setScalar(intensity);
     Dome.material.uniforms.background.value.copy(background);
     Ocean.material.color.copy(background);
+    Rain.material.uniforms.diffuse.value.copy(background);
     Starfield.material.opacity = 1.0 - intensity;
     [Dude.material, VoxelChunk.material].forEach(({ uniforms }) => {
       uniforms.ambientIntensity.value = Math.max(Math.min(intensity, 0.7) / 0.7, 0.5) * 0.1;
       uniforms.lightIntensity.value = Math.min(1.0 - Math.min(intensity, 0.5) * 2, 0.7);
       uniforms.sunlightIntensity.value = Math.min(intensity, 0.7);
     });
+  }
+
+  updateRain(enabled) {
+    const { ambient, rain } = this;
+    if (rain.visible === enabled) {
+      return;
+    }
+    if (enabled) {
+      rain.reset();
+    }
+    rain.visible = enabled;
+    ambient.sounds.find(({ url }) => url === 'sounds/rain.ogg').enabled = rain.visible;
   }
 
   static getBrush({ shape, size }) {

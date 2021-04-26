@@ -85,19 +85,26 @@ body.pointerlock #enterVR {
   display: none;
 }
 
-#light {
+#light, #rain {
   position: absolute;
   bottom: 1rem;
-  right: 1rem;
   opacity: 0.8;
   display: flex;
 }
 
-body.pointerlock #light {
+#light {
+  right: 1rem;
+}
+
+#rain {
+  right: 8rem;
+}
+
+body.pointerlock #light, body.pointerlock #rain {
   display: none;
 }
 
-#light > svg {
+#light > svg, #rain > svg {
   padding: 0.5rem 1rem;
   width: 24px;
   height: 24px;
@@ -105,6 +112,15 @@ body.pointerlock #light {
   background: #000;
   cursor: pointer;
   transition: background ease-out .3s;
+}
+
+#rain > svg {
+  border-radius: 16px;
+}
+
+#rain.enabled > svg {
+  background: #05a;
+  cursor: default;
 }
 
 #light > svg:nth-child(1) {
