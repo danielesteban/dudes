@@ -128,7 +128,7 @@ class DesktopControls {
   }
 
   onKeyDown({ keyCode, repeat }) {
-    const { keyboard } = this;
+    const { buttonState, keyboard } = this;
     if (repeat) return;
     switch (keyCode) {
       case 16:
@@ -149,13 +149,16 @@ class DesktopControls {
       case 68:
         keyboard.x = 1;
         break;
+      case 70:
+        buttonState.tertiary = true;
+        break;
       default:
         break;
     }
   }
 
   onKeyUp({ keyCode, repeat }) {
-    const { keyboard } = this;
+    const { buttonState, keyboard } = this;
     if (repeat) return;
     switch (keyCode) {
       case 16:
@@ -169,6 +172,9 @@ class DesktopControls {
       case 65:
       case 68:
         keyboard.x = 0;
+        break;
+      case 70:
+        buttonState.tertiary = false;
         break;
       default:
         break;
