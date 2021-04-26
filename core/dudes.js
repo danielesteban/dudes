@@ -100,7 +100,7 @@ class Dudes extends Group {
           return;
         }
         dude.searchTimer = 2 + Math.random();
-        const obstacles = this.computeObstacles();
+        const obstacles = this.computeObstacles(dude);
         const origin = dude.position.clone().divideScalar(scale).floor();
         const target = world.findTarget({
           origin,
@@ -127,13 +127,13 @@ class Dudes extends Group {
     const { auxVector: voxel, dudes, worldScale: scale } = this;
     return dudes.reduce((obstacles, dude) => {
       if (dude !== exclude) {
-        voxel.copy(dude.position).divideScalar(scale).floor();
-        for (let y = 0; y < 4; y += 1) {
-          obstacles.push({
-            x: voxel.x,
-            y: voxel.y + y,
-            z: voxel.z,
-          });
+        for (let i = 0, l = (dude.path ? 2 : 1); i < l; i += 1) {
+          voxel
+            .copy(i === 0 ? dude.position : dude.path[dude.path.length - 1].position)
+            .divideScalar(scale).floor();
+          for (let y = 0; y < 4; y += 1) {
+            obstacles.push({ x: voxel.x, y: voxel.y + y, z: voxel.z });
+          }
         }
       }
       return obstacles;
