@@ -177,7 +177,7 @@ class Physics {
         return new Ammo.btCapsuleShape(radius, height);
       }
       case 'plane': {
-        const { normal } = physics;
+        const { constant, normal } = physics;
         vector.setValue(normal.x, normal.y, normal.z);
         return new Ammo.btStaticPlaneShape(vector, constant || 0);
       }
