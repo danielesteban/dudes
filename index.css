@@ -119,7 +119,7 @@ body.pointerlock #light, body.pointerlock #rain {
 }
 
 #rain.enabled > svg {
-  background: #05a;
+  background: #55a;
 }
 
 #light > svg:nth-child(1) {
