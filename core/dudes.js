@@ -159,6 +159,16 @@ class Dudes extends Group {
     });
   }
 
+  select(dude) {
+    const { selectionMarker: marker } = this;
+    this.selected = dude;
+    marker.material.color.copy(dude.diffuse);
+    marker.position.y = dude.physics.physics.height + 0.5;
+    marker.updateMatrix();
+    marker.visible = true;
+    dude.add(marker);
+  }
+
   setDestination(dude, to) {
     const { world, worldScale: scale } = this;
 
@@ -186,16 +196,6 @@ class Dudes extends Group {
         dude.setPath(path, scale, true);
       }
     }
-  }
-
-  select(dude) {
-    const { selectionMarker: marker } = this;
-    this.selected = dude;
-    marker.material.color.copy(dude.diffuse);
-    marker.position.y = dude.physics.physics.height + 0.5;
-    marker.updateMatrix();
-    marker.visible = true;
-    dude.add(marker);
   }
 }
 
