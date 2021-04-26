@@ -120,7 +120,6 @@ body.pointerlock #light, body.pointerlock #rain {
 
 #rain.enabled > svg {
   background: #05a;
-  cursor: default;
 }
 
 #light > svg:nth-child(1) {
