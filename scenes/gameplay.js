@@ -111,7 +111,7 @@ class Gameplay extends Group {
       };
     }
 
-    Promise.all([...Array(4)].map(() => (
+    Promise.all([...Array(5)].map(() => (
       world.sfx.load('/sounds/plop.ogg')
         .then((sound) => {
           sound.filter = sound.context.createBiquadFilter();
@@ -420,6 +420,7 @@ class Gameplay extends Group {
 
   update({ brush, voxel }) {
     const {
+      chunks,
       meshes,
       dudes,
       voxels,
@@ -437,11 +438,6 @@ class Gameplay extends Group {
         b: Math.min(Math.max((brush.color.b + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
       })
     ));
-    const chunks = {
-      x: world.width / world.chunkSize,
-      y: world.height / world.chunkSize,
-      z: world.depth / world.chunkSize,
-    };
     const chunkX = Math.floor(voxel.x / world.chunkSize);
     const chunkY = Math.floor(voxel.y / world.chunkSize);
     const chunkZ = Math.floor(voxel.z / world.chunkSize);
