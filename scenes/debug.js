@@ -45,16 +45,16 @@ class Debug extends Gameplay {
       const { buttons, raycaster } = player.desktop;
       if (dudes.selected && buttons.primaryDown) {
         const hit = physics.raycast(raycaster.ray.origin, raycaster.ray.direction);
-        if (!hit) {
+        if (hit) {
+          dudes.setDestination(
+            dudes.selected,
+            hit.point
+              .divideScalar(scale)
+              .addScaledVector(hit.normal, 0.25)
+              .floor()
+          );
           return;
         }
-        dudes.setDestination(
-          dudes.selected,
-          hit.point
-            .divideScalar(scale)
-            .addScaledVector(hit.normal, 0.25)
-            .floor()
-        );
       }
       if (buttons.secondaryDown) {
         const hit = physics.raycast(raycaster.ray.origin, raycaster.ray.direction, 4);
