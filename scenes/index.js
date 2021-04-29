@@ -1,1 +1,2 @@
-export { default as Gameplay } from './gameplay.js';
+export { default as Debug } from './debug.js';
+export { default as Poop } from './poop.js';

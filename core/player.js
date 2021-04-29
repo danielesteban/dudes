@@ -1,18 +1,14 @@
 import {
   AudioListener,
-  BoxBufferGeometry,
+  Euler,
   Group,
   Matrix4,
-  Mesh,
-  MeshBasicMaterial,
   Quaternion,
   Raycaster,
+  Vector2,
   Vector3,
 } from '../vendor/three.js';
-import CurveCast from './curvecast.js';
-import DesktopControls from './desktop.js';
 import Hand from '../renderables/hand.js';
-import Marker from '../renderables/translocation.js';
 import Pointer from '../renderables/pointer.js';
 
 class Player extends Group {
@@ -22,47 +18,19 @@ class Player extends Group {
     xr,
   }) {
     super();
-    this.add(camera);
-    this.auxMatrixA = new Matrix4();
-    this.auxMatrixB = new Matrix4();
-    this.auxVector = new Vector3();
-    this.auxDestination = new Vector3();
     this.attachments = { left: [], right: [] };
-    this.climbing = {
-      bodyScale: 1,
-      enabled: true,
-      grip: [false, false],
-      hand: new Vector3(),
-      isJumping: false,
-      isOnAir: false,
-      lastMovement: new Vector3(),
-      movement: new Vector3(),
-      normal: new Vector3(),
-      velocity: new Vector3(),
-      worldUp: new Vector3(0, 1, 0),
-      reset() {
-        this.bodyScale = 1;
-        this.enabled = true;
-        this.grip[0] = false;
-        this.grip[1] = false;
-        this.isJumping = false;
-        this.isOnAir = false;
-      },
+    this.aux = {
+      center: new Vector2(),
+      euler: new Euler(0, 0, 0, 'YXZ'),
+      one: new Vector3(1, 1, 1),
+      matrixA: new Matrix4(),
+      matrixB: new Matrix4(),
+      vectorA: new Vector3(),
+      vectorB: new Vector3(),
     };
-    this.direction = new Vector3();
     this.head = new AudioListener();
     this.head.rotation.order = 'YXZ';
-    const physicsMaterial = new MeshBasicMaterial({ visible: false });
-    this.head.physics = new Mesh(
-      new BoxBufferGeometry(0.3, 0.3, 0.3),
-      physicsMaterial
-    );
-    this.head.add(this.head.physics);
-    const controllerPhysics = new Mesh(
-      new BoxBufferGeometry(0.015, 0.09, 0.14),
-      physicsMaterial
-    );
-    controllerPhysics.position.set(0, -0.1 / 3, 0.02);
+    this.add(camera);
     this.controllers = [...Array(2)].map((v, i) => {
       const controller = xr.getController(i);
       this.add(controller);
@@ -76,8 +44,6 @@ class Player extends Group {
         primary: false,
         secondary: false,
       };
-      controller.marker = new Marker();
-      controller.physics = controllerPhysics.clone();
       controller.pointer = new Pointer();
       controller.add(controller.pointer);
       controller.pulse = (intensity, duration) => {
@@ -106,7 +72,6 @@ class Player extends Group {
         controller.hand = hand;
         controller.gamepad = gamepad;
         controller.add(hand);
-        controller.add(controller.physics);
         const attachments = this.attachments[handedness];
         if (attachments) {
           attachments.forEach((attachment) => {
@@ -125,16 +90,43 @@ class Player extends Group {
           });
         }
         controller.remove(controller.hand);
-        controller.remove(controller.physics);
         delete controller.hand;
         delete controller.gamepad;
-        controller.marker.visible = false;
         controller.pointer.visible = false;
       });
       return controller;
     });
-    this.desktopControls = new DesktopControls({ renderer: dom.renderer, xr });
     this.xr = xr;
+    this.desktop = {
+      buttons: {
+        primary: false,
+        secondary: false,
+        tertiary: false,
+      },
+      keyboard: new Vector3(0, 0, 0),
+      pointer: new Vector2(0, 0),
+      raycaster: new Raycaster(),
+      speed: 6,
+    };
+    this.desktop.buttonState = { ...this.desktop.buttons };
+    this.onBlur = this.onBlur.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+    this.onKeyUp = this.onKeyUp.bind(this);
+    this.onMouseDown = this.onMouseDown.bind(this);
+    this.onMouseMove = this.onMouseMove.bind(this);
+    this.onMouseUp = this.onMouseUp.bind(this);
+    this.onMouseWheel = this.onMouseWheel.bind(this);
+    this.onPointerLock = this.onPointerLock.bind(this);
+    this.requestPointerLock = this.requestPointerLock.bind(this);
+    window.addEventListener('blur', this.onBlur);
+    document.addEventListener('keydown', this.onKeyDown);
+    document.addEventListener('keyup', this.onKeyUp);
+    document.addEventListener('mousedown', this.onMouseDown);
+    document.addEventListener('mousemove', this.onMouseMove);
+    document.addEventListener('mouseup', this.onMouseUp);
+    document.addEventListener('wheel', this.onMouseWheel, false);
+    document.addEventListener('pointerlockchange', this.onPointerLock);
+    dom.renderer.addEventListener('mousedown', this.requestPointerLock);
   }
 
   attach(attachment, handedness) {
@@ -148,10 +140,8 @@ class Player extends Group {
   }
 
   detachAll() {
-    const { attachments, head, controllers } = this;
-    delete head.physics.onContact;
+    const { attachments, controllers } = this;
     controllers.forEach((controller) => {
-      delete controller.physics.onContact;
       const children = controller.hand && attachments[controller.hand.handedness];
       if (children) {
         children.forEach((child) => (
@@ -163,259 +153,31 @@ class Player extends Group {
     attachments.right.length = 0;
   }
 
-  onAnimationTick({
-    animation,
-    camera,
-    physics,
-    pointables,
-    translocables,
-  }) {
+  move(offset, physics) {
     const {
-      auxMatrixA: rotation,
-      auxVector: vector,
-      climbing,
       controllers,
-      desktopControls,
-      destination,
-      direction,
+      desktop,
       head,
       position,
-      speed,
-      xr,
     } = this;
-
-    // Update input state
-    camera.matrixWorld.decompose(head.position, head.quaternion, vector);
-    head.updateMatrixWorld();
+    position.add(offset);
+    head.position.add(offset);
     controllers.forEach(({
-      buttons,
       hand,
-      gamepad,
-      marker,
       matrixWorld,
-      pointer,
       raycaster,
       worldspace,
     }) => {
-      if (!hand) {
-        return;
-      }
-      marker.visible = false;
-      pointer.visible = false;
-      [
-        ['forwards', gamepad.axes[3] <= -0.5],
-        ['backwards', gamepad.axes[3] >= 0.5],
-        ['leftwards', gamepad.axes[2] <= -0.5],
-        ['rightwards', gamepad.axes[2] >= 0.5],
-        ['trigger', gamepad.buttons[0] && gamepad.buttons[0].pressed],
-        ['grip', gamepad.buttons[1] && gamepad.buttons[1].pressed],
-        ['primary', gamepad.buttons[4] && gamepad.buttons[4].pressed],
-        ['secondary', gamepad.buttons[5] && gamepad.buttons[5].pressed],
-      ].forEach(([key, value]) => {
-        buttons[`${key}Down`] = value && buttons[key] !== value;
-        buttons[`${key}Up`] = !value && buttons[key] !== value;
-        buttons[key] = value;
-      });
-      hand.setFingers({
-        thumb: gamepad.buttons[3] && gamepad.buttons[3].touched,
-        index: gamepad.buttons[0] && gamepad.buttons[0].pressed,
-        middle: gamepad.buttons[1] && gamepad.buttons[1].pressed,
-      });
-      hand.animate(animation);
-      worldspace.lastPosition.copy(worldspace.position);
-      matrixWorld.decompose(worldspace.position, worldspace.quaternion, vector);
-      worldspace.movement.subVectors(worldspace.position, worldspace.lastPosition);
-      rotation.identity().extractRotation(matrixWorld);
-      raycaster.ray.origin
-        .addVectors(
-          worldspace.position,
-          vector.set(0, -0.1 / 3, 0).applyMatrix4(rotation)
-        );
-      raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotation);
-    });
-
-    // Animate translocation
-    if (destination) {
-      let step = speed * animation.delta;
-      const distance = destination.distanceTo(position);
-      if (distance <= step) {
-        delete this.destination;
-        step = distance;
-      }
-      vector.copy(direction).multiplyScalar(step);
-      position.add(vector);
-      head.position.add(vector);
-      controllers.forEach(({ hand, raycaster, worldspace }) => {
-        if (hand) {
-          raycaster.ray.origin.add(vector);
-          worldspace.position.add(vector);
-        }
-      });
-    }
-
-    // Climb
-    let climbingHands = 0;
-    if (climbing.enabled && !destination && physics) {
-      climbing.movement.set(0, 0, 0);
-      controllers.forEach((controller, hand) => {
-        if (
-          controller.hand
-          && controller.buttons.gripDown
-          && !(climbing.isOnAir && climbing.velocity.length() < -5)
-        ) {
-          climbing.hand
-            .copy(controller.physics.position)
-            .applyQuaternion(controller.worldspace.quaternion)
-            .add(controller.worldspace.position);
-          const contacts = physics.getContacts({
-            climbable: true,
-            shape: 'sphere',
-            radius: 0.1,
-            position: climbing.hand,
-          });
-          if (contacts.length) {
-            const { mesh, index } = contacts[0].body;
-            climbing.grip[hand] = { mesh, index, time: animation.time };
-            controller.pulse(0.3, 30);
-          }
-        }
-        if (climbing.grip[hand]) {
-          if (!controller.hand || controller.buttons.gripUp) {
-            climbing.grip[hand] = false;
-            if (!climbing.climbingHands) {
-              climbing.isOnAir = true;
-              climbing.velocity.copy(climbing.lastMovement);
-            }
-          } else {
-            climbing.movement.add(controller.worldspace.movement);
-            climbingHands += 1;
-            climbing.isOnAir = false;
-          }
-        }
-      });
-
-      // Jump
-      const jumpGrip = (
-        controllers[0].hand && controllers[0].buttons.grip
-        && controllers[1].hand && controllers[1].buttons.grip
-      );
-      if (
-        !climbingHands
-        && jumpGrip
-        && !climbing.isOnAir
-        && !climbing.isJumping
-      ) {
-        climbing.isJumping = true;
-      }
-      if (climbing.isJumping) {
-        if (jumpGrip) {
-          climbingHands = 2;
-          climbing.movement.addVectors(
-            controllers[0].worldspace.movement,
-            controllers[1].worldspace.movement
-          );
-        } else {
-          climbing.isJumping = false;
-          climbing.isOnAir = true;
-          climbing.velocity.copy(climbing.lastMovement);
-        }
-      }
-      if (climbingHands) {
-        this.move(
-          climbing.movement.divideScalar(climbingHands).negate()
-        );
-        climbing.bodyScale = 0;
-        climbing.lastMovement.copy(climbing.movement).divideScalar(animation.delta);
-      } else if (climbing.isOnAir) {
-        climbing.velocity.y -= 9.8 * animation.delta;
-        this.move(
-          climbing.movement.copy(climbing.velocity).multiplyScalar(animation.delta)
-        );
-      }
-    }
-
-    // Process input
-    controllers.forEach(({
-      hand,
-      buttons: {
-        forwards,
-        forwardsUp,
-        leftwardsDown,
-        rightwardsDown,
-        secondaryDown,
-      },
-      marker,
-      pointer,
-      raycaster,
-    }) => {
-      if (!hand) {
-        return;
-      }
-      if (
-        !climbingHands
-        && !climbing.isOnAir
-        && !this.destination
-        && hand.handedness === 'left'
-        && (leftwardsDown || rightwardsDown)
-      ) {
-        this.rotate(
-          Math.PI * 0.25 * (leftwardsDown ? 1 : -1)
-        );
-      }
-      if (
-        !climbingHands
-        && !climbing.isOnAir
-        && !this.destination
-        && hand.handedness === 'right'
-        && (forwards || forwardsUp)
-      ) {
-        const { hit, points } = CurveCast({
-          intersects: translocables.flat(),
-          raycaster,
-        });
-        if (hit) {
-          if (forwardsUp) {
-            this.translocate(hit.point);
-          } else {
-            marker.update({ animation, hit, points });
-          }
-        }
-      }
-      if (
-        !climbingHands
-        && !climbing.isOnAir
-        && !this.destination
-        && secondaryDown
-        && xr.enabled
-        && xr.isPresenting
-      ) {
-        xr.getSession().end();
-      }
-      if (pointables.length) {
-        const hit = raycaster.intersectObjects(pointables.flat())[0] || false;
-        if (hit) {
-          pointer.update({
-            distance: hit.distance,
-            origin: raycaster.ray.origin,
-            target: hit,
-          });
-        }
+      if (hand) {
+        raycaster.ray.origin.add(offset);
+        worldspace.position.add(offset);
+        matrixWorld.compose(worldspace.position, worldspace.quaternion, this.aux.one);
       }
     });
-    desktopControls.onAnimationTick({ animation, camera, player: this });
-
-    // Fall
-    if (climbing.enabled && !this.destination && physics) {
-      if (!climbingHands && climbing.bodyScale < 1) {
-        climbing.bodyScale = (
-          Math.min(Math.max(climbing.bodyScale + animation.delta * 2, 0.45), 1)
-        );
-      }
+    desktop.raycaster.ray.origin.add(offset);
+    if (physics) {
       const radius = 0.2;
-      const height = (
-        Math.max(head.position.y - position.y - radius, 0) * climbing.bodyScale ** 2
-        + radius * 2
-      );
+      const height = Math.max(head.position.y - position.y - radius, 0) + radius * 2;
       const contacts = physics.getContacts({
         static: true,
         shape: 'capsule',
@@ -428,45 +190,26 @@ class Player extends Group {
         },
       });
       if (contacts.length) {
-        climbing.movement.set(0, 0, 0);
-        contacts.forEach(({
-          distance,
-          normal,
-        }) => {
-          climbing.normal.copy(normal).normalize();
-          climbing.movement.addScaledVector(climbing.normal, -distance);
-          if (
-            climbing.bodyScale === 1
-            && climbing.normal.dot(climbing.worldUp) > 0
-          ) {
-            climbing.isOnAir = false;
-          }
-        });
-        if (climbing.movement.length()) {
-          this.move(climbing.movement);
+        const { aux: { vectorA: movement, vectorB: direction } } = this;
+        movement.set(0, 0, 0);
+        contacts.forEach(({ distance, normal }) => (
+          movement.addScaledVector(direction.copy(normal).normalize(), -distance)
+        ));
+        if (movement.length()) {
+          this.move(movement);
         }
       }
     }
   }
 
-  move(offset) {
-    const { controllers, head, position } = this;
-    position.add(offset);
-    head.position.add(offset);
-    controllers.forEach(({ hand, raycaster, worldspace }) => {
-      if (hand) {
-        raycaster.ray.origin.add(offset);
-        worldspace.position.add(offset);
-      }
-    });
-    delete this.destination;
-  }
-
   rotate(radians) {
     const {
-      auxMatrixA: transform,
-      auxMatrixB: matrix,
+      aux: {
+        matrixA: transform,
+        matrixB: matrix,
+      },
       controllers,
+      desktop,
       head,
       position,
     } = this;
@@ -483,51 +226,264 @@ class Player extends Group {
     );
     this.applyMatrix4(transform);
     head.applyMatrix4(transform);
-    controllers.forEach(({ hand, raycaster, worldspace }) => {
+    controllers.forEach(({
+      hand,
+      matrixWorld,
+      raycaster,
+      worldspace,
+    }) => {
       if (hand) {
         raycaster.ray.origin.applyMatrix4(transform);
         worldspace.position.applyMatrix4(transform);
+        matrixWorld.multiply(transform);
       }
     });
+    desktop.raycaster.ray.origin.applyMatrix4(transform);
   }
 
-  teleport(point) {
-    const { head, position } = this;
-    const headY = head.position.y - position.y;
-    position
-      .subVectors(point, position.set(
-        head.position.x - position.x,
-        0,
-        head.position.z - position.z
-      ));
-    head.position.set(
-      point.x,
-      point.y + headY,
-      point.z
-    );
-    delete this.destination;
+  teleport(destination, physics) {
+    const { aux: { vectorA }, position } = this;
+    vectorA.subVectors(destination, position);
+    this.move(vectorA, physics);
   }
 
-  translocate(point) {
+  onAnimationTick({
+    animation,
+    camera,
+    isXR,
+  }) {
     const {
-      auxDestination: destination,
-      direction,
+      aux: {
+        center,
+        euler,
+        matrixA: rotation,
+        vectorA: vector,
+      },
+      controllers,
+      desktop,
       head,
-      position,
     } = this;
-    destination
-      .subVectors(point, destination.set(
-        head.position.x - position.x,
-        0,
-        head.position.z - position.z
-      ));
-    this.destination = destination;
-    this.speed = Math.max(destination.distanceTo(position) / 0.2, 2);
-    direction
-      .copy(destination)
-      .sub(position)
-      .normalize();
+    if (isXR) {
+      if (desktop.isLocked) {
+        document.exitPointerLock();
+      }
+      controllers.forEach(({
+        buttons,
+        hand,
+        gamepad,
+        matrixWorld,
+        pointer,
+        raycaster,
+        worldspace,
+      }) => {
+        if (!hand) {
+          return;
+        }
+        [
+          ['forwards', gamepad.axes[3] <= -0.5],
+          ['backwards', gamepad.axes[3] >= 0.5],
+          ['leftwards', gamepad.axes[2] <= -0.5],
+          ['rightwards', gamepad.axes[2] >= 0.5],
+          ['trigger', gamepad.buttons[0] && gamepad.buttons[0].pressed],
+          ['grip', gamepad.buttons[1] && gamepad.buttons[1].pressed],
+          ['primary', gamepad.buttons[4] && gamepad.buttons[4].pressed],
+          ['secondary', gamepad.buttons[5] && gamepad.buttons[5].pressed],
+        ].forEach(([key, value]) => {
+          buttons[`${key}Down`] = value && buttons[key] !== value;
+          buttons[`${key}Up`] = !value && buttons[key] !== value;
+          buttons[key] = value;
+        });
+        hand.setFingers({
+          thumb: gamepad.buttons[3] && gamepad.buttons[3].touched,
+          index: gamepad.buttons[0] && gamepad.buttons[0].pressed,
+          middle: gamepad.buttons[1] && gamepad.buttons[1].pressed,
+        });
+        hand.animate(animation);
+        pointer.visible = false;
+        worldspace.lastPosition.copy(worldspace.position);
+        matrixWorld.decompose(worldspace.position, worldspace.quaternion, vector);
+        worldspace.movement.subVectors(worldspace.position, worldspace.lastPosition);
+        rotation.identity().extractRotation(matrixWorld);
+        raycaster.ray.origin
+          .addVectors(
+            worldspace.position,
+            vector.set(0, -0.1 / 3, 0).applyMatrix4(rotation)
+          );
+        raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotation);
+      });
+    } else if (desktop.isLocked) {
+      const {
+        buttons,
+        buttonState,
+        pointer,
+        raycaster,
+      } = desktop;
+      if (pointer.x !== 0 || pointer.y !== 0) {
+        euler.setFromQuaternion(camera.quaternion);
+        euler.y -= pointer.x * 0.003;
+        euler.x -= pointer.y * 0.003;
+        const PI_2 = Math.PI / 2;
+        euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
+        camera.quaternion.setFromEuler(euler);
+        pointer.set(0, 0);
+      }
+      ['primary', 'secondary', 'tertiary'].forEach((button) => {
+        const state = buttonState[button];
+        buttons[`${button}Down`] = state && buttons[button] !== state;
+        buttons[`${button}Up`] = !state && buttons[button] !== state;
+        buttons[button] = state;
+      });
+      raycaster.setFromCamera(center, camera);
+    }
+    camera.matrixWorld.decompose(head.position, head.quaternion, vector);
+  }
+
+  onBlur() {
+    const { desktop: { buttonState, keyboard } } = this;
+    buttonState.primary = false;
+    buttonState.secondary = false;
+    buttonState.tertiary = false;
+    keyboard.set(0, 0, 0);
+  }
+
+  onKeyDown({ keyCode, repeat }) {
+    const { desktop: { buttonState, keyboard } } = this;
+    if (repeat) return;
+    switch (keyCode) {
+      case 16:
+        keyboard.y = -1;
+        break;
+      case 32:
+        keyboard.y = 1;
+        break;
+      case 87:
+        keyboard.z = 1;
+        break;
+      case 83:
+        keyboard.z = -1;
+        break;
+      case 65:
+        keyboard.x = -1;
+        break;
+      case 68:
+        keyboard.x = 1;
+        break;
+      case 70:
+        buttonState.tertiary = true;
+        break;
+      default:
+        break;
+    }
+  }
+
+  onKeyUp({ keyCode, repeat }) {
+    const { desktop: { buttonState, keyboard } } = this;
+    if (repeat) return;
+    switch (keyCode) {
+      case 16:
+      case 32:
+        keyboard.y = 0;
+        break;
+      case 87:
+      case 83:
+        keyboard.z = 0;
+        break;
+      case 65:
+      case 68:
+        keyboard.x = 0;
+        break;
+      case 70:
+        buttonState.tertiary = false;
+        break;
+      default:
+        break;
+    }
+  }
+
+  onMouseDown({ button }) {
+    const { desktop: { buttonState, isLocked } } = this;
+    if (!isLocked) {
+      return;
+    }
+    switch (button) {
+      case 0:
+        buttonState.primary = true;
+        break;
+      case 1:
+        buttonState.tertiary = true;
+        break;
+      case 2:
+        buttonState.secondary = true;
+        break;
+      default:
+        break;
+    }
+  }
+
+  onMouseMove({ movementX, movementY }) {
+    const { desktop: { isLocked, pointer } } = this;
+    if (!isLocked) {
+      return;
+    }
+    pointer.x += movementX;
+    pointer.y += movementY;
+  }
+
+  onMouseUp({ button }) {
+    const { desktop: { buttonState, isLocked } } = this;
+    if (!isLocked) {
+      return;
+    }
+    switch (button) {
+      case 0:
+        buttonState.primary = false;
+        break;
+      case 1:
+        buttonState.tertiary = false;
+        break;
+      case 2:
+        buttonState.secondary = false;
+        break;
+      default:
+        break;
+    }
+  }
+
+  onMouseWheel({ deltaY }) {
+    const { desktop: { speed, isLocked } } = this;
+    if (!isLocked) {
+      return;
+    }
+    const { minSpeed, speedRange } = Player;
+    const logSpeed = Math.min(
+      Math.max(
+        ((Math.log(speed) - minSpeed) / speedRange) - (-deltaY * 0.0003),
+        0
+      ),
+      1
+    );
+    this.desktop.speed = Math.exp(minSpeed + logSpeed * speedRange);
+  }
+
+  onPointerLock() {
+    this.desktop.isLocked = !!document.pointerLockElement;
+    document.body.classList[this.desktop.isLocked ? 'add' : 'remove']('pointerlock');
+    if (!this.desktop.isLocked) {
+      this.onBlur();
+    }
+  }
+
+  requestPointerLock() {
+    const { desktop: { isLocked }, xr } = this;
+    if (isLocked || (xr.enabled && xr.isPresenting)) {
+      return;
+    }
+    document.body.requestPointerLock();
   }
 }
+
+Player.minSpeed = Math.log(2);
+Player.maxSpeed = Math.log(40);
+Player.speedRange = Player.maxSpeed - Player.minSpeed;
 
 export default Player;

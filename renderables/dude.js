@@ -25,6 +25,7 @@ import Marker from './marker.js';
 
 class Dude extends SkinnedMesh {
   static createGeometry({
+    color: diffuse,
     height,
     waist,
     arms,
@@ -81,7 +82,7 @@ class Dude extends SkinnedMesh {
         if (i % (shape === 'box' ? 6 : 3) === 0) {
           c = light - Math.random() * 0.15;
         }
-        color.setXYZ(i, c, c, c);
+        color.setXYZ(i, diffuse.r * c, diffuse.g * c, diffuse.b * c);
         skinIndex.setXYZW(i, bone, 0, 0, 0);
         skinWeight.setXYZW(i, 1, 0, 0, 0);
       }
@@ -438,12 +439,11 @@ class Dude extends SkinnedMesh {
     this.action = this.actions.idle;
     this.action.enabled = true;
     this.auxVector = new Vector3();
-    this.diffuse = (new Color()).copy(spec.color);
     this.lighting = {
       light: 0,
       sunlight: 0xFF,
     };
-    this.marker = new Marker(this.diffuse);
+    this.marker = new Marker(spec.color);
     this.speed = 4 * spec.stamina;
     this.physics = new Group();
     this.physics.physics = this.geometry.physics;
@@ -537,8 +537,7 @@ class Dude extends SkinnedMesh {
   }
 
   onBeforeRender() {
-    const { material, diffuse, lighting } = this;
-    material.uniforms.diffuse.value.copy(diffuse);
+    const { material, lighting } = this;
     material.uniforms.light.value = lighting.light;
     material.uniforms.sunlight.value = lighting.sunlight;
     material.uniformsNeedUpdate = true;

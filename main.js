@@ -17,7 +17,10 @@ const renderer = new Renderer({
 router.addEventListener('update', ({ route }) => {
   switch (route) {
     case '':
-      renderer.world.load('Gameplay');
+      renderer.world.load('Debug');
+      break;
+    case 'game':
+      renderer.world.load('Poop');
       break;
     default:
       router.replace('/');

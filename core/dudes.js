@@ -162,7 +162,7 @@ class Dudes extends Group {
   select(dude) {
     const { selectionMarker: marker } = this;
     this.selected = dude;
-    marker.material.color.copy(dude.diffuse);
+    marker.material.color.copy(dude.marker.material.color);
     marker.position.y = dude.physics.physics.height + 0.5;
     marker.updateMatrix();
     marker.visible = true;

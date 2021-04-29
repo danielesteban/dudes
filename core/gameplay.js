@@ -1,6 +1,7 @@
 import { Color, FogExp2, Group, Matrix4, Vector3 } from '../vendor/three.js';
-import Ambient from '../core/ambient.js';
-import Dudes from '../core/dudes.js';
+import Ambient from './ambient.js';
+import Dudes from './dudes.js';
+import VoxelWorld from './voxels.js';
 import Birds from '../renderables/birds.js';
 import Bodies from '../renderables/bodies.js';
 import Dome from '../renderables/dome.js';
@@ -12,7 +13,6 @@ import Rain from '../renderables/rain.js';
 import Spheres from '../renderables/spheres.js';
 import Starfield from '../renderables/starfield.js';
 import VoxelChunk from '../renderables/chunk.js';
-import VoxelWorld from '../core/voxels.js';
 
 class Gameplay extends Group {
   constructor(world) {
@@ -22,8 +22,6 @@ class Gameplay extends Group {
     this.background = world.background = new Color(0);
     this.fog = world.fog = new FogExp2(0, 0.005);
     this.player = world.player;
-    this.pointables = world.pointables;
-    this.translocables = world.translocables;
 
     this.ambient = new Ambient({
       anchor: this.player.head,
@@ -58,13 +56,19 @@ class Gameplay extends Group {
       size: 1,
       type: 3,
     };
+    this.locomotion = {
+      direction: new Vector3(),
+      forward: new Vector3(),
+      right: new Vector3(),
+      worldUp: new Vector3(0, 1, 0),
+    };
     this.light = 0;
     this.targetLight = 1;
+    this.seed = 735794906;
     this.meshes = [];
     this.worldScale = 0.5;
     this.voxels = new Group();
     this.voxels.matrixAutoUpdate = false;
-    // this.translocables.push(this.voxels.children);
 
     this.explosions = [...Array(50)].map(() => {
       const explosion = new Explosion({ sfx: world.sfx });
@@ -97,22 +101,6 @@ class Gameplay extends Group {
           vector.set(0, 0.2, -1000 - projectile)
         );
         return true;
-      };
-      this.projectiles.onColliderContact = (contact) => {
-        if (this.projectiles.destroyOnContact(contact)) {
-          this.update({
-            brush: {
-              ...this.brush,
-              type: 0,
-              shape: Gameplay.brushShapes.sphere,
-              size: 3,
-            },
-            voxel: (new Vector3()).copy(contact.position)
-              .divideScalar(this.worldScale)
-              .addScaledVector(contact.normal, 0.5 * this.worldScale)
-              .floor(),
-          });
-        }
       };
     }
 
@@ -174,12 +162,13 @@ class Gameplay extends Group {
       physics,
       player,
       projectiles,
+      seed,
       voxels,
       world,
       worldScale: scale,
     } = this;
 
-    world.generate(735794906);
+    world.generate(seed);
     const spawn = new Vector3(
       Math.floor(world.width * 0.5),
       0,
@@ -244,7 +233,9 @@ class Gameplay extends Group {
           chunk.collider.matrixAutoUpdate = false;
           chunk.collider.position.copy(chunk.position);
           chunk.collider.physics = [];
-          chunk.collider.onContact = projectiles.onColliderContact;
+          if (projectiles.onColliderContact) {
+            chunk.collider.onContact = projectiles.onColliderContact;
+          }
           meshes.push(chunk);
           if (chunk.geometry.getIndex() !== null) {
             voxels.add(chunk);
@@ -255,12 +246,10 @@ class Gameplay extends Group {
     }
 
     this.dudes.dudes.forEach((dude) => {
-      dude.physics.onContact = (contact) => {
-        if (projectiles.destroyOnContact(contact)) {
-          dude.onHit();
-        }
-      };
-      physics.addMesh(dude.physics, { isKinematic: true, isTrigger: true });
+      if (projectiles.onDudeContact) {
+        dude.physics.onContact = projectiles.onDudeContact;
+      }
+      physics.addMesh(dude.physics, { isKinematic: true, isTrigger: !!dude.physics.onContact });
     });
     physics.addMesh(projectiles, { mass: 1 });
 
@@ -285,29 +274,23 @@ class Gameplay extends Group {
     rain.dispose();
   }
 
-  onAnimationTick({ animation }) {
+  onAnimationTick({ animation, camera, isXR }) {
     const {
       ambient,
       birds,
-      brush,
       clouds,
       dudes,
       explosions,
       hasLoaded,
       light,
-      physics,
       player,
-      plops,
       rain,
       targetLight,
-      worldScale: scale,
     } = this;
     if (!hasLoaded) {
       return;
     }
-    if (player.position.y < 3) {
-      player.move({ x: 0, y: 3 - player.position.y, z: 0 });
-    }
+    this.onLocomotion({ animation, camera, isXR });
     ambient.animate(animation);
     birds.animate(animation);
     clouds.animate(animation);
@@ -320,93 +303,77 @@ class Gameplay extends Group {
         light + Math.min(Math.max(targetLight - light, -animation.delta), animation.delta)
       );
     }
-    [
-      player.desktopControls,
-      ...player.controllers,
-    ].forEach(({
-      buttons,
-      hand,
-      isDesktop,
-      pointer,
-      raycaster,
-    }) => {
-      if (
-        dudes.selected
-        && isDesktop && buttons.primaryDown
-      ) {
-        const hit = physics.raycast(raycaster.ray.origin, raycaster.ray.direction);
-        if (!hit) {
-          return;
+  }
+
+  onLocomotion({ animation, camera, isXR }) {
+    const {
+      locomotion: {
+        direction,
+        forward,
+        right,
+        worldUp,
+      },
+      physics,
+      player,
+    } = this;
+    if (isXR) {
+      player.controllers.forEach(({ buttons, hand, worldspace }) => {
+        if (
+          hand && hand.handedness === 'left'
+          && (buttons.leftwardsDown || buttons.rightwardsDown)
+        ) {
+          player.rotate(
+            Math.PI * 0.25 * (buttons.leftwardsDown ? 1 : -1)
+          );
         }
-        dudes.setDestination(
-          dudes.selected,
-          hit.point
-            .divideScalar(scale)
-            .addScaledVector(hit.normal, 0.25)
-            .floor()
+        if (
+          hand && hand.handedness === 'right'
+          && (
+            buttons.backwards || buttons.backwardsUp
+            || buttons.forwards || buttons.forwardsUp
+            || buttons.leftwards || buttons.leftwardsUp
+            || buttons.rightwards || buttons.rightwardsUp
+          )
+        ) {
+          const speed = 6;
+          player.move(
+            direction
+              .set(
+                (buttons.leftwards || buttons.leftwardsUp) ? -1 : ((buttons.rightwards || buttons.rightwardsUp) ? 1 : 0),
+                0,
+                (buttons.backwards || buttons.backwardsUp) ? 1 : ((buttons.forwards || buttons.forwardsUp) ? -1 : 0),
+              )
+              .normalize()
+              .applyQuaternion(worldspace.quaternion)
+              .multiplyScalar(animation.delta * speed),
+            physics
+          );
+        }
+      });
+    } else {
+      const { desktop: { keyboard, speed } } = player;
+      if (
+        keyboard.x !== 0
+        || keyboard.y !== 0
+        || keyboard.z !== 0
+      ) {
+        camera.getWorldDirection(forward);
+        right.crossVectors(forward, worldUp);
+        player.move(
+          direction
+            .set(0, 0, 0)
+            .addScaledVector(right, keyboard.x)
+            .addScaledVector(worldUp, keyboard.y)
+            .addScaledVector(forward, keyboard.z)
+            .normalize()
+            .multiplyScalar(animation.delta * speed),
+          physics
         );
       }
-
-      if (
-        isDesktop && buttons.tertiaryDown
-      ) {
-        const { origin, direction } = raycaster.ray;
-        const position = origin
-          .clone()
-          .addScaledVector(direction, 0.5);
-        const impulse = direction.clone().multiplyScalar(24);
-        this.spawnProjectile(position, impulse);
-        return;
-      }
-
-      if (
-        isDesktop && buttons.secondaryDown
-      ) {
-        const hit = raycaster.intersectObjects(dudes.dudes)[0] || false;
-        if (hit) {
-          dudes.select(hit.object);
-          return;
-        }
-        if (dudes.selected) {
-          // This should prolly be in a "deslect" method in the Dudes class
-          dudes.selected.remove(dudes.selectionMarker);
-          delete dudes.selected;
-          return;
-        }
-      }
-
-      const isPlacing = isDesktop ? buttons.primaryDown : hand && pointer.visible && buttons.triggerDown;
-      const isRemoving = isDesktop ? buttons.secondaryDown : hand && pointer.visible && buttons.primaryDown;
-      if (
-        !dudes.selected
-        && (isPlacing || isRemoving)
-      ) {
-        const hit = physics.raycast(raycaster.ray.origin, raycaster.ray.direction);
-        if (!hit) {
-          return;
-        }
-        if (plops) {
-          const sound = plops.find(({ isPlaying }) => (!isPlaying));
-          if (sound && sound.context.state === 'running') {
-            sound.filter.type = isRemoving ? 'highpass' : 'lowpass';
-            sound.filter.frequency.value = (Math.random() + 0.5) * 1000;
-            sound.position.copy(hit.point);
-            sound.play();
-          }
-        }
-        brush.color.setRGB(Math.random(), Math.random(), Math.random());
-        this.update({
-          brush: {
-            ...brush,
-            ...(isRemoving ? { type: 0 } : {}),
-          },
-          voxel: hit.point
-            .divideScalar(scale)
-            .addScaledVector(hit.normal, isRemoving ? -0.25 : 0.25)
-            .floor(),
-        });
-      }
-    });
+    }
+    if (player.position.y < 3) {
+      player.move({ x: 0, y: 3 - player.position.y, z: 0 });
+    }
   }
 
   resumeAudio() {
@@ -520,7 +487,7 @@ class Gameplay extends Group {
           },
         });
       }
-      physics.addMesh(collider, { isClimbable: true, isTrigger: true });
+      physics.addMesh(collider, { isTrigger: !!collider.onContact });
     }
   }
 

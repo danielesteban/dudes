@@ -52,7 +52,7 @@ class Physics {
         });
         body.mesh = mesh;
         body.instance = i;
-        world.addRigidBody(body, (flags.isDynamic || flags.isKinematic) ? 1 : 2, -1);
+        world.addRigidBody(body, flags.collisionGroup, -1);
         instances.push(body);
       }
       bodies.set(mesh, instances);
@@ -62,7 +62,7 @@ class Physics {
         rotation: mesh.quaternion,
       });
       body.mesh = mesh;
-      world.addRigidBody(body, (flags.isDynamic || flags.isKinematic) ? 1 : 2, -1);
+      world.addRigidBody(body, flags.collisionGroup, -1);
       bodies.set(mesh, body);
     } else {
       Ammo.destroy(shape);
@@ -107,6 +107,9 @@ class Physics {
     flags.isDynamic = flags.mass > 0;
     flags.isKinematic = !flags.isDynamic && flags.isKinematic;
     flags.isTrigger = !!flags.isTrigger;
+    flags.collisionGroup = 1;
+    if (flags.isDynamic) flags.collisionGroup = 2;
+    else if (flags.isKinematic) flags.collisionGroup = 4;
 
     if (transform.matrix) {
       aux.transform.setFromOpenGLMatrix(transform.matrix);
@@ -226,7 +229,7 @@ class Physics {
 
       let body;
       let normal = contactPoint.get_m_normalWorldOnB();
-      if (Ammo.castObject( obj0Wrap.getCollisionObject(), Ammo.btGhostObject) === ghostObject) {
+      if (Ammo.castObject(obj0Wrap.getCollisionObject(), Ammo.btGhostObject) === ghostObject) {
         body = Ammo.castObject(obj1Wrap.getCollisionObject(), Ammo.btRigidBody);
         normal = { x: normal.x(), y: normal.y(), z: normal.z() };
       } else {
@@ -236,7 +239,6 @@ class Physics {
       const distance = contactPoint.getDistance();
       if (
         distance > 0
-        || (query.climbable && !(body.flags && body.flags.isClimbable))
         || (query.static && !body.isStaticObject())
       ) {
         return;
@@ -262,7 +264,7 @@ class Physics {
     return results.sort(({ distance: a }, { distance: b }) => (a - b));
   }
 
-  raycast(origin, direction, far = 64) {
+  raycast(origin, direction, mask = 1, far = 64) {
     const {
       aux: {
         vector: from,
@@ -277,7 +279,7 @@ class Physics {
     to.setValue(direction.x, direction.y, direction.z);
     to.op_mul(far);
     to.op_add(from);
-    rayResultCallback.set_m_collisionFilterMask(2);
+    rayResultCallback.set_m_collisionFilterMask(mask);
     rayResultCallback.set_m_collisionObject(null);
     rayResultCallback.set_m_closestHitFraction(1);
     rayResultCallback.set_m_rayFromWorld(from);
@@ -376,13 +378,15 @@ class Physics {
         for (let j = 0, jl = contactManifold.getNumContacts(); j < jl; j += 1) {
           const contactPoint = contactManifold.getContactPoint(j);
           const distance = contactPoint.getDistance();
-          if (distance < 0) {
+          if (
+            distance <= 0
+            && (!contact || contact.distance > distance)
+          ) {
             contact = {
               distance,
               impulse: contactPoint.getAppliedImpulse(),
               point: contactPoint,
             };
-            break;
           }
         }
 
@@ -391,7 +395,8 @@ class Physics {
             ...getContact(contact.point),
             distance: contact.distance,
             impulse: contact.impulse,
-            trigger: trigger.instance,
+            triggerMesh: trigger.mesh,
+            triggerInstance: trigger.instance,
             mesh: body.mesh,
             instance: body.instance,
           });

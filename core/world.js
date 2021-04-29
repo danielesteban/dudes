@@ -22,8 +22,6 @@ class World extends Scene {
     this.add(this.player);
     this.music = new Music(this.player.head.context.state === 'running');
     this.sfx = new SFX({ listener: this.player.head });
-    this.pointables = [];
-    this.translocables = [];
     this.router = router;
     this.scenes = scenes;
 
@@ -53,8 +51,6 @@ class World extends Scene {
     const {
       physics,
       player,
-      pointables,
-      translocables,
       scenes,
     } = this;
     if (this.scene) {
@@ -65,13 +61,8 @@ class World extends Scene {
     }
     this.background = null;
     this.fog = null;
-    player.climbing.reset();
     player.detachAll();
-    if (physics) {
-      physics.reset();
-    }
-    pointables.length = 0;
-    translocables.length = 0;
+    if (physics) physics.reset();
     this.scene = new scenes[scene](this, options);
     if (this.scene.resumeAudio && player.head.context.state === 'running') {
       this.scene.resumeAudio();
@@ -79,12 +70,10 @@ class World extends Scene {
     this.add(this.scene);
   }
 
-  onAnimationTick({ animation, camera }) {
+  onAnimationTick({ animation, camera, isXR }) {
     const {
       player,
       physics,
-      pointables,
-      translocables,
       scene,
     } = this;
     if (physics) {
@@ -93,13 +82,12 @@ class World extends Scene {
     player.onAnimationTick({
       animation,
       camera,
-      physics,
-      pointables,
-      translocables,
+      isXR,
     });
     if (scene && scene.onAnimationTick) {
-      scene.onAnimationTick({ animation, camera });
+      scene.onAnimationTick({ animation, camera, isXR });
     }
+    player.head.updateMatrixWorld();
   }
 
   resumeAudio() {
