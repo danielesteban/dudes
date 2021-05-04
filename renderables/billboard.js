@@ -51,7 +51,7 @@ class Billboard extends Mesh {
 
     ctx.font = '700 100px monospace';
     ctx.fillText('CONTROLS', renderer.width * 0.5, renderer.height * 0.6);
-    ctx.font = '700 40px monospace';
+    ctx.font = '700 30px monospace';
     ctx.fillText('WASD: Move', renderer.width * 0.5, renderer.height * 0.7);
     ctx.fillText('Mouse wheel: Adjust speed', renderer.width * 0.5, renderer.height * 0.75);
     ctx.fillText('Left click: Place block / Select target', renderer.width * 0.5, renderer.height * 0.8);
