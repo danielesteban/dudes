@@ -1487,11 +1487,11 @@ const unsigned char findTarget(
   point[0] = fromX + rand() % (toX - fromX);
   point[2] = fromZ + rand() % (toZ - fromZ);
   const int groundHeight = heightmap[(point[2] * world->width) + point[0]];
-  if (groundHeight <= seaLevel) {
-    return 0;
-  }
   const int fromY = fmax(originY - radius, seaLevel + 1);
   const int toY = fmin(fmin(originY, groundHeight) + radius, world->height - 5);
+  if (groundHeight <= seaLevel || toY <= fromY) {
+    return 0;
+  }
   point[1] = fromY + rand() % (toY - fromY);
   const int voxel = getVoxel(world, point[0], point[1], point[2]);
   if (
