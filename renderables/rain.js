@@ -50,7 +50,7 @@ class Rain extends Mesh {
     });
   }
 
-  constructor({ anchor, world, worldScale }) {
+  constructor({ anchor, world }) {
     if (!Rain.geometry) {
       Rain.setupGeometry();
     }
@@ -73,7 +73,6 @@ class Rain extends Mesh {
     this.matrixAutoUpdate = false;
     this.visible = false;
     this.world = world;
-    this.worldScale = worldScale;
   }
 
   animate({ delta }) {
@@ -108,7 +107,6 @@ class Rain extends Mesh {
       geometry,
       targets,
       world,
-      worldScale: scale,
     } = this;
     aux.set(
       anchor.position.x + (Math.random() * (radius * 2 + 1)) - radius,
@@ -119,13 +117,13 @@ class Rain extends Mesh {
     offsets.setX(i, aux.x);
     offsets.setZ(i, aux.z);
 
-    aux.divideScalar(scale).floor();
+    aux.divideScalar(world.scale).floor();
     let height = 0;
     if (
       aux.x >= 0 && aux.x < world.width
       && aux.z >= 0 && aux.z < world.depth
     ) {
-      height = Math.max((world.heightmap.view[(aux.z * world.width) + aux.x] + 1) * scale, 3);
+      height = Math.max((world.heightmap.view[(aux.z * world.width) + aux.x] + 1) * world.scale, 3);
     }
     targets[i] = height;
     offsets.setY(i, Math.max(anchor.position.y - radius + Math.random() * radius * 3, height));
@@ -141,6 +139,6 @@ class Rain extends Mesh {
 }
 
 Rain.numDrops = 10000;
-Rain.radius = 50;
+Rain.radius = 32;
 
 export default Rain;

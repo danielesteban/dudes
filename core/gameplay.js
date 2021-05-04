@@ -15,13 +15,13 @@ import Starfield from '../renderables/starfield.js';
 import VoxelChunk from '../renderables/chunk.js';
 
 class Gameplay extends Group {
-  constructor(world) {
+  constructor(scene, seed = 970297029704) {
     super();
     this.matrixAutoUpdate = false;
 
-    this.background = world.background = new Color(0);
-    this.fog = world.fog = new FogExp2(0, 0.005);
-    this.player = world.player;
+    this.background = scene.background = new Color(0);
+    this.fog = scene.fog = new FogExp2(0, 0.005);
+    this.player = scene.player;
 
     this.ambient = new Ambient({
       anchor: this.player.head,
@@ -49,29 +49,17 @@ class Gameplay extends Group {
         },
       ],
     });
-    this.brush = {
-      color: new Color(0xAAAAAA),
-      noise: 0.15,
-      shape: Gameplay.brushShapes.box,
-      size: 1,
-      type: 3,
-    };
+    this.light = 0;
+    this.targetLight = 1;
     this.locomotion = {
       direction: new Vector3(),
       forward: new Vector3(),
       right: new Vector3(),
       worldUp: new Vector3(0, 1, 0),
     };
-    this.light = 0;
-    this.targetLight = 1;
-    this.seed = 735794906;
-    this.meshes = [];
-    this.worldScale = 0.5;
-    this.voxels = new Group();
-    this.voxels.matrixAutoUpdate = false;
 
     this.explosions = [...Array(50)].map(() => {
-      const explosion = new Explosion({ sfx: world.sfx });
+      const explosion = new Explosion({ sfx: scene.sfx });
       this.add(explosion);
       return explosion;
     });
@@ -79,7 +67,7 @@ class Gameplay extends Group {
     this.projectile = 0;
     this.projectiles = new Spheres({
       count: 50,
-      sfx: world.sfx,
+      sfx: scene.sfx,
       sound: '/sounds/shot.ogg',
     });
     {
@@ -103,17 +91,6 @@ class Gameplay extends Group {
         return true;
       };
     }
-
-    Promise.all([...Array(5)].map(() => (
-      world.sfx.load('/sounds/plop.ogg')
-        .then((sound) => {
-          sound.filter = sound.context.createBiquadFilter();
-          sound.setFilter(sound.filter);
-          sound.setRefDistance(8);
-          this.add(sound);
-          return sound;
-        })
-    ))).then((sfx) => { this.plops = sfx; });
 
     {
       const toggle = document.getElementById('light');
@@ -139,13 +116,14 @@ class Gameplay extends Group {
     }
 
     Promise.all([
-      world.getPhysics(),
+      scene.getPhysics(),
       new Promise((resolve) => {
-        const voxels = new VoxelWorld({
-          width: 384,
+        const world = new VoxelWorld({
+          width: 400,
           height: 96,
-          depth: 384,
-          onLoad: () => resolve(voxels),
+          depth: 400,
+          seed,
+          onLoad: () => resolve(world),
         });
       }),
     ])
@@ -158,21 +136,16 @@ class Gameplay extends Group {
 
   onLoad() {
     const {
-      meshes,
       physics,
       player,
       projectiles,
-      seed,
-      voxels,
       world,
-      worldScale: scale,
     } = this;
 
-    world.generate(seed);
     const spawn = new Vector3(
       Math.floor(world.width * 0.5),
       0,
-      Math.floor(world.depth * 0.49)
+      Math.floor(world.depth * 0.5)
     );
     spawn
       .add({
@@ -180,31 +153,30 @@ class Gameplay extends Group {
         y: world.heightmap.view[spawn.z * world.width + spawn.x] + 1,
         z: 0.5,
       })
-      .multiplyScalar(scale);
+      .multiplyScalar(world.scale);
     spawn.y = Math.max(3, spawn.y);
     player.teleport(spawn);
 
-    const origin = { x: world.width * 0.5 * scale, z: world.depth * 0.5 * scale };
+    const origin = { x: world.width * 0.5 * world.scale, z: world.depth * 0.5 * world.scale };
     this.birds = new Birds({ anchor: player });
     this.clouds = new Clouds(origin);
     const dome = new Dome(origin);
     this.dudes = new Dudes({
       count: 32,
       spawn: {
-        origin: spawn.clone().divideScalar(scale).floor(),
+        origin: spawn.clone().divideScalar(world.scale).floor(),
         radius: 64,
       },
       world,
-      worldScale: scale,
     });
     const ocean = new Ocean({
       ...origin,
       y: 3.2,
     });
-    this.rain = new Rain({ anchor: this.player, world, worldScale: scale });
+    this.rain = new Rain({ anchor: this.player, world });
     const starfield = new Starfield(origin);
 
-    this.add(voxels);
+    this.add(world.chunks);
     this.add(this.dudes);
     this.add(projectiles);
     this.add(this.clouds);
@@ -227,18 +199,17 @@ class Gameplay extends Group {
             y: y * world.chunkSize,
             z: z * world.chunkSize,
             geometry: world.mesh(x, y, z),
-            scale,
+            scale: world.scale,
           });
           chunk.collider = new Group();
-          chunk.collider.matrixAutoUpdate = false;
           chunk.collider.position.copy(chunk.position);
           chunk.collider.physics = [];
           if (projectiles.onColliderContact) {
             chunk.collider.onContact = projectiles.onColliderContact;
           }
-          meshes.push(chunk);
+          world.meshes.push(chunk);
           if (chunk.geometry.getIndex() !== null) {
-            voxels.add(chunk);
+            world.chunks.add(chunk);
             this.updateCollider(chunk.collider, world.colliders(x, y, z), true);
           }
         }
@@ -290,7 +261,7 @@ class Gameplay extends Group {
     if (!hasLoaded) {
       return;
     }
-    this.onLocomotion({ animation, camera, isXR });
+    this.updateLocomotion({ animation, camera, isXR });
     ambient.animate(animation);
     birds.animate(animation);
     clouds.animate(animation);
@@ -305,7 +276,139 @@ class Gameplay extends Group {
     }
   }
 
-  onLocomotion({ animation, camera, isXR }) {
+  resumeAudio() {
+    const { ambient } = this;
+    ambient.resume();
+  }
+
+  spawnExplosion(position, color, scale = 0.5) {
+    const { explosions } = this;
+    const explosion = explosions.find(({ sound, visible }) => (
+      !visible && (!sound || !sound.isPlaying)
+    ));
+    if (explosion) {
+      explosion.detonate({
+        color,
+        filter: 'highpass',
+        position,
+        scale,
+      });
+    }
+  }
+
+  spawnProjectile(position, impulse) {
+    const { physics, projectile, projectiles } = this;
+    if (!this.physics) {
+      return;
+    }
+    this.projectile = (this.projectile + 1) % projectiles.count;
+    physics.setTransform(projectiles, projectile, position);
+    physics.applyImpulse(projectiles, projectile, impulse);
+    projectiles.playSound(position);
+  }
+
+  updateVoxel(brush, voxel) {
+    const {
+      chunks,
+      dudes,
+      world,
+    } = this;
+    const noise = ((brush.color.r + brush.color.g + brush.color.b) / 3) * brush.noise;
+    VoxelWorld.getBrush(brush).forEach(({ x, y, z }) => (
+      world.update({
+        x: voxel.x + x,
+        y: voxel.y + y,
+        z: voxel.z + z,
+        type: brush.type,
+        r: Math.min(Math.max((brush.color.r + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
+        g: Math.min(Math.max((brush.color.g + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
+        b: Math.min(Math.max((brush.color.b + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
+      })
+    ));
+    const chunkX = Math.floor(voxel.x / world.chunkSize);
+    const chunkY = Math.floor(voxel.y / world.chunkSize);
+    const chunkZ = Math.floor(voxel.z / world.chunkSize);
+    const topY = Math.min(chunkY + 1, chunks.y - 1);
+    Gameplay.chunkNeighbors.forEach((neighbor) => {
+      const x = chunkX + neighbor.x;
+      const z = chunkZ + neighbor.z;
+      if (x < 0 || x >= chunks.x || z < 0 || z >= chunks.z) {
+        return;
+      }
+      for (let y = 0; y <= topY; y += 1) {
+        const mesh = world.meshes[z * chunks.x * chunks.y + y * chunks.x + x];
+        const geometry = world.mesh(x, y, z);
+        if (geometry.indices.length > 0) {
+          mesh.update(geometry);
+          if (Math.abs(chunkY - y) <= 1) {
+            this.updateCollider(
+              mesh.collider,
+              world.colliders(x, y, z),
+              x === chunkX && y === chunkY && z === chunkZ
+            );
+          }
+          if (!mesh.parent) world.chunks.add(mesh);
+        } else if (mesh.parent) {
+          world.chunks.remove(mesh);
+          this.updateCollider(mesh.collider, []);
+        }
+      }
+    });
+    dudes.revaluatePaths();
+    // this.physics.wakeAll();
+  }
+
+  updateCollider(collider, boxes, force) {
+    const { physics, world } = this;
+    if (!force && collider.physics.length === boxes.length / 6) {
+      // This is kind of a hack.
+      // It will cause bugs since it could happen that the volume changed
+      // but the count of resulting boxes is the same.
+      // I need to think of a safer way to optimize this.
+      return;
+    }
+    if (collider.physics.length) {
+      physics.removeMesh(collider);
+      collider.physics.length = 0;
+    }
+    if (boxes.length) {
+      for (let i = 0, l = boxes.length; i < l; i += 6) {
+        collider.physics.push({
+          shape: 'box',
+          width: boxes[i + 3] * world.scale,
+          height: boxes[i + 4] * world.scale,
+          depth: boxes[i + 5] * world.scale,
+          position: {
+            x: (boxes[i] + boxes[i + 3] * 0.5) * world.scale,
+            y: (boxes[i + 1] + boxes[i + 4] * 0.5) * world.scale,
+            z: (boxes[i + 2] + boxes[i + 5] * 0.5) * world.scale,
+          },
+        });
+      }
+      physics.addMesh(collider, { isTrigger: !!collider.onContact });
+    }
+  }
+
+  updateLight(intensity) {
+    const { background, fog } = this;
+    this.light = intensity;
+    background.setHex(0x226699).multiplyScalar(Math.max(intensity, 0.05));
+    fog.color.copy(background);
+    Birds.material.uniforms.diffuse.value.setScalar(intensity);
+    Bodies.material.color.setScalar(Math.max(intensity, 0.3));
+    Clouds.material.color.setScalar(intensity);
+    Dome.material.uniforms.background.value.copy(background);
+    Ocean.material.color.copy(background);
+    Rain.material.uniforms.diffuse.value.copy(background);
+    Starfield.material.opacity = 1.0 - intensity;
+    [Dude.material, VoxelChunk.material].forEach(({ uniforms }) => {
+      uniforms.ambientIntensity.value = Math.max(Math.min(intensity, 0.7) / 0.7, 0.5) * 0.1;
+      uniforms.lightIntensity.value = Math.min(1.0 - Math.min(intensity, 0.5) * 2, 0.7);
+      uniforms.sunlightIntensity.value = Math.min(intensity, 0.7);
+    });
+  }
+
+  updateLocomotion({ animation, camera, isXR }) {
     const {
       locomotion: {
         direction,
@@ -376,140 +479,6 @@ class Gameplay extends Group {
     }
   }
 
-  resumeAudio() {
-    const { ambient } = this;
-    ambient.resume();
-  }
-
-  spawnExplosion(position, color, scale = 0.5) {
-    const { explosions } = this;
-    const explosion = explosions.find(({ sound, visible }) => (
-      !visible && (!sound || !sound.isPlaying)
-    ));
-    if (explosion) {
-      explosion.detonate({
-        color,
-        filter: 'highpass',
-        position,
-        scale,
-      });
-    }
-  }
-
-  spawnProjectile(position, impulse) {
-    const { physics, projectile, projectiles } = this;
-    if (!this.physics) {
-      return;
-    }
-    this.projectile = (this.projectile + 1) % projectiles.count;
-    physics.setTransform(projectiles, projectile, position);
-    physics.applyImpulse(projectiles, projectile, impulse);
-    projectiles.playSound(position);
-  }
-
-  update({ brush, voxel }) {
-    const {
-      chunks,
-      meshes,
-      dudes,
-      voxels,
-      world,
-    } = this;
-    const noise = ((brush.color.r + brush.color.g + brush.color.b) / 3) * brush.noise;
-    Gameplay.getBrush(brush).forEach(({ x, y, z }) => (
-      world.update({
-        x: voxel.x + x,
-        y: voxel.y + y,
-        z: voxel.z + z,
-        type: brush.type,
-        r: Math.min(Math.max((brush.color.r + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
-        g: Math.min(Math.max((brush.color.g + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
-        b: Math.min(Math.max((brush.color.b + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
-      })
-    ));
-    const chunkX = Math.floor(voxel.x / world.chunkSize);
-    const chunkY = Math.floor(voxel.y / world.chunkSize);
-    const chunkZ = Math.floor(voxel.z / world.chunkSize);
-    const topY = Math.min(chunkY + 1, chunks.y - 1);
-    Gameplay.chunkNeighbors.forEach((neighbor) => {
-      const x = chunkX + neighbor.x;
-      const z = chunkZ + neighbor.z;
-      if (x < 0 || x >= chunks.x || z < 0 || z >= chunks.z) {
-        return;
-      }
-      for (let y = 0; y <= topY; y += 1) {
-        const mesh = meshes[z * chunks.x * chunks.y + y * chunks.x + x];
-        const geometry = world.mesh(x, y, z);
-        if (geometry.indices.length > 0) {
-          mesh.update(geometry);
-          if (Math.abs(chunkY - y) <= 1) {
-            this.updateCollider(
-              mesh.collider,
-              world.colliders(x, y, z),
-              x === chunkX && y === chunkY && z === chunkZ
-            );
-          }
-          if (!mesh.parent) voxels.add(mesh);
-        } else if (mesh.parent) {
-          voxels.remove(mesh);
-          this.updateCollider(mesh.collider, []);
-        }
-      }
-    });
-    dudes.revaluatePaths();
-    // this.physics.wakeAll();
-  }
-
-  updateCollider(collider, boxes, force) {
-    const { physics, worldScale: scale } = this;
-    if (!force && collider.physics.length === boxes.length / 6) {
-      // This is kind of a hack.
-      // It will cause bugs since it could happen that the volume changed
-      // but the count of resulting boxes is the same.
-      // I need to think of a safer way to optimize this.
-      return;
-    }
-    if (collider.physics.length) {
-      physics.removeMesh(collider);
-      collider.physics.length = 0;
-    }
-    if (boxes.length) {
-      for (let i = 0, l = boxes.length; i < l; i += 6) {
-        collider.physics.push({
-          shape: 'box',
-          width: boxes[i + 3] * scale,
-          height: boxes[i + 4] * scale,
-          depth: boxes[i + 5] * scale,
-          position: {
-            x: (boxes[i] + boxes[i + 3] * 0.5) * scale,
-            y: (boxes[i + 1] + boxes[i + 4] * 0.5) * scale,
-            z: (boxes[i + 2] + boxes[i + 5] * 0.5) * scale,
-          },
-        });
-      }
-      physics.addMesh(collider, { isTrigger: !!collider.onContact });
-    }
-  }
-
-  updateLight(intensity) {
-    const { background, fog } = this;
-    this.light = intensity;
-    background.setHex(0x226699).multiplyScalar(Math.max(intensity, 0.05));
-    fog.color.copy(background);
-    Birds.material.uniforms.diffuse.value.setScalar(intensity);
-    Bodies.material.color.setScalar(Math.max(intensity, 0.3));
-    Clouds.material.color.setScalar(intensity);
-    Dome.material.uniforms.background.value.copy(background);
-    Ocean.material.color.copy(background);
-    Rain.material.uniforms.diffuse.value.copy(background);
-    Starfield.material.opacity = 1.0 - intensity;
-    [Dude.material, VoxelChunk.material].forEach(({ uniforms }) => {
-      uniforms.ambientIntensity.value = Math.max(Math.min(intensity, 0.7) / 0.7, 0.5) * 0.1;
-      uniforms.lightIntensity.value = Math.min(1.0 - Math.min(intensity, 0.5) * 2, 0.7);
-      uniforms.sunlightIntensity.value = Math.min(intensity, 0.7);
-    });
-  }
-
   updateRain(enabled) {
     const { ambient, rain } = this;
     if (rain.visible === enabled) {
@@ -521,44 +490,7 @@ class Gameplay extends Group {
     rain.visible = enabled;
     ambient.sounds.find(({ url }) => url === 'sounds/rain.ogg').enabled = rain.visible;
   }
-
-  static getBrush({ shape, size }) {
-    const { brushShapes, brushes } = Gameplay;
-    const key = `${shape}:${size}`;
-    let brush = brushes.get(key);
-    if (!brush) {
-      brush = [];
-      if (shape === brushShapes.box) {
-        size -= 1;
-      }
-      const radius = Math.sqrt(((size * 0.5) ** 2) * 3);
-      for (let z = -size; z <= size; z += 1) {
-        for (let y = -size; y <= size; y += 1) {
-          for (let x = -size; x <= size; x += 1) {
-            if (
-              shape === brushShapes.box
-              || Math.sqrt(x ** 2 + y ** 2 + z ** 2) <= radius
-            ) {
-              brush.push({ x, y, z });
-            }
-          }
-        }
-      }
-      brush.sort((a, b) => (
-        Math.sqrt(a.x ** 2 + a.y ** 2 + a.z ** 2) - Math.sqrt(b.x ** 2 + b.y ** 2 + b.z ** 2)
-      ));
-      brushes.set(key, brush);
-    }
-    return brush;
-  }
 }
-
-Gameplay.brushes = new Map();
-
-Gameplay.brushShapes = {
-  box: 0,
-  sphere: 1,
-};
 
 Gameplay.chunkNeighbors = [
   { x: -1, z: -1 },

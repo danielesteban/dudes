@@ -300,7 +300,10 @@ class Physics {
   }
 
   reset() {
-    // TODO!
+    // ToDo?
+    // I didn't find a way to extract the full list of bodies from the btDiscreteDynamicsWorld.
+    // So... This will require to track all the added/removed bodies in JS
+    // Which I don't want to do right now for performance.
   }
 
   simulate(delta) {

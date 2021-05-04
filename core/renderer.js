@@ -6,8 +6,8 @@ import {
   sRGBEncoding,
   WebGLRenderer,
 } from '../vendor/three.js';
+import Scene from './scene.js';
 import SetupComposer from './postprocessing.js';
-import World from './world.js';
 
 class Renderer {
   constructor({ dom, router, scenes }) {
@@ -40,7 +40,7 @@ class Renderer {
       this.composer = SetupComposer(this.renderer);
     }
 
-    this.world = new World({
+    this.scene = new Scene({
       renderer: this,
       router,
       scenes,
@@ -60,7 +60,7 @@ class Renderer {
                 .then((session) => {
                   xr.setSession(session);
                   dom.enterVR.style.display = 'none';
-                  this.world.resumeAudio();
+                  this.scene.resumeAudio();
                   session.addEventListener('end', () => {
                     xr.setSession(null);
                     dom.enterVR.style.display = '';
@@ -82,7 +82,7 @@ class Renderer {
       dom,
       fps,
       renderer,
-      world,
+      scene,
     } = this;
 
     const animation = {
@@ -91,8 +91,7 @@ class Renderer {
     };
 
     const isXR = renderer.xr.enabled && renderer.xr.isPresenting;
-    world.player.updateMatrixWorld();
-    world.onAnimationTick({
+    scene.onAnimationTick({
       animation,
       camera: isXR ? (
         renderer.xr.getCamera(camera)
@@ -103,10 +102,10 @@ class Renderer {
     });
     if (!isXR && composer) {
       composer.renderPass.camera = camera;
-      composer.renderPass.scene = world;
+      composer.renderPass.scene = scene;
       composer.render();
     } else {
-      renderer.render(world, camera);
+      renderer.render(scene, camera);
     }
 
     fps.count += 1;

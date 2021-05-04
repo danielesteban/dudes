@@ -2,8 +2,8 @@ import { Color, Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
 
 class Game extends Gameplay {
-  constructor(world) {
-    super(world);
+  constructor(scene) {
+    super(scene);
 
     const color = new Color();
     for (let i = 0, l = this.projectiles.count; i < l; i += 1) {

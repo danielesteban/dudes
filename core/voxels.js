@@ -1,15 +1,31 @@
+import { Color, Group } from '../vendor/three.js';
+
 class VoxelWorld {
   constructor({
     chunkSize = 16,
     width,
     height,
     depth,
+    scale = 0.5,
+    seed = Math.floor(Math.random() * 2147483647),
     onLoad,
   }) {
+    this.brush = {
+      color: new Color(0xAAAAAA),
+      noise: 0.15,
+      shape: VoxelWorld.brushShapes.box,
+      size: 1,
+      type: 3,
+    };
+    this.chunks = new Group();
+    this.chunks.matrixAutoUpdate = false;
     this.chunkSize = chunkSize;
+    this.meshes = [];
     this.width = width;
     this.height = height;
     this.depth = depth;
+    this.scale = scale;
+    this.seed = seed;
     const maxVoxelsPerChunk = Math.ceil(chunkSize * chunkSize * chunkSize * 0.5); // worst possible case
     const maxFacesPerChunk = maxVoxelsPerChunk * 6;
     const queueSize = width * depth * 3;
@@ -59,6 +75,7 @@ class VoxelWorld {
           address += size * type.BYTES_PER_ELEMENT;
         });
         this.world.view.set([width, height, depth]);
+        this.generate();
         if (onLoad) {
           onLoad(this);
         }
@@ -92,7 +109,12 @@ class VoxelWorld {
     return colliderBoxes.view.subarray(0, boxes * 6);
   }
 
-  findPath({ from, to, obstacles }) {
+  findPath({
+    height,
+    from,
+    to,
+    obstacles,
+  }) {
     const {
       world,
       voxels,
@@ -105,6 +127,7 @@ class VoxelWorld {
       voxels.address,
       obstaclesMap.address,
       queueA.address,
+      height,
       from.x,
       from.y,
       from.z,
@@ -118,7 +141,12 @@ class VoxelWorld {
     return queueA.view.subarray(0, nodes * 4);
   }
 
-  findTarget({ origin, radius, obstacles }) {
+  findTarget({
+    height,
+    radius,
+    origin,
+    obstacles,
+  }) {
     const {
       world,
       heightmap,
@@ -133,10 +161,11 @@ class VoxelWorld {
       voxels.address,
       obstaclesMap.address,
       queueA.address,
+      height,
+      radius,
       origin.x,
       origin.y,
-      origin.z,
-      radius
+      origin.z
     );
     if (found === 1) {
       return queueA.view.subarray(0, 4);
@@ -144,7 +173,7 @@ class VoxelWorld {
     return false;
   }
 
-  generate(seed = Math.floor(Math.random() * 2147483647)) {
+  generate() {
     const {
       world,
       heightmap,
@@ -152,6 +181,7 @@ class VoxelWorld {
       queueA,
       queueB,
       queueC,
+      seed,
     } = this;
     heightmap.view.fill(0);
     voxels.view.fill(0);
@@ -231,61 +261,6 @@ class VoxelWorld {
     );
   }
 
-  setupPakoWorker() {
-    let requestId = 0;
-    const requests = [];
-    this.pako = new Worker('/vendor/pako.worker.js');
-    this.pako.addEventListener('message', ({ data: { id, data } }) => {
-      const req = requests.findIndex((p) => p.id === id);
-      if (req !== -1) {
-        requests.splice(req, 1)[0].resolve(data);
-      }
-    });
-    this.pako.request = ({ data, operation }) => (
-      new Promise((resolve) => {
-        const id = requestId++;
-        requests.push({ id, resolve });
-        this.pako.postMessage({ id, data, operation }, [data.buffer]);
-      })
-    );
-  }
-
-  exportVoxels() {
-    if (!this.pako) this.setupPakoWorker();
-    const { voxels, pako } = this;
-    return pako.request({ data: new Uint8Array(voxels.view), operation: 'deflate' });
-  }
-
-  importVoxels(deflated) {
-    if (!this.pako) this.setupPakoWorker();
-    const {
-      width,
-      height,
-      depth,
-      heightmap,
-      voxels,
-      pako,
-    } = this;
-    return pako.request({ data: deflated, operation: 'inflate' })
-      .then((inflated) => {
-        // This should prolly be a method in the C implementation
-        for (let z = 0, index = 0; z < depth; z += 1) {
-          for (let x = 0; x < width; x += 1, index += 1) {
-            for (let y = height - 1; y >= 0; y -= 1) {
-              if (
-                y === 0
-                || inflated[(z * width * height + y * width + x) * 6] !== 0
-              ) {
-                heightmap.view[index] = y;
-                break;
-              }
-            }
-          }
-        }
-        voxels.view.set(inflated);
-      });
-  }
-
   setupObstaclesMap(obstacles) {
     const {
       obstaclesMap,
@@ -305,6 +280,43 @@ class VoxelWorld {
       obstaclesMap.view[z * width * height + y * width + x] = 1;
     });
   }
+
+  static getBrush({ shape, size }) {
+    const { brushShapes, brushes } = VoxelWorld;
+    const key = `${shape}:${size}`;
+    let brush = brushes.get(key);
+    if (!brush) {
+      brush = [];
+      if (shape === brushShapes.box) {
+        size -= 1;
+      }
+      const radius = Math.sqrt(((size * 0.5) ** 2) * 3);
+      for (let z = -size; z <= size; z += 1) {
+        for (let y = -size; y <= size; y += 1) {
+          for (let x = -size; x <= size; x += 1) {
+            if (
+              shape === brushShapes.box
+              || Math.sqrt(x ** 2 + y ** 2 + z ** 2) <= radius
+            ) {
+              brush.push({ x, y, z });
+            }
+          }
+        }
+      }
+      brush.sort((a, b) => (
+        Math.sqrt(a.x ** 2 + a.y ** 2 + a.z ** 2) - Math.sqrt(b.x ** 2 + b.y ** 2 + b.z ** 2)
+      ));
+      brushes.set(key, brush);
+    }
+    return brush;
+  }
 }
+
+VoxelWorld.brushes = new Map();
+
+VoxelWorld.brushShapes = {
+  box: 0,
+  sphere: 1,
+};
 
 export default VoxelWorld;

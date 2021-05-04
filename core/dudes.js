@@ -7,7 +7,6 @@ class Dudes extends Group {
     count,
     spawn: { origin, radius },
     world,
-    worldScale,
   }) {
     super();
     this.matrixAutoUpdate = false;
@@ -15,7 +14,6 @@ class Dudes extends Group {
     this.dudes = [];
     this.selectionMarker = new Selected();
     this.world = world;
-    this.worldScale = worldScale;
     const spec = Dude.defaultSpec;
     for (let i = 0; i < count; i += 1) {
       const height = 1.4 + Math.random() * 0.6;
@@ -58,6 +56,7 @@ class Dudes extends Group {
       let spawn;
       while (!spawn) {
         spawn = world.findTarget({
+          height: 4,
           origin,
           radius,
           obstacles: this.computeObstacles(),
@@ -67,7 +66,7 @@ class Dudes extends Group {
       dude.lighting.sunlight = spawn[3] & 0xFF;
       dude.position
         .set(spawn[0] + 0.5, spawn[1], spawn[2] + 0.5)
-        .multiplyScalar(worldScale);
+        .multiplyScalar(world.scale);
       dude.searchTimer = Math.random();
       dude.updateMatrixWorld();
       this.add(dude);
@@ -87,7 +86,6 @@ class Dudes extends Group {
       selected,
       selectionMarker,
       world,
-      worldScale: scale,
     } = this;
     selectionMarker.animate(animation);
     dudes.forEach((dude) => {
@@ -101,8 +99,9 @@ class Dudes extends Group {
         }
         dude.searchTimer = 2 + Math.random();
         const obstacles = this.computeObstacles(dude);
-        const origin = dude.position.clone().divideScalar(scale).floor();
+        const origin = dude.position.clone().divideScalar(world.scale).floor();
         const target = world.findTarget({
+          height: 4,
           origin,
           radius: 64,
           obstacles,
@@ -111,6 +110,7 @@ class Dudes extends Group {
           return;
         }
         const path = world.findPath({
+          height: 4,
           from: origin,
           to: { x: target[0], y: target[1], z: target[2] },
           obstacles,
@@ -118,19 +118,19 @@ class Dudes extends Group {
         if (path.length <= 4) {
           return;
         }
-        dude.setPath(path, scale);
+        dude.setPath(path, world.scale);
       }
     });
   }
 
   computeObstacles(exclude) {
-    const { auxVector: voxel, dudes, worldScale: scale } = this;
+    const { auxVector: voxel, dudes, world } = this;
     return dudes.reduce((obstacles, dude) => {
       if (dude !== exclude) {
         for (let i = 0, l = (dude.path ? 2 : 1); i < l; i += 1) {
           voxel
             .copy(i === 0 ? dude.position : dude.path[dude.path.length - 1].position)
-            .divideScalar(scale).floor();
+            .divideScalar(world.scale).floor();
           for (let y = 0; y < 4; y += 1) {
             obstacles.push({ x: voxel.x, y: voxel.y + y, z: voxel.z });
           }
@@ -141,18 +141,19 @@ class Dudes extends Group {
   }
 
   revaluatePaths() {
-    const { dudes, selected, world, worldScale: scale } = this;
+    const { dudes, selected, world } = this;
     dudes.forEach((dude) => {
       if (!dude.path || dude.step >= dude.path.length - 2) {
         return;
       }
       const path = world.findPath({
-        from: dude.path[dude.step].position.divideScalar(scale).floor(),
-        to: dude.path[dude.path.length - 1].position.divideScalar(scale).floor(),
+        height: 4,
+        from: dude.path[dude.step].position.divideScalar(world.scale).floor(),
+        to: dude.path[dude.path.length - 1].position.divideScalar(world.scale).floor(),
         obstacles: this.computeObstacles(dude),
       });
       if (path.length > 4) {
-        dude.setPath(path, scale, dude === selected);
+        dude.setPath(path, world.scale, dude === selected);
       } else {
         dude.onHit();
       }
@@ -170,7 +171,7 @@ class Dudes extends Group {
   }
 
   setDestination(dude, to) {
-    const { world, worldScale: scale } = this;
+    const { world } = this;
 
     // This search should prolly be a method in the C implementation
     const test = (x, y, z) => (
@@ -185,15 +186,16 @@ class Dudes extends Group {
       }
     }
 
-    const from = dude.position.clone().divideScalar(scale).floor();
+    const from = dude.position.clone().divideScalar(world.scale).floor();
     if (!from.equals(to)) {
       const path = world.findPath({
+        height: 4,
         from,
         to,
         obstacles: this.computeObstacles(dude),
       });
       if (path.length > 4) {
-        dude.setPath(path, scale, true);
+        dude.setPath(path, world.scale, true);
       }
     }
   }

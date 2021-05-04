@@ -1,23 +1,28 @@
-import { Vector3 } from '../vendor/three.js';
+import { Color, Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
+import VoxelWorld from '../core/voxels.js';
 
 class Debug extends Gameplay {
-  constructor(world) {
-    super(world);
+  constructor(scene) {
+    super(scene);
+    const explosionOrigin = new Vector3();
+    const explosionBrush = {
+      color: new Color(),
+      noise: 0,
+      type: 0,
+      shape: VoxelWorld.brushShapes.sphere,
+      size: 3,
+    };
     this.projectiles.onColliderContact = (contact) => {
       if (this.projectiles.destroyOnContact(contact)) {
-        this.update({
-          brush: {
-            ...this.brush,
-            type: 0,
-            shape: Gameplay.brushShapes.sphere,
-            size: 3,
-          },
-          voxel: (new Vector3()).copy(contact.position)
-            .divideScalar(this.worldScale)
-            .addScaledVector(contact.normal, 0.5 * this.worldScale)
-            .floor(),
-        });
+        this.updateVoxel(
+          explosionBrush,
+          explosionOrigin
+            .copy(contact.position)
+            .divideScalar(this.world.scale)
+            .addScaledVector(contact.normal, 0.5 * this.world.scale)
+            .floor()
+        );
       }
     };
     this.projectiles.onDudeContact = (contact) => {
@@ -25,17 +30,26 @@ class Debug extends Gameplay {
         contact.triggerMesh.parent.onHit();
       }
     };
+    Promise.all([...Array(5)].map(() => (
+      scene.sfx.load('/sounds/plop.ogg')
+        .then((sound) => {
+          sound.filter = sound.context.createBiquadFilter();
+          sound.setFilter(sound.filter);
+          sound.setRefDistance(8);
+          this.add(sound);
+          return sound;
+        })
+    ))).then((sfx) => { this.plops = sfx; });
   }
 
   onAnimationTick({ animation, camera, isXR }) {
     const {
-      brush,
       dudes,
       hasLoaded,
       physics,
       player,
       plops,
-      worldScale: scale,
+      world,
     } = this;
     if (!hasLoaded) {
       return;
@@ -49,7 +63,7 @@ class Debug extends Gameplay {
           dudes.setDestination(
             dudes.selected,
             hit.point
-              .divideScalar(scale)
+              .divideScalar(world.scale)
               .addScaledVector(hit.normal, 0.25)
               .floor()
           );
@@ -91,7 +105,7 @@ class Debug extends Gameplay {
         this.spawnProjectile(position, impulse);
         return;
       }
-      if (isXR && hand) {
+      if (isXR && hand && buttons.primary) {
         if (pointer.visible) {
           return;
         }
@@ -105,12 +119,12 @@ class Debug extends Gameplay {
         }
       }
       const isPlacing = isXR ? (
-        hand && pointer.visible && hand.handedness === 'right' && buttons.primaryDown
+        hand && pointer.visible && hand.handedness === 'right' && buttons.primaryUp
       ) : (
         buttons.primaryDown
       );
       const isRemoving = isXR ? (
-        hand && pointer.visible && hand.handedness === 'left' && buttons.primaryDown
+        hand && pointer.visible && hand.handedness === 'left' && buttons.primaryUp
       ) : (
         buttons.secondaryDown
       );
@@ -130,17 +144,17 @@ class Debug extends Gameplay {
             sound.play();
           }
         }
-        brush.color.setRGB(Math.random(), Math.random(), Math.random());
-        this.update({
-          brush: {
-            ...brush,
+        world.brush.color.setRGB(Math.random(), Math.random(), Math.random());
+        this.updateVoxel(
+          {
+            ...world.brush,
             ...(isRemoving ? { type: 0 } : {}),
           },
-          voxel: hit.point
-            .divideScalar(scale)
+          hit.point
+            .divideScalar(world.scale)
             .addScaledVector(hit.normal, isRemoving ? -0.25 : 0.25)
-            .floor(),
-        });
+            .floor()
+        );
       }
     });
   }

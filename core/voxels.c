@@ -366,7 +366,7 @@ static void generateBuilding(
   unsigned char* voxels,
   const int x,
   const int z,
-  const unsigned int color,
+  const unsigned int tint,
   const int size,
   const int height,
   const int floorHeight,
@@ -402,7 +402,7 @@ static void generateBuilding(
               // Windows
               fy < 5
               || fy > floorHeight - (bx == 0 || bx == size - 1 ? 4 : 5)
-              || (bz + 2) % windowsWidth < 4
+              || bz % windowsWidth < 4
             )
           ) || (
             // Exterior walls Z
@@ -412,7 +412,7 @@ static void generateBuilding(
               // Windows
               fy < 5
               || fy > floorHeight - (bz == 0 || bz == size - 1 ? 4 : 5)
-              || (bx + 2) % windowsWidth < 4
+              || bx % windowsWidth < 4
             )
           ) || (
             // Lights
@@ -468,11 +468,12 @@ static void generateBuilding(
           ) {
             type = TYPE_LIGHT;
           }
+          const unsigned int color = getColorFromNoise((tint * (f + 1)) % 0xFF);
           const int voxel = getVoxel(world, x + bx, y, z + bz);
           voxels[voxel] = type;
-          voxels[voxel + VOXEL_R] = _fnlFastMin(_fnlFastMax((int) ((color >> 16) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
-          voxels[voxel + VOXEL_G] = _fnlFastMin(_fnlFastMax((int) ((color >> 8) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
-          voxels[voxel + VOXEL_B] = _fnlFastMin(_fnlFastMax((int) (color & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_R] = _fnlFastMin(_fnlFastMax((int) ((color >> 16) & 0xFF) - (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_G] = _fnlFastMin(_fnlFastMax((int) ((color >> 8) & 0xFF) - (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_B] = _fnlFastMin(_fnlFastMax((int) (color & 0xFF) - (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
           if (y <= seaLevel) {
             voxels[voxel + VOXEL_R] /= 2;
             voxels[voxel + VOXEL_G] /= 2;
@@ -635,7 +636,7 @@ void generate(
   const int centerX = world->width * 0.5f;
   const int centerZ = world->depth * 0.5f;
   const int radius = sqrt(centerX * centerX + centerZ * centerZ) * 0.65f;
-  const int maxTerrainHeight = world->height / 3;
+  const int maxTerrainHeight = world->height / 2.5f;
   for (int z = 0; z < world->depth; z++) {
     for (int y = 0; y < maxTerrainHeight; y++) {
       for (int x = 0; x < world->width; x++) {
@@ -645,7 +646,7 @@ void generate(
         if (distance > radius) {
           continue;
         }
-        const float n = _fnlFastAbs(fnlGetNoise3D(&noise, x * 0.5f, y, z * 0.5f));
+        const float n = _fnlFastAbs(fnlGetNoise3D(&noise, (float) x * 0.5f, (float) y, (float) z * 0.5f));
         if (y == 0 || y < n * maxTerrainHeight) {
           const int voxel = getVoxel(world, x, y, z);
           voxels[voxel] = TYPE_DIRT;
@@ -668,20 +669,37 @@ void generate(
 
   srand(seed);
   {
-    const int grid = 64;
-    const int plazaW = grid * 2;
-    const int plazaD = grid * 2;
-    const int plazaX = world->width / 2 - plazaW / 2;
-    const int plazaZ = world->depth / 2 - plazaD / 2;
-    for (int z = grid; z < world->depth - grid; z += grid) {
-      for (int x = grid; x < world->width - grid; x += grid) {
+    const int grid = 80;
+    const int plaza = grid * 2;
+    {
+      const int street = (rand() % 2) * 8 + 6;
+      const int floorHeight = 12 + (rand() % 4);
+      generateBuilding(
+        world,
+        heightmap,
+        voxels,
+        world->width / 2 - grid / 2 + street,
+        world->depth / 2 - grid / 2 + street,
+        rand(),
+        grid - street * 2,
+        2 * floorHeight + 4,
+        floorHeight,
+        (1 + (rand() % 2)) * 8
+      );
+    }
+    const int from = _fnlFastMax(world->width / 2 - grid * 2, 0);
+    const int to = _fnlFastMin(world->width / 2 + grid * 2, world->width);
+    for (int z = from; z < to; z += grid) {
+      for (int x = from; x < to; x += grid) {
+        const int dx = x + grid / 2 - centerX;
+        const int dz = z + grid / 2 - centerZ;
+        const int distance = sqrt(dx * dx + dz * dz);
         if (
-          x >= plazaX && x < plazaX + plazaW
-          && z >= plazaZ && z < plazaZ + plazaD
+          distance < plaza / 2 || distance > plaza
         ) {
           continue;
         }
-        const int street = (rand() % 2) * 8;
+        const int street = (rand() % 2) * 8 + 6;
         const int floorHeight = 12 + (rand() % 4);
         generateBuilding(
           world,
@@ -689,43 +707,12 @@ void generate(
           voxels,
           x + street,
           z + street,
-          getColorFromNoise(rand() % 0xFF),
+          rand(),
           grid - street * 2,
-          (_fnlFastFloor((rand() % (world->height - floorHeight - 4)) / floorHeight) + 1) * floorHeight + 4,
+          (_fnlFastFloor((rand() % (world->height - floorHeight * 3 - 4)) / floorHeight) + 3) * floorHeight + 4,
           floorHeight,
           (1 + (rand() % 2)) * 8
         );
-      }
-    }
-  }
-
-  {
-    const int grid = 16;
-    for (int z = 0; z < world->depth; z += grid) {
-      for (int x = 0; x < world->width; x += grid) {
-        const int tx = x + rand() % grid;
-        const int tz = z + rand() % grid;
-        const int y = heightmap[tz * world->width + tx];
-        if (
-          y >= seaLevel / 2
-          && voxels[getVoxel(world, tx, y, tz)] == TYPE_DIRT
-          && rand() % 2 == 0
-        ) {
-          const int size = 10 + rand() % 10;
-          generateTree(
-            world,
-            heightmap,
-            voxels,
-            tx,
-            y + 1,
-            tz,
-            getColorFromNoise(rand() % 0xFF),
-            size,
-            _fnlFastMin(size * 0.75f, 8) + rand() % 4,
-            queueA,
-            queueB
-          );
-        }
       }
     }
   }
@@ -761,6 +748,37 @@ void generate(
               heightmap[heightmapIndex] = ly;
             }
           }
+        }
+      }
+    }
+  }
+
+  {
+    const int grid = 16;
+    for (int z = 0; z < world->depth; z += grid) {
+      for (int x = 0; x < world->width; x += grid) {
+        const int tx = x + rand() % grid;
+        const int tz = z + rand() % grid;
+        const int y = heightmap[tz * world->width + tx];
+        if (
+          y >= seaLevel / 2
+          && voxels[getVoxel(world, tx, y, tz)] == TYPE_DIRT
+          && rand() % 2 == 0
+        ) {
+          const int size = 10 + rand() % 10;
+          generateTree(
+            world,
+            heightmap,
+            voxels,
+            tx,
+            y + 1,
+            tz,
+            getColorFromNoise(rand() % 0xFF),
+            size,
+            _fnlFastMin(size * 0.75f, 8) + rand() % 4,
+            queueA,
+            queueB
+          );
         }
       }
     }
@@ -1258,30 +1276,31 @@ typedef struct {
   const World* world;
   const unsigned char* voxels;
   const unsigned char* obstacles;
+  const int height;
 } PathContext;
 
 static const unsigned char canWalk(
   const PathContext* context,
   const int x,
   const int y,
-  const int z,
-  const unsigned char hasMass
+  const int z
 ) {
   if (y <= seaLevel) {
     return 0;
   }
   const int voxel = getVoxel(context->world, x, y, z);
-  if (
-    voxel == -1
-    || (
-      hasMass ? (
-        context->voxels[voxel] == TYPE_AIR
-      ) : (
-        context->voxels[voxel] != TYPE_AIR || context->obstacles[voxel / VOXELS_STRIDE]
-      )
-    ) 
-  ) {
+  if (voxel == -1 || context->voxels[voxel] == TYPE_AIR) {
     return 0;
+  }
+  for (int h = 1; h <= context->height; h++) {
+    const int voxel = getVoxel(context->world, x, y + h, z);
+    if (
+      voxel == -1
+      || context->voxels[voxel] != TYPE_AIR
+      || context->obstacles[voxel / VOXELS_STRIDE]
+    ) {
+      return 0;
+    }
   }
   return 1;
 }
@@ -1290,117 +1309,32 @@ static void PathNodeNeighbors(ASNeighborList neighbors, void* node, void* contex
   PathNode* pathNode = (PathNode*) node;
   PathContext* pathContext = (PathContext*) context;
 
-  // Sideways
-  if (
-    canWalk(pathContext, pathNode->x + 1, pathNode->y, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x + 1, pathNode->y + 1, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x + 1, pathNode->y + 2, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x + 1, pathNode->y + 3, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x + 1, pathNode->y - 1, pathNode->z, 1)
-  ) {
+  if (canWalk(pathContext, pathNode->x + 1, pathNode->y - 1, pathNode->z)) {
     ASNeighborListAdd(neighbors, &(PathNode){pathNode->x + 1, pathNode->y, pathNode->z}, 1);
-  }
-  if (
-    canWalk(pathContext, pathNode->x - 1, pathNode->y, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x - 1, pathNode->y + 1, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x - 1, pathNode->y + 2, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x - 1, pathNode->y + 3, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x - 1, pathNode->y - 1, pathNode->z, 1)
-  ) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x - 1, pathNode->y, pathNode->z}, 1);
-  }
-  if (
-    canWalk(pathContext, pathNode->x, pathNode->y, pathNode->z + 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 1, pathNode->z + 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 2, pathNode->z + 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 3, pathNode->z + 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y - 1, pathNode->z + 1, 1)
-  ) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y, pathNode->z + 1}, 1);
-  }
-  if (
-    canWalk(pathContext, pathNode->x, pathNode->y, pathNode->z - 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 1, pathNode->z - 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 2, pathNode->z - 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 3, pathNode->z - 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y - 1, pathNode->z - 1, 1)
-  ) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y, pathNode->z - 1}, 1);
-  }
-
-  // Up
-  if (
-    canWalk(pathContext, pathNode->x + 1, pathNode->y, pathNode->z, 1)
-    && canWalk(pathContext, pathNode->x + 1, pathNode->y + 1, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x + 1, pathNode->y + 2, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x + 1, pathNode->y + 3, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x + 1, pathNode->y + 4, pathNode->z, 0)
-  ) {
+  } else if (canWalk(pathContext, pathNode->x + 1, pathNode->y, pathNode->z)) {
     ASNeighborListAdd(neighbors, &(PathNode){pathNode->x + 1, pathNode->y + 1, pathNode->z}, 1);
-  }
-  if (
-    canWalk(pathContext, pathNode->x - 1, pathNode->y, pathNode->z, 1)
-    && canWalk(pathContext, pathNode->x - 1, pathNode->y + 1, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x - 1, pathNode->y + 2, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x - 1, pathNode->y + 3, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x - 1, pathNode->y + 4, pathNode->z, 0)
-  ) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x - 1, pathNode->y + 1, pathNode->z}, 1);
-  }
-  if (
-    canWalk(pathContext, pathNode->x, pathNode->y, pathNode->z + 1, 1)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 1, pathNode->z + 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 2, pathNode->z + 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 3, pathNode->z + 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 4, pathNode->z + 1, 0)
-  ) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y + 1, pathNode->z + 1}, 1);
-  }
-  if (
-    canWalk(pathContext, pathNode->x, pathNode->y, pathNode->z - 1, 1)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 1, pathNode->z - 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 2, pathNode->z - 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 3, pathNode->z - 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 4, pathNode->z - 1, 0)
-  ) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y + 1, pathNode->z - 1}, 1);
-  }
-
-  // Down
-  if (
-    canWalk(pathContext, pathNode->x + 1, pathNode->y, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x + 1, pathNode->y + 1, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x + 1, pathNode->y + 2, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x + 1, pathNode->y - 1, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x + 1, pathNode->y - 2, pathNode->z, 1)
-  ) {
+  } else if (canWalk(pathContext, pathNode->x + 1, pathNode->y - 2, pathNode->z)) {
     ASNeighborListAdd(neighbors, &(PathNode){pathNode->x + 1, pathNode->y - 1, pathNode->z}, 1);
   }
-  if (
-    canWalk(pathContext, pathNode->x - 1, pathNode->y, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x - 1, pathNode->y + 1, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x - 1, pathNode->y + 2, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x - 1, pathNode->y - 1, pathNode->z, 0)
-    && canWalk(pathContext, pathNode->x - 1, pathNode->y - 2, pathNode->z, 1)
-  ) {
+  if (canWalk(pathContext, pathNode->x - 1, pathNode->y - 1, pathNode->z)) {
+    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x - 1, pathNode->y, pathNode->z}, 1);
+  } else if (canWalk(pathContext, pathNode->x - 1, pathNode->y, pathNode->z)) {
+    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x - 1, pathNode->y + 1, pathNode->z}, 1);
+  } else if (canWalk(pathContext, pathNode->x - 1, pathNode->y - 2, pathNode->z)) {
     ASNeighborListAdd(neighbors, &(PathNode){pathNode->x - 1, pathNode->y - 1, pathNode->z}, 1);
   }
-  if (
-    canWalk(pathContext, pathNode->x, pathNode->y, pathNode->z + 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 1, pathNode->z + 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 2, pathNode->z + 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y - 1, pathNode->z + 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y - 2, pathNode->z + 1, 1)
-  ) {
+  if (canWalk(pathContext, pathNode->x, pathNode->y - 1, pathNode->z + 1)) {
+    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y, pathNode->z + 1}, 1);
+  } else if (canWalk(pathContext, pathNode->x, pathNode->y, pathNode->z + 1)) {
+    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y + 1, pathNode->z + 1}, 1);
+  } else if (canWalk(pathContext, pathNode->x, pathNode->y - 2, pathNode->z + 1)) {
     ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y - 1, pathNode->z + 1}, 1);
   }
-  if (
-    canWalk(pathContext, pathNode->x, pathNode->y, pathNode->z - 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 1, pathNode->z - 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y + 2, pathNode->z - 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y - 1, pathNode->z - 1, 0)
-    && canWalk(pathContext, pathNode->x, pathNode->y - 2, pathNode->z - 1, 1)
-  ) {
+  if (canWalk(pathContext, pathNode->x, pathNode->y - 1, pathNode->z - 1)) {
+    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y, pathNode->z - 1}, 1);
+  } else if (canWalk(pathContext, pathNode->x, pathNode->y, pathNode->z - 1)) {
+    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y + 1, pathNode->z - 1}, 1);
+  } else if (canWalk(pathContext, pathNode->x, pathNode->y - 2, pathNode->z - 1)) {
     ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y - 1, pathNode->z - 1}, 1);
   }
 }
@@ -1431,6 +1365,7 @@ const int findPath(
   const unsigned char* voxels,
   const unsigned char* obstacles,
   int* results,
+  const int height,
   const int fromX,
   const int fromY,
   const int fromZ,
@@ -1454,7 +1389,7 @@ const int findPath(
   ) {
     return -1;
   }
-  ASPath path = ASPathCreate(&PathNodeSource, &(PathContext){world, voxels, obstacles}, &(PathNode){fromX, fromY, fromZ}, &(PathNode){toX, toY, toZ});
+  ASPath path = ASPathCreate(&PathNodeSource, &(PathContext){world, voxels, obstacles, height}, &(PathNode){fromX, fromY, fromZ}, &(PathNode){toX, toY, toZ});
   const int nodes = ASPathGetCount(path);
   for (int i = 0, p = 0; i < nodes; i++, p += 4) {
     PathNode *pathNode = ASPathGetNode(path, i);
@@ -1477,10 +1412,11 @@ const unsigned char findTarget(
   const unsigned char* voxels,
   const unsigned char* obstacles,
   int* point,
+  const int height,
+  const int radius,
   const int originX,
   const int originY,
-  const int originZ,
-  const int radius
+  const int originZ
 ) {
   const int fromX = _fnlFastMax(originX - radius, 1);
   const int toX = _fnlFastMin(originX + radius, world->width - 1);
@@ -1488,15 +1424,12 @@ const unsigned char findTarget(
   const int toZ = _fnlFastMin(originZ + radius, world->depth - 1);
   point[0] = fromX + rand() % (toX - fromX);
   point[2] = fromZ + rand() % (toZ - fromZ);
-  const int height = heightmap[(point[2] * world->width) + point[0]];
-  if (height <= seaLevel) {
+  const int groundHeight = heightmap[(point[2] * world->width) + point[0]];
+  if (groundHeight <= seaLevel) {
     return 0;
   }
   const int fromY = _fnlFastMax(originY - radius, seaLevel + 1);
-  const int toY = _fnlFastMin(_fnlFastMin(originY, height) + radius, world->height - 5);
-   if (toY <= fromY) {
-    return 0;
-  }
+  const int toY = _fnlFastMin(_fnlFastMin(originY, groundHeight) + radius, world->height - 5);
   point[1] = fromY + rand() % (toY - fromY);
   const int voxel = getVoxel(world, point[0], point[1], point[2]);
   if (
@@ -1506,14 +1439,21 @@ const unsigned char findTarget(
   }
   for (int y = point[1] - 1; y > seaLevel; y--) {
     const int type = voxels[getVoxel(world, point[0], y, point[2])];
-    if (
-      type != TYPE_AIR
-      && type != TYPE_TREE
-      && !obstacles[getVoxel(world, point[0], y + 1, point[2]) / VOXELS_STRIDE]
-      && voxels[getVoxel(world, point[0], y + 2, point[2])] == TYPE_AIR
-      && voxels[getVoxel(world, point[0], y + 3, point[2])] == TYPE_AIR
-      && voxels[getVoxel(world, point[0], y + 4, point[2])] == TYPE_AIR
-    ) {
+    if (type == TYPE_AIR || type == TYPE_TREE) {
+      continue;
+    }
+    unsigned char isValid = 1;
+    for (int h = 1; h <= height; h++) {
+      const int voxel = getVoxel(world, point[0], y + h, point[2]);
+      if (
+        voxels[voxel] != TYPE_AIR
+        || obstacles[voxel / VOXELS_STRIDE]
+      ) {
+        isValid = 0;
+        break;
+      }
+    }
+    if (isValid) {
       const int light = getVoxel(world, point[0], y + 2, point[2]);
       point[1] = y + 1;
       point[3] = (

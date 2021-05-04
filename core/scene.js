@@ -1,10 +1,10 @@
-import { Scene } from '../vendor/three.js';
+import { Scene as ThreeScene } from '../vendor/three.js';
 import Music from './music.js';
 import Physics from './physics.js';
 import Player from './player.js';
 import SFX from './sfx.js';
 
-class World extends Scene {
+class Scene extends ThreeScene {
   constructor({
     renderer: {
       camera,
@@ -102,4 +102,4 @@ class World extends Scene {
   }
 }
 
-export default World;
+export default Scene;
