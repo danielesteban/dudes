@@ -388,11 +388,12 @@ static void generateBillboard(
         ) {
           continue;
         }
+        const int type = (by == legs || by == height - 1) && bz == depth - 1 && (bx + 1) % 4 >= 2 ? TYPE_LIGHT : TYPE_STONE;
         const int voxel = getVoxel(world, x + bx, y + by, z + bz);
-        voxels[voxel] = TYPE_STONE;
-        voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) - (rand() % 0x11), 0), 0xFF);
-        voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) - (rand() % 0x11), 0), 0xFF);
-        voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel] = type;
+        voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+        voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+        voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
         const int heightmapIndex = (bz + z) * world->width + (bx + x);
         if (heightmap[heightmapIndex] < y + by) {
           heightmap[heightmapIndex] = y + by;
@@ -513,9 +514,9 @@ static void generateBuilding(
           const unsigned int color = getColorFromNoise((tint * (f + 1)) % 0xFF);
           const int voxel = getVoxel(world, x + bx, y, z + bz);
           voxels[voxel] = type;
-          voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) - (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
-          voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) - (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
-          voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) - (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
           if (y <= seaLevel) {
             voxels[voxel + VOXEL_R] /= 2;
             voxels[voxel + VOXEL_G] /= 2;
