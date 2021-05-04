@@ -153,7 +153,7 @@ class Gameplay extends Group {
       .divideScalar(world.scale)
       .floor()
       .add({ x: 0, y: 0, z: -23 });
-    const billboard = new Billboard({
+    this.billboard = new Billboard({
       x: billboardPos.x * world.scale,
       y: world.heightmap.view[billboardPos.z * world.width + billboardPos.x] * world.scale,
       z: billboardPos.z * world.scale,
@@ -180,12 +180,12 @@ class Gameplay extends Group {
 
     this.add(world.chunks);
     this.add(this.dudes);
-    this.add(billboard);
     this.add(projectiles);
     this.add(this.clouds);
     this.add(this.rain);
     this.add(starfield);
     this.add(dome);
+    this.add(this.billboard);
     this.add(this.birds);
     this.add(ocean);
 
@@ -251,6 +251,7 @@ class Gameplay extends Group {
   onAnimationTick({ animation, camera, isXR }) {
     const {
       ambient,
+      billboard,
       birds,
       clouds,
       dudes,
@@ -266,6 +267,7 @@ class Gameplay extends Group {
     }
     this.updateLocomotion({ animation, camera, isXR });
     ambient.animate(animation);
+    billboard.animate(animation);
     birds.animate(animation);
     clouds.animate(animation);
     dudes.animate(animation, player.head.position);
