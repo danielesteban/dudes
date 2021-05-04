@@ -359,6 +359,49 @@ static void pushFace(
   growBox(box, x4, y4, z4);
 }
 
+static void generateBillboard(
+  const World* world,
+  int* heightmap,
+  unsigned char* voxels,
+  const int x,
+  const int y,
+  const int z,
+  const unsigned int tint,
+  const int width,
+  const int height,
+  const int depth
+) {
+  const unsigned int color = getColorFromNoise(tint);
+  const int legs = height / 3;
+  for (int bz = 0; bz < depth; bz++) {
+    for (int by = 0; by < height; by++) {
+      for (int bx = 0; bx < width; bx++) {
+        if (
+          (
+            by < legs
+            && (bx + 1) % 4 < 2
+          ) || (
+            by > legs
+            && by < height - 1
+            && bz == depth - 1
+          )
+        ) {
+          continue;
+        }
+        const int voxel = getVoxel(world, x + bx, y + by, z + bz);
+        voxels[voxel] = TYPE_STONE;
+        voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) - (rand() % 0x11), 0), 0xFF);
+        const int heightmapIndex = (bz + z) * world->width + (bx + x);
+        if (heightmap[heightmapIndex] < y + by) {
+          heightmap[heightmapIndex] = y + by;
+        }
+      }
+    }
+  }
+}
+
 static void generateBuilding(
   const World* world,
   int* heightmap,
@@ -673,17 +716,32 @@ void generate(
     {
       const int street = (rand() % 2) * 8 + 6;
       const int floorHeight = 12 + (rand() % 4);
+      const unsigned int tint = rand();
       generateBuilding(
         world,
         heightmap,
         voxels,
         world->width / 2 - grid / 2 + street,
         world->depth / 2 - grid / 2 + street,
-        rand(),
+        tint,
         grid - street * 2,
         2 * floorHeight + 4,
         floorHeight,
         (1 + (rand() % 2)) * 8
+      );
+      const int bx = world->width / 2 - 6;
+      const int bz = world->depth / 2 - grid / 2 + street + 1;
+      generateBillboard(
+        world,
+        heightmap,
+        voxels,
+        bx,
+        heightmap[bz * world->width + bx] - 1,
+        bz,
+        tint,
+        12,
+        14,
+        3
       );
     }
     const int from = fmax(world->width / 2 - grid * 2, 0);

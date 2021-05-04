@@ -2,6 +2,7 @@ import { Color, FogExp2, Group, Matrix4, Vector3 } from '../vendor/three.js';
 import Ambient from './ambient.js';
 import Dudes from './dudes.js';
 import VoxelWorld from './voxels.js';
+import Billboard from '../renderables/billboard.js';
 import Birds from '../renderables/birds.js';
 import Bodies from '../renderables/bodies.js';
 import Dome from '../renderables/dome.js';
@@ -142,25 +143,25 @@ class Gameplay extends Group {
       world,
     } = this;
 
-    const spawn = new Vector3(
-      Math.floor(world.width * 0.5),
-      0,
-      Math.floor(world.depth * 0.5)
-    );
-    spawn
-      .add({
-        x: 0.5,
-        y: world.heightmap.view[spawn.z * world.width + spawn.x] + 1,
-        z: 0.5,
-      })
-      .multiplyScalar(world.scale);
-    spawn.y = Math.max(3, spawn.y);
+    const spawn = (new Vector3(world.width * 0.5, 0, world.depth * 0.5)).floor();
+    spawn.y = Math.max(3, world.heightmap.view[spawn.z * world.width + spawn.x] + 1);
+    spawn.multiplyScalar(world.scale);
     player.teleport(spawn);
 
-    const origin = { x: world.width * 0.5 * world.scale, z: world.depth * 0.5 * world.scale };
+    const billboardPos = spawn
+      .clone()
+      .divideScalar(world.scale)
+      .floor()
+      .add({ x: 0, y: 0, z: -23 });
+    const billboard = new Billboard({
+      x: billboardPos.x * world.scale,
+      y: world.heightmap.view[billboardPos.z * world.width + billboardPos.x] * world.scale,
+      z: billboardPos.z * world.scale,
+    });
+
     this.birds = new Birds({ anchor: player });
-    this.clouds = new Clouds(origin);
-    const dome = new Dome(origin);
+    this.clouds = new Clouds(spawn);
+    const dome = new Dome(spawn);
     this.dudes = new Dudes({
       count: 32,
       spawn: {
@@ -170,14 +171,16 @@ class Gameplay extends Group {
       world,
     });
     const ocean = new Ocean({
-      ...origin,
+      x: spawn.x,
       y: 3.2,
+      z: spawn.z,
     });
     this.rain = new Rain({ anchor: this.player, world });
-    const starfield = new Starfield(origin);
+    const starfield = new Starfield(spawn);
 
     this.add(world.chunks);
     this.add(this.dudes);
+    this.add(billboard);
     this.add(projectiles);
     this.add(this.clouds);
     this.add(this.rain);
