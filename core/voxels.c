@@ -388,7 +388,11 @@ static void generateBillboard(
         ) {
           continue;
         }
-        const int type = (by == legs || by == height - 1) && bz == depth - 1 && (bx + 1) % 4 >= 2 ? TYPE_LIGHT : TYPE_STONE;
+        const int type = (
+          (by == legs || by == height - 1)
+          && bz == depth - 1
+          && (bx + 1) % 4 >= 2
+        ) ? TYPE_LIGHT : TYPE_STONE;
         const int voxel = getVoxel(world, x + bx, y + by, z + bz);
         voxels[voxel] = type;
         voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
