@@ -146,17 +146,19 @@ class Dudes extends Group {
       if (!dude.path || dude.step >= dude.path.length - 2) {
         return;
       }
-      const path = world.findPath({
-        height: 4,
-        from: dude.path[dude.step].position.divideScalar(world.scale).floor(),
-        to: dude.path[dude.path.length - 1].position.divideScalar(world.scale).floor(),
-        obstacles: this.computeObstacles(dude),
-      });
-      if (path.length > 4) {
-        dude.setPath(path, world.scale, dude === selected);
-      } else {
-        dude.onHit();
-      }
+      dude.revaluate = () => {
+        const path = world.findPath({
+          height: 4,
+          from: dude.path[dude.step].position.divideScalar(world.scale).floor(),
+          to: dude.path[dude.path.length - 1].position.divideScalar(world.scale).floor(),
+          obstacles: this.computeObstacles(dude),
+        });
+        if (path.length > 4) {
+          dude.setPath(path, world.scale, dude === selected);
+        } else {
+          dude.onHit();
+        }
+      };
     });
   }
 

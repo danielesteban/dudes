@@ -527,6 +527,12 @@ class Dude extends SkinnedMesh {
         from.direction.copy(to.direction);
         return;
       }
+      if (this.revaluate) {
+        const { revaluate } = this;
+        delete this.revaluate;
+        revaluate();
+        return;
+      }
       this.step += 1;
       if (this.step >= path.length - 1) {
         delete this.path;
