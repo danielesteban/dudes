@@ -297,57 +297,6 @@ class Gameplay extends Group {
     projectiles.playSound(position);
   }
 
-  updateVoxel(brush, voxel) {
-    const {
-      chunks,
-      dudes,
-      world,
-    } = this;
-    const noise = ((brush.color.r + brush.color.g + brush.color.b) / 3) * brush.noise;
-    VoxelWorld.getBrush(brush).forEach(({ x, y, z }) => (
-      world.update({
-        x: voxel.x + x,
-        y: voxel.y + y,
-        z: voxel.z + z,
-        type: brush.type,
-        r: Math.min(Math.max((brush.color.r + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
-        g: Math.min(Math.max((brush.color.g + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
-        b: Math.min(Math.max((brush.color.b + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
-      })
-    ));
-    const chunkX = Math.floor(voxel.x / world.chunkSize);
-    const chunkY = Math.floor(voxel.y / world.chunkSize);
-    const chunkZ = Math.floor(voxel.z / world.chunkSize);
-    const topY = Math.min(chunkY + 1, chunks.y - 1);
-    Gameplay.chunkNeighbors.forEach((neighbor) => {
-      const x = chunkX + neighbor.x;
-      const z = chunkZ + neighbor.z;
-      if (x < 0 || x >= chunks.x || z < 0 || z >= chunks.z) {
-        return;
-      }
-      for (let y = 0; y <= topY; y += 1) {
-        const mesh = world.meshes[z * chunks.x * chunks.y + y * chunks.x + x];
-        const geometry = world.mesh(x, y, z);
-        if (geometry.indices.length > 0) {
-          mesh.update(geometry);
-          if (Math.abs(chunkY - y) <= 1) {
-            this.updateCollider(
-              mesh.collider,
-              world.colliders(x, y, z),
-              x === chunkX && y === chunkY && z === chunkZ
-            );
-          }
-          if (!mesh.parent) world.chunks.add(mesh);
-        } else if (mesh.parent) {
-          world.chunks.remove(mesh);
-          this.updateCollider(mesh.collider, []);
-        }
-      }
-    });
-    dudes.revaluatePaths();
-    // this.physics.wakeAll();
-  }
-
   updateCollider(collider, boxes, force) {
     const { physics, world } = this;
     if (!force && collider.physics.length === boxes.length / 6) {
@@ -479,6 +428,57 @@ class Gameplay extends Group {
     }
     rain.visible = enabled;
     ambient.sounds.find(({ url }) => url === 'sounds/rain.ogg').enabled = rain.visible;
+  }
+
+  updateVoxel(brush, voxel) {
+    const {
+      chunks,
+      dudes,
+      world,
+    } = this;
+    const noise = ((brush.color.r + brush.color.g + brush.color.b) / 3) * brush.noise;
+    VoxelWorld.getBrush(brush).forEach(({ x, y, z }) => (
+      world.update({
+        x: voxel.x + x,
+        y: voxel.y + y,
+        z: voxel.z + z,
+        type: brush.type,
+        r: Math.min(Math.max((brush.color.r + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
+        g: Math.min(Math.max((brush.color.g + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
+        b: Math.min(Math.max((brush.color.b + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
+      })
+    ));
+    const chunkX = Math.floor(voxel.x / world.chunkSize);
+    const chunkY = Math.floor(voxel.y / world.chunkSize);
+    const chunkZ = Math.floor(voxel.z / world.chunkSize);
+    const topY = Math.min(chunkY + 1, chunks.y - 1);
+    Gameplay.chunkNeighbors.forEach((neighbor) => {
+      const x = chunkX + neighbor.x;
+      const z = chunkZ + neighbor.z;
+      if (x < 0 || x >= chunks.x || z < 0 || z >= chunks.z) {
+        return;
+      }
+      for (let y = 0; y <= topY; y += 1) {
+        const mesh = world.meshes[z * chunks.x * chunks.y + y * chunks.x + x];
+        const geometry = world.mesh(x, y, z);
+        if (geometry.indices.length > 0) {
+          mesh.update(geometry);
+          if (Math.abs(chunkY - y) <= 1) {
+            this.updateCollider(
+              mesh.collider,
+              world.colliders(x, y, z),
+              x === chunkX && y === chunkY && z === chunkZ
+            );
+          }
+          if (!mesh.parent) world.chunks.add(mesh);
+        } else if (mesh.parent) {
+          world.chunks.remove(mesh);
+          this.updateCollider(mesh.collider, []);
+        }
+      }
+    });
+    dudes.revaluatePaths();
+    // this.physics.wakeAll();
   }
 }
 
