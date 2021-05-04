@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include "../vendor/AStar/AStar.h"
 #define FNL_IMPL
 #include "../vendor/FastNoiseLite.h"
@@ -150,9 +149,9 @@ static void floodLight(
       continue;
     }
     const int index = voxel / VOXELS_STRIDE,
-              z = _fnlFastFloor(index / (world->width * world->height)),
-              y = _fnlFastFloor((index % (world->width * world->height)) / world->width),
-              x = _fnlFastFloor((index % (world->width * world->height)) % world->width);
+              z = floor(index / (world->width * world->height)),
+              y = floor((index % (world->width * world->height)) / world->width),
+              x = floor((index % (world->width * world->height)) % world->width);
     for (unsigned char n = 0; n < 6; n += 1) {
       const int nx = x + neighbors[n * 3],
                 ny = y + neighbors[n * 3 + 1],
@@ -209,9 +208,9 @@ static void removeLight(
     const int voxel = queue[i];
     const unsigned char light = queue[i + 1];
     const int index = voxel / VOXELS_STRIDE,
-              z = _fnlFastFloor(index / (world->width * world->height)),
-              y = _fnlFastFloor((index % (world->width * world->height)) / world->width),
-              x = _fnlFastFloor((index % (world->width * world->height)) % world->width);
+              z = floor(index / (world->width * world->height)),
+              y = floor((index % (world->width * world->height)) / world->width),
+              x = floor((index % (world->width * world->height)) % world->width);
     for (unsigned char n = 0; n < 6; n += 1) {
       const int neighbor = getVoxel(
         world,
@@ -376,7 +375,7 @@ static void generateBuilding(
     for (int y = 0; y < height; y++) {
       for (int bx = 0; bx < size; bx++) {
         const int fy = y % floorHeight;
-        const int f = _fnlFastFloor(y / floorHeight);
+        const int f = floor(y / floorHeight);
         if (
           (
             // Floors
@@ -471,9 +470,9 @@ static void generateBuilding(
           const unsigned int color = getColorFromNoise((tint * (f + 1)) % 0xFF);
           const int voxel = getVoxel(world, x + bx, y, z + bz);
           voxels[voxel] = type;
-          voxels[voxel + VOXEL_R] = _fnlFastMin(_fnlFastMax((int) ((color >> 16) & 0xFF) - (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
-          voxels[voxel + VOXEL_G] = _fnlFastMin(_fnlFastMax((int) ((color >> 8) & 0xFF) - (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
-          voxels[voxel + VOXEL_B] = _fnlFastMin(_fnlFastMax((int) (color & 0xFF) - (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) - (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) - (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) - (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
           if (y <= seaLevel) {
             voxels[voxel + VOXEL_R] /= 2;
             voxels[voxel + VOXEL_G] /= 2;
@@ -513,31 +512,31 @@ static void growTree(
     const int voxel = queue[i];
     const int distance = queue[i + 1];
     const int index = voxel / VOXELS_STRIDE,
-          z = _fnlFastFloor(index / (world->width * world->height)),
-          y = _fnlFastFloor((index % (world->width * world->height)) / world->width),
-          x = _fnlFastFloor((index % (world->width * world->height)) % world->width);
+          z = floor(index / (world->width * world->height)),
+          y = floor((index % (world->width * world->height)) / world->width),
+          x = floor((index % (world->width * world->height)) % world->width);
     const unsigned char isTrunk = distance <= trunk;
     if (isTrunk) {
       for (int j = -1; j <= 1; j += 1) {
         for (int k = -1; k <= 1; k += 1) {
           const int n = getVoxel(world, x + j, y, z + k);
           voxels[n] = TYPE_TREE;
-          voxels[n + VOXEL_R] = _fnlFastMax((int) ((color >> 16) & 0xFF) / 2 - (rand() % 0x11), 0);
-          voxels[n + VOXEL_G] = _fnlFastMax((int) ((color >> 8) & 0xFF) / 2 - (rand() % 0x11), 0);
-          voxels[n + VOXEL_B] = _fnlFastMax((int) (color & 0xFF) / 2 - (rand() % 0x11), 0);
+          voxels[n + VOXEL_R] = fmax((int) ((color >> 16) & 0xFF) / 2 - (rand() % 0x11), 0);
+          voxels[n + VOXEL_G] = fmax((int) ((color >> 8) & 0xFF) / 2 - (rand() % 0x11), 0);
+          voxels[n + VOXEL_B] = fmax((int) (color & 0xFF) / 2 - (rand() % 0x11), 0);
         }
       }
     } else {
-      const int f = _fnlFastFloor(((distance - trunk) / size) * 0x33);
+      const int f = floor(((distance - trunk) / size) * 0x33);
       voxels[voxel] = TYPE_TREE;
       if (distance < branches) {
-        voxels[voxel + VOXEL_R] = _fnlFastMin(_fnlFastMax((int) ((color >> 16) & 0xFF) / 2 + f - (rand() % 0x11), 0), 0xFF);
-        voxels[voxel + VOXEL_G] = _fnlFastMin(_fnlFastMax((int) ((color >> 8) & 0xFF) / 2 + f - (rand() % 0x11), 0), 0xFF);
-        voxels[voxel + VOXEL_B] = _fnlFastMin(_fnlFastMax((int) (color & 0xFF) / 2 + f - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) / 2 + f - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) / 2 + f - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) / 2 + f - (rand() % 0x11), 0), 0xFF);
       } else {
-        voxels[voxel + VOXEL_R] = _fnlFastMin(_fnlFastMax((int) ((color >> 16) & 0xFF) + f - (rand() % 0x11), 0), 0xFF);
-        voxels[voxel + VOXEL_G] = _fnlFastMin(_fnlFastMax((int) ((color >> 8) & 0xFF) + f - (rand() % 0x11), 0), 0xFF);
-        voxels[voxel + VOXEL_B] = _fnlFastMin(_fnlFastMax((int) (color & 0xFF) + f - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + f - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + f - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + f - (rand() % 0x11), 0), 0xFF);
       }
     }
     const int heightmapIndex = z * world->width + x;
@@ -606,7 +605,7 @@ static void generateTree(
   int* queueA,
   int* queueB
 ) {
-  queueA[0] = getVoxel(world, x, _fnlFastMax(y - 1, 0), z);
+  queueA[0] = getVoxel(world, x, fmax(y - 1, 0), z);
   queueA[1] = 0;
   growTree(
     world,
@@ -614,7 +613,7 @@ static void generateTree(
     voxels,
     color,
     size,
-    size + _fnlFastFloor(radius * 0.75f),
+    size + floor(radius * 0.75f),
     size + radius,
     queueA,
     2,
@@ -646,7 +645,7 @@ void generate(
         if (distance > radius) {
           continue;
         }
-        const float n = _fnlFastAbs(fnlGetNoise3D(&noise, (float) x * 0.5f, (float) y, (float) z * 0.5f));
+        const float n = fabs(fnlGetNoise3D(&noise, (float) x * 0.5f, (float) y, (float) z * 0.5f));
         if (y == 0 || y < n * maxTerrainHeight) {
           const int voxel = getVoxel(world, x, y, z);
           voxels[voxel] = TYPE_DIRT;
@@ -687,8 +686,8 @@ void generate(
         (1 + (rand() % 2)) * 8
       );
     }
-    const int from = _fnlFastMax(world->width / 2 - grid * 2, 0);
-    const int to = _fnlFastMin(world->width / 2 + grid * 2, world->width);
+    const int from = fmax(world->width / 2 - grid * 2, 0);
+    const int to = fmin(world->width / 2 + grid * 2, world->width);
     for (int z = from; z < to; z += grid) {
       for (int x = from; x < to; x += grid) {
         const int dx = x + grid / 2 - centerX;
@@ -709,7 +708,7 @@ void generate(
           z + street,
           rand(),
           grid - street * 2,
-          (_fnlFastFloor((rand() % (world->height - floorHeight * 3 - 4)) / floorHeight) + 3) * floorHeight + 4,
+          (floor((rand() % (world->height - floorHeight * 3 - 4)) / floorHeight) + 3) * floorHeight + 4,
           floorHeight,
           (1 + (rand() % 2)) * 8
         );
@@ -735,9 +734,9 @@ void generate(
             const int voxel = getVoxel(world, lx, ly, lz);
             voxels[voxel] = i == 0 ? TYPE_STONE : TYPE_LIGHT;
             if (i == 0) {
-              voxels[voxel + VOXEL_R] = _fnlFastMin(voxels[ground + VOXEL_R] + (rand() % 0x11), 0xFF);
-              voxels[voxel + VOXEL_G] = _fnlFastMin(voxels[ground + VOXEL_G] + (rand() % 0x11), 0xFF);
-              voxels[voxel + VOXEL_B] = _fnlFastMin(voxels[ground + VOXEL_B] + (rand() % 0x11), 0xFF);
+              voxels[voxel + VOXEL_R] = fmin(voxels[ground + VOXEL_R] + (rand() % 0x11), 0xFF);
+              voxels[voxel + VOXEL_G] = fmin(voxels[ground + VOXEL_G] + (rand() % 0x11), 0xFF);
+              voxels[voxel + VOXEL_B] = fmin(voxels[ground + VOXEL_B] + (rand() % 0x11), 0xFF);
             } else {
               voxels[voxel + VOXEL_R] = 0xEE - (rand() % 0x11);
               voxels[voxel + VOXEL_G] = 0xEE - (rand() % 0x11);
@@ -775,7 +774,7 @@ void generate(
             tz,
             getColorFromNoise(rand() % 0xFF),
             size,
-            _fnlFastMin(size * 0.75f, 8) + rand() % 4,
+            fmin(size * 0.75f, 8) + rand() % 4,
             queueA,
             queueB
           );
@@ -1342,7 +1341,7 @@ static void PathNodeNeighbors(ASNeighborList neighbors, void* node, void* contex
 static float PathNodeHeuristic(void *fromNode, void *toNode, void *context) {
   PathNode* from = (PathNode*) fromNode;
   PathNode* to = (PathNode*) toNode;
-  return (_fnlFastAbs(from->x - to->x) + _fnlFastAbs(from->y - to->y) + _fnlFastAbs(from->z - to->z));
+  return (abs(from->x - to->x) + abs(from->y - to->y) + abs(from->z - to->z));
 }
 
 static int EarlyExit(size_t visitedCount, void *visitingNode, void *goalNode, void *context) {
@@ -1418,18 +1417,18 @@ const unsigned char findTarget(
   const int originY,
   const int originZ
 ) {
-  const int fromX = _fnlFastMax(originX - radius, 1);
-  const int toX = _fnlFastMin(originX + radius, world->width - 1);
-  const int fromZ = _fnlFastMax(originZ - radius, 1);
-  const int toZ = _fnlFastMin(originZ + radius, world->depth - 1);
+  const int fromX = fmax(originX - radius, 1);
+  const int toX = fmin(originX + radius, world->width - 1);
+  const int fromZ = fmax(originZ - radius, 1);
+  const int toZ = fmin(originZ + radius, world->depth - 1);
   point[0] = fromX + rand() % (toX - fromX);
   point[2] = fromZ + rand() % (toZ - fromZ);
   const int groundHeight = heightmap[(point[2] * world->width) + point[0]];
   if (groundHeight <= seaLevel) {
     return 0;
   }
-  const int fromY = _fnlFastMax(originY - radius, seaLevel + 1);
-  const int toY = _fnlFastMin(_fnlFastMin(originY, groundHeight) + radius, world->height - 5);
+  const int fromY = fmax(originY - radius, seaLevel + 1);
+  const int toY = fmin(fmin(originY, groundHeight) + radius, world->height - 5);
   point[1] = fromY + rand() % (toY - fromY);
   const int voxel = getVoxel(world, point[0], point[1], point[2]);
   if (
