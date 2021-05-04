@@ -3,7 +3,11 @@ import Gameplay from '../core/gameplay.js';
 
 class Game extends Gameplay {
   constructor(scene) {
-    super(scene);
+    super(scene, {
+      width: 160,
+      height: 48,
+      depth: 160,
+    });
 
     const color = new Color();
     for (let i = 0, l = this.projectiles.count; i < l; i += 1) {

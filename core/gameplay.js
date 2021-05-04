@@ -2,7 +2,6 @@ import { Color, FogExp2, Group, Matrix4, Vector3 } from '../vendor/three.js';
 import Ambient from './ambient.js';
 import Dudes from './dudes.js';
 import VoxelWorld from './voxels.js';
-import Billboard from '../renderables/billboard.js';
 import Birds from '../renderables/birds.js';
 import Bodies from '../renderables/bodies.js';
 import Dome from '../renderables/dome.js';
@@ -16,7 +15,7 @@ import Starfield from '../renderables/starfield.js';
 import VoxelChunk from '../renderables/chunk.js';
 
 class Gameplay extends Group {
-  constructor(scene, seed = 970297029704) {
+  constructor(scene, options) {
     super();
     this.matrixAutoUpdate = false;
 
@@ -27,7 +26,7 @@ class Gameplay extends Group {
     this.ambient = new Ambient({
       anchor: this.player.head,
       isRunning: this.player.head.context.state === 'running',
-      range: { from: 0, to: 64 },
+      range: { from: 0, to: Math.round(options.height * 0.7) },
       sounds: [
         {
           url: '/sounds/sea.ogg',
@@ -120,10 +119,10 @@ class Gameplay extends Group {
       scene.getPhysics(),
       new Promise((resolve) => {
         const world = new VoxelWorld({
-          width: 400,
-          height: 96,
-          depth: 400,
-          seed,
+          width: options.width,
+          height: options.height,
+          depth: options.depth,
+          seed: options.seed,
           onLoad: () => resolve(world),
         });
       }),
@@ -147,17 +146,6 @@ class Gameplay extends Group {
     spawn.y = Math.max(3, world.heightmap.view[spawn.z * world.width + spawn.x] + 1);
     spawn.multiplyScalar(world.scale);
     player.teleport(spawn);
-
-    const billboardPos = spawn
-      .clone()
-      .divideScalar(world.scale)
-      .floor()
-      .add({ x: 0, y: 0, z: -23 });
-    this.billboard = new Billboard({
-      x: billboardPos.x * world.scale,
-      y: world.heightmap.view[billboardPos.z * world.width + billboardPos.x] * world.scale,
-      z: billboardPos.z * world.scale,
-    });
 
     this.birds = new Birds({ anchor: player });
     this.clouds = new Clouds(spawn);
@@ -185,7 +173,6 @@ class Gameplay extends Group {
     this.add(this.rain);
     this.add(starfield);
     this.add(dome);
-    this.add(this.billboard);
     this.add(this.birds);
     this.add(ocean);
 
@@ -251,7 +238,6 @@ class Gameplay extends Group {
   onAnimationTick({ animation, camera, isXR }) {
     const {
       ambient,
-      billboard,
       birds,
       clouds,
       dudes,
@@ -267,7 +253,6 @@ class Gameplay extends Group {
     }
     this.updateLocomotion({ animation, camera, isXR });
     ambient.animate(animation);
-    billboard.animate(animation);
     birds.animate(animation);
     clouds.animate(animation);
     dudes.animate(animation, player.head.position);

@@ -1,10 +1,16 @@
 import { Color, Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
 import VoxelWorld from '../core/voxels.js';
+import Billboard from '../renderables/billboard.js';
 
 class Debug extends Gameplay {
   constructor(scene) {
-    super(scene);
+    super(scene, {
+      width: 400,
+      height: 96,
+      depth: 400,
+      seed: 970297029704,
+    });
     const explosionOrigin = new Vector3();
     const explosionBrush = {
       color: new Color(),
@@ -42,8 +48,25 @@ class Debug extends Gameplay {
     ))).then((sfx) => { this.plops = sfx; });
   }
 
+  onLoad() {
+    const { world, player } = this;
+    super.onLoad();
+    const billboardPos = player.position
+      .clone()
+      .divideScalar(world.scale)
+      .floor()
+      .add({ x: 0, y: 0, z: -23 });
+    this.billboard = new Billboard({
+      x: billboardPos.x * world.scale,
+      y: world.heightmap.view[billboardPos.z * world.width + billboardPos.x] * world.scale,
+      z: billboardPos.z * world.scale,
+    });
+    this.add(this.billboard);
+  }
+
   onAnimationTick({ animation, camera, isXR }) {
     const {
+      billboard,
       dudes,
       hasLoaded,
       physics,
@@ -55,6 +78,7 @@ class Debug extends Gameplay {
       return;
     }
     super.onAnimationTick({ animation, camera, isXR });
+    billboard.animate(animation);
     if (!isXR) {
       const { buttons, raycaster } = player.desktop;
       if (dudes.selected && buttons.primaryDown) {
