@@ -906,7 +906,7 @@ void update(
   const unsigned char b
 ) {
   if (
-    x < 1 || y >= world->width - 1
+    x < 1 || x >= world->width - 1
     || y < 1 || y >= world->height - 1
     || z < 1 || z >= world->depth - 1
   ) {
