@@ -4,6 +4,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import copy from 'rollup-plugin-copy';
 import serve from 'rollup-plugin-serve';
 import { terser } from 'rollup-plugin-terser';
+import { watchExternal } from 'rollup-plugin-watch-external';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -23,18 +24,20 @@ export default {
     resolve({ browser: true }),
     copy({
       targets: [
-        { src: 'core/voxels.wasm', dest: 'dist' },
-        { src: 'index.css', dest: 'dist' },
-        { src: 'index.html', dest: 'dist' },
         { src: 'node_modules/three/examples/js/libs/ammo.wasm.*', dest: 'dist' },
+        { src: 'index.*', dest: 'dist' },
         { src: 'screenshot.png', dest: 'dist' },
         { src: 'sounds/*.ogg', dest: 'dist/sounds' },
+        { src: 'core/voxels.wasm', dest: 'dist' },
       ],
     }),
     ...(production ? (
       [terser(), cname('dudes.gatunes.com')]
     ) : (
-      [serve({ contentBase: path.join(__dirname, 'dist'), port: 8080 })])
+      [
+        watchExternal({ entries: ['core/voxels.wasm'] }),
+        serve({ contentBase: path.join(__dirname, 'dist'), port: 8080 })])
     ),
   ],
+  watch: { clearScreen: false },
 };
