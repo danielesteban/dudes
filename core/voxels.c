@@ -1381,37 +1381,37 @@ static const unsigned char canWalk(
   return 1;
 }
 
-static void PathNodeNeighbors(ASNeighborList neighbors, void* node, void* context) {
-  PathNode* pathNode = (PathNode*) node;
-  PathContext* pathContext = (PathContext*) context;
+static void PathNodeNeighbors(ASNeighborList neighbors, void* pathNode, void* pathContext) {
+  PathNode* node = (PathNode*) pathNode;
+  PathContext* context = (PathContext*) pathContext;
 
-  if (canWalk(pathContext, pathNode->x + 1, pathNode->y - 1, pathNode->z)) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x + 1, pathNode->y, pathNode->z}, 1);
-  } else if (canWalk(pathContext, pathNode->x + 1, pathNode->y, pathNode->z)) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x + 1, pathNode->y + 1, pathNode->z}, 2);
-  } else if (canWalk(pathContext, pathNode->x + 1, pathNode->y - 2, pathNode->z)) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x + 1, pathNode->y - 1, pathNode->z}, 2);
+  if (canWalk(context, node->x + 1, node->y - 1, node->z)) {
+    ASNeighborListAdd(neighbors, &(PathNode){node->x + 1, node->y, node->z}, 1);
+  } else if (canWalk(context, node->x + 1, node->y, node->z)) {
+    ASNeighborListAdd(neighbors, &(PathNode){node->x + 1, node->y + 1, node->z}, 2);
+  } else if (canWalk(context, node->x + 1, node->y - 2, node->z)) {
+    ASNeighborListAdd(neighbors, &(PathNode){node->x + 1, node->y - 1, node->z}, 2);
   }
-  if (canWalk(pathContext, pathNode->x - 1, pathNode->y - 1, pathNode->z)) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x - 1, pathNode->y, pathNode->z}, 1);
-  } else if (canWalk(pathContext, pathNode->x - 1, pathNode->y, pathNode->z)) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x - 1, pathNode->y + 1, pathNode->z}, 2);
-  } else if (canWalk(pathContext, pathNode->x - 1, pathNode->y - 2, pathNode->z)) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x - 1, pathNode->y - 1, pathNode->z}, 2);
+  if (canWalk(context, node->x - 1, node->y - 1, node->z)) {
+    ASNeighborListAdd(neighbors, &(PathNode){node->x - 1, node->y, node->z}, 1);
+  } else if (canWalk(context, node->x - 1, node->y, node->z)) {
+    ASNeighborListAdd(neighbors, &(PathNode){node->x - 1, node->y + 1, node->z}, 2);
+  } else if (canWalk(context, node->x - 1, node->y - 2, node->z)) {
+    ASNeighborListAdd(neighbors, &(PathNode){node->x - 1, node->y - 1, node->z}, 2);
   }
-  if (canWalk(pathContext, pathNode->x, pathNode->y - 1, pathNode->z + 1)) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y, pathNode->z + 1}, 1);
-  } else if (canWalk(pathContext, pathNode->x, pathNode->y, pathNode->z + 1)) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y + 1, pathNode->z + 1}, 2);
-  } else if (canWalk(pathContext, pathNode->x, pathNode->y - 2, pathNode->z + 1)) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y - 1, pathNode->z + 1}, 2);
+  if (canWalk(context, node->x, node->y - 1, node->z + 1)) {
+    ASNeighborListAdd(neighbors, &(PathNode){node->x, node->y, node->z + 1}, 1);
+  } else if (canWalk(context, node->x, node->y, node->z + 1)) {
+    ASNeighborListAdd(neighbors, &(PathNode){node->x, node->y + 1, node->z + 1}, 2);
+  } else if (canWalk(context, node->x, node->y - 2, node->z + 1)) {
+    ASNeighborListAdd(neighbors, &(PathNode){node->x, node->y - 1, node->z + 1}, 2);
   }
-  if (canWalk(pathContext, pathNode->x, pathNode->y - 1, pathNode->z - 1)) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y, pathNode->z - 1}, 1);
-  } else if (canWalk(pathContext, pathNode->x, pathNode->y, pathNode->z - 1)) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y + 1, pathNode->z - 1}, 2);
-  } else if (canWalk(pathContext, pathNode->x, pathNode->y - 2, pathNode->z - 1)) {
-    ASNeighborListAdd(neighbors, &(PathNode){pathNode->x, pathNode->y - 1, pathNode->z - 1}, 2);
+  if (canWalk(context, node->x, node->y - 1, node->z - 1)) {
+    ASNeighborListAdd(neighbors, &(PathNode){node->x, node->y, node->z - 1}, 1);
+  } else if (canWalk(context, node->x, node->y, node->z - 1)) {
+    ASNeighborListAdd(neighbors, &(PathNode){node->x, node->y + 1, node->z - 1}, 2);
+  } else if (canWalk(context, node->x, node->y - 2, node->z - 1)) {
+    ASNeighborListAdd(neighbors, &(PathNode){node->x, node->y - 1, node->z - 1}, 2);
   }
 }
 
@@ -1465,14 +1465,19 @@ const int findPath(
   ) {
     return -1;
   }
-  ASPath path = ASPathCreate(&PathNodeSource, &(PathContext){world, voxels, obstacles, height}, &(PathNode){fromX, fromY, fromZ}, &(PathNode){toX, toY, toZ});
+  ASPath path = ASPathCreate(
+    &PathNodeSource,
+    &(PathContext){world, voxels, obstacles, height},
+    &(PathNode){fromX, fromY, fromZ},
+    &(PathNode){toX, toY, toZ}
+  );
   const int nodes = ASPathGetCount(path);
   for (int i = 0, p = 0; i < nodes; i++, p += 4) {
-    PathNode *pathNode = ASPathGetNode(path, i);
-    const int light = getVoxel(world, pathNode->x, pathNode->y + 1, pathNode->z);
-    results[p] = pathNode->x;
-    results[p + 1] = pathNode->y;
-    results[p + 2] = pathNode->z;
+    PathNode *node = ASPathGetNode(path, i);
+    const int light = getVoxel(world, node->x, node->y + 1, node->z);
+    results[p] = node->x;
+    results[p + 1] = node->y;
+    results[p + 2] = node->z;
     results[p + 3] = (
       (((unsigned char) ((float) voxels[light + VOXEL_LIGHT] / maxLight * 0xFF)) << 8)
       | ((unsigned char) ((float) voxels[light + VOXEL_SUNLIGHT] / maxLight * 0xFF))
