@@ -31,13 +31,13 @@ export default {
         { src: 'core/voxels.wasm', dest: 'dist' },
       ],
     }),
-    ...(production ? (
-      [terser(), cname('dudes.gatunes.com')]
-    ) : (
-      [
-        watchExternal({ entries: ['core/voxels.wasm'] }),
-        serve({ contentBase: path.join(__dirname, 'dist'), port: 8080 })])
-    ),
+    ...(production ? [
+      cname('dudes.gatunes.com'),
+      terser(),
+    ] : [
+      serve({ contentBase: path.join(__dirname, 'dist'), port: 8080 }),
+      watchExternal({ entries: ['core/voxels.wasm'] }),
+    ]),
   ],
   watch: { clearScreen: false },
 };
