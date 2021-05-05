@@ -1392,6 +1392,7 @@ static void PathNodeNeighbors(ASNeighborList neighbors, void* pathNode, void* pa
   } else if (canWalk(context, node->x + 1, node->y - 2, node->z)) {
     ASNeighborListAdd(neighbors, &(PathNode){node->x + 1, node->y - 1, node->z}, 2);
   }
+
   if (canWalk(context, node->x - 1, node->y - 1, node->z)) {
     ASNeighborListAdd(neighbors, &(PathNode){node->x - 1, node->y, node->z}, 1);
   } else if (canWalk(context, node->x - 1, node->y, node->z)) {
@@ -1399,6 +1400,7 @@ static void PathNodeNeighbors(ASNeighborList neighbors, void* pathNode, void* pa
   } else if (canWalk(context, node->x - 1, node->y - 2, node->z)) {
     ASNeighborListAdd(neighbors, &(PathNode){node->x - 1, node->y - 1, node->z}, 2);
   }
+
   if (canWalk(context, node->x, node->y - 1, node->z + 1)) {
     ASNeighborListAdd(neighbors, &(PathNode){node->x, node->y, node->z + 1}, 1);
   } else if (canWalk(context, node->x, node->y, node->z + 1)) {
@@ -1406,6 +1408,7 @@ static void PathNodeNeighbors(ASNeighborList neighbors, void* pathNode, void* pa
   } else if (canWalk(context, node->x, node->y - 2, node->z + 1)) {
     ASNeighborListAdd(neighbors, &(PathNode){node->x, node->y - 1, node->z + 1}, 2);
   }
+
   if (canWalk(context, node->x, node->y - 1, node->z - 1)) {
     ASNeighborListAdd(neighbors, &(PathNode){node->x, node->y, node->z - 1}, 1);
   } else if (canWalk(context, node->x, node->y, node->z - 1)) {
