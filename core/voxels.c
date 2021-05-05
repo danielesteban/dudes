@@ -1473,7 +1473,7 @@ const int findPath(
   );
   const int nodes = ASPathGetCount(path);
   for (int i = 0, p = 0; i < nodes; i++, p += 4) {
-    PathNode *node = ASPathGetNode(path, i);
+    PathNode* node = ASPathGetNode(path, i);
     const int light = getVoxel(world, node->x, node->y + 1, node->z);
     results[p] = node->x;
     results[p + 1] = node->y;
