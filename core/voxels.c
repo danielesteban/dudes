@@ -152,7 +152,7 @@ static void floodLight(
               z = floor(index / (world->width * world->height)),
               y = floor((index % (world->width * world->height)) / world->width),
               x = floor((index % (world->width * world->height)) % world->width);
-    for (unsigned char n = 0; n < 6; n += 1) {
+    for (unsigned char n = 0; n < 6; n++) {
       const int nx = x + neighbors[n * 3],
                 ny = y + neighbors[n * 3 + 1],
                 nz = z + neighbors[n * 3 + 2],
@@ -211,7 +211,7 @@ static void removeLight(
               z = floor(index / (world->width * world->height)),
               y = floor((index % (world->width * world->height)) / world->width),
               x = floor((index % (world->width * world->height)) % world->width);
-    for (unsigned char n = 0; n < 6; n += 1) {
+    for (unsigned char n = 0; n < 6; n++) {
       const int neighbor = getVoxel(
         world,
         x + neighbors[n * 3],
@@ -588,8 +588,8 @@ static void growTree(
           x = floor((index % (world->width * world->height)) % world->width);
     const unsigned char isTrunk = distance <= trunk;
     if (isTrunk) {
-      for (int j = -1; j <= 1; j += 1) {
-        for (int k = -1; k <= 1; k += 1) {
+      for (int j = -1; j <= 1; j++) {
+        for (int k = -1; k <= 1; k++) {
           const int n = getVoxel(world, x + j, y, z + k);
           voxels[n] = TYPE_TREE;
           voxels[n + VOXEL_R] = fmax((int) ((color >> 16) & 0xFF) / 2 - (rand() % 0x11), 0);
@@ -633,7 +633,7 @@ static void growTree(
       }
     } else if (distance < size) {
       int count = 0;
-      for (int j = 0; j < 6; j += 1) {
+      for (int j = 0; j < 6; j++) {
         const int ni = rand() % 6;
         const int n = getVoxel(world, x + neighbors[ni * 3], y + neighbors[ni * 3 + 1], z + neighbors[ni * 3 + 2]);
         if (n != -1 && voxels[n] == TYPE_AIR) {
@@ -939,7 +939,7 @@ void update(
   const int height = heightmap[heightmapIndex];
   if (type == TYPE_AIR) {
     if (y == height) {
-      for (int h = y - 1; h >= 0; h --) {
+      for (int h = y - 1; h >= 0; h--) {
         if (h == 0 || voxels[getVoxel(world, x, h, z)] != TYPE_AIR) {
           heightmap[heightmapIndex] = h;
           break;
@@ -1001,7 +1001,7 @@ void update(
   } else if (type == TYPE_AIR && current != TYPE_AIR) {
     unsigned int lightQueue = 0;
     unsigned int sunlightQueue = 0;
-    for (unsigned char n = 0; n < 6; n += 1) {
+    for (unsigned char n = 0; n < 6; n++) {
       const int neighbor = getVoxel(
         world,
         x + neighbors[n * 3],
@@ -1279,7 +1279,7 @@ const int colliders(
           continue;
         }
 
-        for (unsigned char i = z + 1; i <= chunkSize; i += 1) {
+        for (unsigned char i = z + 1; i <= chunkSize; i++) {
           if (
             i == chunkSize
             || voxels[getVoxel(world, chunkX + x, chunkY + y, chunkZ + i)] == TYPE_AIR
@@ -1291,8 +1291,8 @@ const int colliders(
         }
 
         height = chunkSize - y;
-        for (unsigned char i = z; i < z + depth; i += 1) {
-          for (unsigned char j = y + 1; j <= y + height; j += 1) {
+        for (unsigned char i = z; i < z + depth; i++) {
+          for (unsigned char j = y + 1; j <= y + height; j++) {
             if (
               j == chunkSize
               || voxels[getVoxel(world, chunkX + x, chunkY + j, chunkZ + i)] == TYPE_AIR
@@ -1304,9 +1304,9 @@ const int colliders(
         }
 
         width = chunkSize - x;
-        for (unsigned char i = z; i < z + depth; i += 1) {
-          for (unsigned char j = y; j < y + height; j += 1) {
-            for (unsigned char k = x + 1; k <= x + width; k += 1) {
+        for (unsigned char i = z; i < z + depth; i++) {
+          for (unsigned char j = y; j < y + height; j++) {
+            for (unsigned char k = x + 1; k <= x + width; k++) {
               if (
                 k == chunkSize
                 || voxels[getVoxel(world, chunkX + k, chunkY + j, chunkZ + i)] == TYPE_AIR
@@ -1318,9 +1318,9 @@ const int colliders(
           }
         }
 
-        for (unsigned char i = z; i < z + depth; i += 1) {
-          for (unsigned char j = y; j < y + height; j += 1) {
-            for (unsigned char k = x; k < x + width; k += 1) {
+        for (unsigned char i = z; i < z + depth; i++) {
+          for (unsigned char j = y; j < y + height; j++) {
+            for (unsigned char k = x; k < x + width; k++) {
               map[i * chunkSize * chunkSize + j * chunkSize + k] = 1;
             }
           }
