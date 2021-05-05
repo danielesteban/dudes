@@ -25,7 +25,7 @@ class Billboard extends Mesh {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    ctx.fillStyle = 'rgba(255, 255, 255, .5)';
+    ctx.fillStyle = 'rgba(0, 0, 0, .4)';
     [
       [0, 0, renderer.width, 10],
       [0, renderer.height * 0.5 - 10, renderer.width, 20],
