@@ -1,5 +1,6 @@
 import {
   CanvasTexture,
+  DoubleSide,
   Mesh,
   MeshBasicMaterial,
   PlaneGeometry,
@@ -10,7 +11,7 @@ import {
 class Billboard extends Mesh {
   static setupGeometry() {
     Billboard.geometry = new PlaneGeometry(6, 4);
-    Billboard.geometry.translate(0, -2, 0.02);
+    Billboard.geometry.translate(0, -2, 0.125);
     Billboard.geometry.deleteAttribute('normal');
   }
 
@@ -63,7 +64,11 @@ class Billboard extends Mesh {
     texture.wrapT = RepeatWrapping;
     texture.repeat.set(1, 0.5);
     texture.offset.set(0, 0.5);
-    Billboard.material = new MeshBasicMaterial({ map: texture, transparent: true });
+    Billboard.material = new MeshBasicMaterial({
+      map: texture,
+      side: DoubleSide,
+      transparent: true,
+    });
   }
 
   constructor(origin) {
