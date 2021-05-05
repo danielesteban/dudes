@@ -17,8 +17,8 @@ const cname = (domain) => ({
 export default {
   input: path.join(__dirname, 'main.js'),
   output: {
-    format: 'es',
     file: path.join(__dirname, 'dist', 'main.js'),
+    format: 'module',
   },
   plugins: [
     resolve({ browser: true }),
