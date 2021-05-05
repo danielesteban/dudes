@@ -163,7 +163,7 @@ class Gameplay extends Group {
       y: 3.2,
       z: spawn.z,
     });
-    this.rain = new Rain({ anchor: this.player, world });
+    this.rain = new Rain({ anchor: player, world });
     const starfield = new Starfield(spawn);
 
     this.add(world.chunks);
