@@ -535,6 +535,29 @@ static void generateBuilding(
   }
 }
 
+static void generateLamp(
+  const World* world,
+  int* heightmap,
+  unsigned char* voxels,
+  const int x,
+  const int y,
+  const int z,
+  const unsigned int color
+) {
+  for (int i = 0; i < 2; i++) {
+    const int ly = y + i;
+    const int voxel = getVoxel(world, x, ly, z);
+    voxels[voxel] = i == 1 ? TYPE_LIGHT : TYPE_STONE;
+    voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + (rand() % 0x22) * (i == 1 ? 2 : -1), 0), 0xFF);
+    voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + (rand() % 0x22) * (i == 1 ? 2 : -1), 0), 0xFF);
+    voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + (rand() % 0x22) * (i == 1 ? 2 : -1), 0), 0xFF);
+    const int heightmapIndex = z * world->width + x;
+    if (heightmap[heightmapIndex] < ly) {
+      heightmap[heightmapIndex] = ly;
+    }
+  }
+}
+
 static const int branchOffsets[] = {
   0, 1, 0,
   -2, 0, 0,
@@ -792,24 +815,15 @@ void generate(
           && voxels[ground] == TYPE_DIRT
           && rand() % 2 == 0
         ) {
-          for (int i = 0; i < 2; i++) {
-            const int ly = y + 1 + i;
-            const int voxel = getVoxel(world, lx, ly, lz);
-            voxels[voxel] = i == 0 ? TYPE_STONE : TYPE_LIGHT;
-            if (i == 0) {
-              voxels[voxel + VOXEL_R] = fmin(voxels[ground + VOXEL_R] + (rand() % 0x11), 0xFF);
-              voxels[voxel + VOXEL_G] = fmin(voxels[ground + VOXEL_G] + (rand() % 0x11), 0xFF);
-              voxels[voxel + VOXEL_B] = fmin(voxels[ground + VOXEL_B] + (rand() % 0x11), 0xFF);
-            } else {
-              voxels[voxel + VOXEL_R] = 0xEE - (rand() % 0x11);
-              voxels[voxel + VOXEL_G] = 0xEE - (rand() % 0x11);
-              voxels[voxel + VOXEL_B] = 0xAA - (rand() % 0x11);
-            }
-            const int heightmapIndex = lz * world->width + lx;
-            if (heightmap[heightmapIndex] < ly) {
-              heightmap[heightmapIndex] = ly;
-            }
-          }
+          generateLamp(
+            world,
+            heightmap,
+            voxels,
+            lx,
+            y + 1,
+            lz,
+            (voxels[ground + VOXEL_R] << 16) | (voxels[ground + VOXEL_G] << 8) | voxels[ground + VOXEL_B]
+          );
         }
       }
     }
