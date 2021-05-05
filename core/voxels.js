@@ -26,7 +26,8 @@ class VoxelWorld {
     this.depth = depth;
     this.scale = scale;
     this.seed = seed;
-    const maxVoxelsPerChunk = Math.ceil(chunkSize * chunkSize * chunkSize * 0.5); // worst possible case
+    // worst possible case
+    const maxVoxelsPerChunk = Math.ceil(chunkSize * chunkSize * chunkSize * 0.5);
     const maxFacesPerChunk = maxVoxelsPerChunk * 6;
     const queueSize = width * depth * 3;
     const layout = [
