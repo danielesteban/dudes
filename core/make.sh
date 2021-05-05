@@ -9,7 +9,7 @@
 # and remember to run "make -j8" on ../vendor/wasi-libc/ before running this.
 #
 cd "${0%/*}"
-clang --target=wasm32-unknown-wasi -nostartfiles --sysroot=../vendor/wasi-libc/sysroot -O3 -flto \
+clang --target=wasm32-unknown-wasi -nostartfiles --sysroot=../vendor/wasi-libc/sysroot -Ofast -flto \
 -Wl,--import-memory -Wl,--lto-O3 -Wl,--no-entry \
 -Wl,--export=__heap_base \
 -Wl,--export=generate \
