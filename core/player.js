@@ -457,7 +457,7 @@ class Player extends Group {
     const { minSpeed, speedRange } = Player;
     const logSpeed = Math.min(
       Math.max(
-        ((Math.log(speed) - minSpeed) / speedRange) - (-deltaY * 0.0003),
+        ((Math.log(speed) - minSpeed) / speedRange) - (deltaY * 0.0003),
         0
       ),
       1
