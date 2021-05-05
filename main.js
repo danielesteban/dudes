@@ -19,7 +19,7 @@ router.addEventListener('update', ({ route }) => {
     case '':
       renderer.scene.load('Debug');
       break;
-    case 'game':
+    case 'poop':
       renderer.scene.load('Poop');
       break;
     default:
