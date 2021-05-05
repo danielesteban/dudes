@@ -47,17 +47,14 @@ class VoxelWorld {
       total + size * type.BYTES_PER_ELEMENT
     ), 0) / 65536) + 2;
     const memory = new WebAssembly.Memory({ initial: pages, maximum: pages });
-    (VoxelWorld.wasm ? (
-      Promise.resolve(VoxelWorld.wasm)
+    const source = fetch('/voxels.wasm');
+    (WebAssembly.instantiateStreaming ? (
+      WebAssembly.instantiateStreaming(source, { env: { memory } })
     ) : (
-      fetch('/voxels.wasm')
+      source
         .then((res) => res.arrayBuffer())
-        .then((buffer) => {
-          VoxelWorld.wasm = buffer;
-          return buffer;
-        })
+        .then((buffer) => WebAssembly.instantiate(buffer, { env: { memory } }))
     ))
-      .then((buffer) => WebAssembly.instantiate(buffer, { env: { memory } }))
       .then(({ instance }) => {
         this._colliders = instance.exports.colliders;
         this._findPath = instance.exports.findPath;
