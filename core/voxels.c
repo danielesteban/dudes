@@ -809,10 +809,10 @@ void generate(
         const int lx = x + rand() % grid;
         const int lz = z + rand() % grid;
         const int y = heightmap[lz * world->width + lx];
-        const int ground = getVoxel(world, lx, y, lz);
+        const int voxel = getVoxel(world, lx, y, lz);
         if (
           y > seaLevel
-          && voxels[ground] == TYPE_DIRT
+          && voxels[voxel] == TYPE_DIRT
           && rand() % 2 == 0
         ) {
           generateLamp(
@@ -822,7 +822,7 @@ void generate(
             lx,
             y + 1,
             lz,
-            (voxels[ground + VOXEL_R] << 16) | (voxels[ground + VOXEL_G] << 8) | voxels[ground + VOXEL_B]
+            (voxels[voxel + VOXEL_R] << 16) | (voxels[voxel + VOXEL_G] << 8) | voxels[voxel + VOXEL_B]
           );
         }
       }
