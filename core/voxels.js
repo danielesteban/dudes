@@ -3,11 +3,11 @@ import { Color, Group } from '../vendor/three.js';
 class VoxelWorld {
   constructor({
     chunkSize = 16,
+    scale = 0.5,
+    seed = Math.floor(Math.random() * 2147483647),
     width,
     height,
     depth,
-    scale = 0.5,
-    seed = Math.floor(Math.random() * 2147483647),
     onLoad,
   }) {
     this.brush = {
@@ -21,11 +21,11 @@ class VoxelWorld {
     this.chunks.matrixAutoUpdate = false;
     this.chunkSize = chunkSize;
     this.meshes = [];
+    this.scale = scale;
+    this.seed = seed;
     this.width = width;
     this.height = height;
     this.depth = depth;
-    this.scale = scale;
-    this.seed = seed;
     // worst possible case
     const maxVoxelsPerChunk = Math.ceil(chunkSize * chunkSize * chunkSize * 0.5);
     const maxFacesPerChunk = maxVoxelsPerChunk * 6;
