@@ -357,6 +357,7 @@ class Gameplay extends Group {
       },
       physics,
       player,
+      world,
     } = this;
     if (isXR) {
       player.controllers.forEach(({ buttons, hand, worldspace }) => {
@@ -415,6 +416,8 @@ class Gameplay extends Group {
     }
     if (player.position.y < 3) {
       player.move({ x: 0, y: 3 - player.position.y, z: 0 });
+    } else if (player.position.y > 128) {
+      player.move({ x: 0, y: 128 - player.position.y, z: 0 });
     }
   }
 

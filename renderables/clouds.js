@@ -76,13 +76,6 @@ class Clouds extends Group {
                 x, 0, y + 1,
                 1, 1, 1
               );
-              pushFace(
-                x, depth, y + 1,
-                x + 1, depth, y + 1,
-                x + 1, depth, y,
-                x, depth, y,
-                1, 1, 1
-              );
               if (x === 0 || !voxels[x - 1][y]) {
                 pushFace(
                   x, 0, y,
