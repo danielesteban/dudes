@@ -36,7 +36,7 @@ class Billboard extends Mesh {
     });
 
     ctx.save();
-    ctx.translate(renderer.width * 0.2, renderer.height * 0.1125);
+    ctx.translate(renderer.width * 0.2, renderer.height * 0.125);
     ctx.rotate(Math.PI * -0.2);
     ctx.fillStyle = '#bbb';
     ctx.font = '700 40px monospace';
@@ -44,14 +44,16 @@ class Billboard extends Mesh {
     ctx.restore();
     ctx.fillStyle = '#fff';
     ctx.font = '700 120px monospace';
-    ctx.fillText('DUDES', renderer.width * 0.5, renderer.height * 0.25);
+    ctx.fillText('DUDES!', renderer.width * 0.5, renderer.height * 0.25);
     ctx.fillStyle = '#bbb';
     ctx.font = '700 30px monospace';
-    ctx.fillText('v0.0.1 - dani@gatunes © 2021', renderer.width * 0.5, renderer.height * 0.425);
-    ctx.fillText('made with three.js', renderer.width * 0.5, renderer.height * 0.4625);
+    ctx.fillText('v0.0.1 - dani@gatunes © 2021', renderer.width * 0.5, renderer.height * 0.4125);
+    ctx.fillText('made with three.js', renderer.width * 0.5, renderer.height * 0.45);
 
+    ctx.fillStyle = '#fff';
     ctx.font = '700 100px monospace';
     ctx.fillText('CONTROLS', renderer.width * 0.5, renderer.height * 0.6);
+    ctx.fillStyle = '#bbb';
     ctx.font = '700 30px monospace';
     ctx.fillText('WASD: Move', renderer.width * 0.5, renderer.height * 0.7);
     ctx.fillText('Mouse wheel: Adjust speed', renderer.width * 0.5, renderer.height * 0.75);
