@@ -1418,7 +1418,7 @@ static void PathNodeNeighbors(ASNeighborList neighbors, void* pathNode, void* pa
 static float PathNodeHeuristic(void *fromNode, void *toNode, void *context) {
   PathNode* from = (PathNode*) fromNode;
   PathNode* to = (PathNode*) toNode;
-  return (abs(from->x - to->x) + abs(from->y - to->y) + abs(from->z - to->z));
+  return abs(from->x - to->x) + abs(from->y - to->y) + abs(from->z - to->z);
 }
 
 static int EarlyExit(size_t visitedCount, void *visitingNode, void *goalNode, void *context) {
