@@ -357,7 +357,6 @@ class Gameplay extends Group {
       },
       physics,
       player,
-      world,
     } = this;
     if (isXR) {
       player.controllers.forEach(({ buttons, hand, worldspace }) => {
