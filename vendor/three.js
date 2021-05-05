@@ -1,6 +1,7 @@
-export * from 'https://cdn.jsdelivr.net/npm/three@0.127.0/build/three.module.js';
-export { BufferGeometryUtils } from 'https://cdn.jsdelivr.net/npm/three@0.127.0/examples/jsm/utils/BufferGeometryUtils.js';
-export { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three@0.127.0/examples/jsm/postprocessing/EffectComposer.js';
-export { RenderPass } from 'https://cdn.jsdelivr.net/npm/three@0.127.0/examples/jsm/postprocessing/RenderPass.js';
-export { ShaderPass } from 'https://cdn.jsdelivr.net/npm/three@0.127.0/examples/jsm/postprocessing/ShaderPass.js';
-export { SimplexNoise } from 'https://cdn.jsdelivr.net/npm/three@0.127.0/examples/jsm/math/SimplexNoise.js';
+export * from 'three';
+export { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+export { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+export { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+export { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+export { SimplexNoise } from 'three/examples/jsm/math/SimplexNoise.js';
+export { default as Ammo } from 'three/examples/js/libs/ammo.wasm.js';

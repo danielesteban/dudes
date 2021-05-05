@@ -50,7 +50,7 @@ class VoxelWorld {
     (VoxelWorld.wasm ? (
       Promise.resolve(VoxelWorld.wasm)
     ) : (
-      fetch('/core/voxels.wasm')
+      fetch('/voxels.wasm')
         .then((res) => res.arrayBuffer())
         .then((buffer) => {
           VoxelWorld.wasm = buffer;

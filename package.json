@@ -7,16 +7,22 @@
     "make": "core/voxels.c"
   },
   "scripts": {
+    "build": "rollup -c rollup.config.js",
     "make": "sh core/make.sh",
-    "cert": "openssl req -x509 -newkey rsa:2048 -nodes -sha256 -subj /CN=localhost -keyout localhost-key.pem -out localhost-cert.pem",
-    "postinstall": "npm run cert",
-    "serve": "sirv --dev --single --host 0.0.0.0 --cert localhost-cert.pem --key localhost-key.pem --http2 .",
+    "serve": "npm run build -- -w",
     "watch": "npm-watch",
     "start": "run-p serve watch"
   },
+  "dependencies": {
+    "three": "^0.128.0"
+  },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^13.0.0",
     "npm-run-all": "^4.1.5",
     "npm-watch": "^0.9.0",
-    "sirv-cli": "^1.0.11"
+    "rollup": "^2.47.0",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-serve": "^1.1.0",
+    "rollup-plugin-terser": "^7.0.2"
   }
 }
