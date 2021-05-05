@@ -26,6 +26,7 @@ export default {
         { src: 'core/voxels.wasm', dest: 'dist' },
         { src: 'index.css', dest: 'dist' },
         { src: 'index.html', dest: 'dist' },
+        { src: 'node_modules/three/examples/js/libs/ammo.wasm.*', dest: 'dist' },
         { src: 'screenshot.png', dest: 'dist' },
         { src: 'sounds/*.ogg', dest: 'dist/sounds' },
       ],
