@@ -9,8 +9,8 @@
 # and remember to run "make -j8" on ../vendor/wasi-libc/ before running this.
 #
 cd "${0%/*}"
-clang --target=wasm32-unknown-wasi -nostartfiles --sysroot=../vendor/wasi-libc/sysroot -Ofast -flto \
--Wl,--import-memory -Wl,--lto-O3 -Wl,--no-entry \
+clang --target=wasm32-unknown-wasi --sysroot=../vendor/wasi-libc/sysroot -nostartfiles -flto -Ofast \
+-Wl,--import-memory -Wl,--no-entry -Wl,--lto-O3 \
 -Wl,--export=__heap_base \
 -Wl,--export=generate \
 -Wl,--export=propagate \
@@ -19,4 +19,5 @@ clang --target=wasm32-unknown-wasi -nostartfiles --sysroot=../vendor/wasi-libc/s
 -Wl,--export=colliders \
 -Wl,--export=findPath \
 -Wl,--export=findTarget \
--o voxels.wasm ../vendor/AStar/AStar.c voxels.c
+-o voxels.wasm \
+../vendor/AStar/AStar.c voxels.c
