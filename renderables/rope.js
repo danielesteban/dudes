@@ -17,6 +17,8 @@ class Rope extends Mesh {
   }
 
   constructor({
+    anchorA,
+    anchorB,
     origin,
     length,
     segments,
@@ -78,15 +80,18 @@ class Rope extends Mesh {
       Rope.material
     );
     this.aux = {
-      normal: new Vector3(),
       model: model.getAttribute('position').array,
-      auxModel: aux.getAttribute('position'),
+      normal: new Vector3(),
       quaternion: new Quaternion(),
       matrix: new Matrix4(),
       transform: new Matrix4(),
+      vertex: new Vector3(),
+      vertexB: new Vector3(),
       worldUp: new Vector3(0, 1, 0),
     };
     this.isRope = true;
+    this.anchorA = anchorA;
+    this.anchorB = anchorB;
     this.length = length;
     this.segments = segments;
     this.segmentLength = segmentLength;
@@ -95,7 +100,18 @@ class Rope extends Mesh {
 
   update(nodes) {
     const {
-      aux: { model, auxModel, normal, quaternion, matrix, transform, worldUp },
+      aux: {
+        model,
+        normal,
+        quaternion,
+        matrix,
+        transform,
+        vertex,
+        vertexB,
+        worldUp,
+      },
+      anchorA,
+      anchorB,
       geometry,
       positionStride,
       segments,
@@ -103,24 +119,34 @@ class Rope extends Mesh {
     } = this;
     const position = geometry.getAttribute('position');
     for (let i = 0; i < segments; i += 1) {
-      const node = nodes.at(i);
-      const pos = node.get_m_x();
-      const next = nodes.at(i + 1);
-      const nextPos = next.get_m_x();
+      if (i === 0 && anchorA) {
+        anchorA.getWorldPosition(vertex);
+      } else {
+        const node = nodes.at(i);
+        const nodePos = node.get_m_x();
+        vertex.set(nodePos.x(), nodePos.y(), nodePos.z());
+      }
+      if (i === segments - 1 && anchorB) {
+        anchorB.getWorldPosition(vertexB);
+      } else {
+        const node = nodes.at(i + 1);
+        const nodePos = node.get_m_x();
+        vertexB.set(nodePos.x(), nodePos.y(), nodePos.z());
+      }
       normal
         .set(
-          nextPos.x() - pos.x(),
-          nextPos.y() - pos.y(),
-          nextPos.z() - pos.z()
+          vertexB.x - vertex.x,
+          vertexB.y - vertex.y,
+          vertexB.z - vertex.z
         );
       const scale = normal.length() / segmentLength;
       normal.normalize();
       quaternion.setFromUnitVectors(worldUp, normal);
       transform
         .makeTranslation(
-          pos.x(),
-          pos.y(),
-          pos.z()
+          vertex.x,
+          vertex.y,
+          vertex.z
         )
         .multiply(
           matrix.makeRotationFromQuaternion(quaternion)
@@ -128,9 +154,12 @@ class Rope extends Mesh {
         .multiply(
           matrix.makeScale(1, scale, 1)
         );
-      auxModel.array.set(model);
-      auxModel.applyMatrix4(transform);
-      position.array.set(auxModel.array, positionStride * i);
+      for (let v = 0, l = model.length; v < l; v += 3) {
+        vertex
+          .set(model[v], model[v + 1], model[v + 2])
+          .applyMatrix4(transform);
+        position.array.set([vertex.x, vertex.y, vertex.z], positionStride * i + v);
+      }
     }
     position.needsUpdate = true;
     geometry.computeBoundingSphere();

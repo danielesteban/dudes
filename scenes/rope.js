@@ -52,24 +52,22 @@ class Ropes extends Gameplay {
 
     player.move({ x: 0.5, y: 15, z: 5 });
     player.updateMatrixWorld();
+    const { anchor, ball } = this;
     const options = {
+      anchorA: ball,
+      anchorB: anchor,
       length: 10,
       segments: 12,
     };
-    const { anchor, ball } = this;
     this.helicopter.getWorldPosition(anchor.position).add({ x: 0, y: 0.625, z: 1.125 });
-    physics.addMesh(anchor, { isKinematic: true });
     ball.position.copy(anchor.position);
     ball.position.y -= options.length;
     options.origin = ball.position;
-    physics.addMesh(ball, { mass: 10, angularFactor: { x: 0, y: 0, z: 0 } });
     const rope = new Rope(options);
     this.rope = rope;
-    physics.addRope(rope, {
-      ...options,
-      anchorA: ball,
-      anchorB: anchor,
-    });
+    physics.addMesh(anchor, { isKinematic: true });
+    physics.addMesh(ball, { mass: 10, angularFactor: { x: 0, y: 0, z: 0 } });
+    physics.addRope(rope, options);
     this.helicopter.worldToLocal(anchor.position);
     this.helicopter.add(anchor);
     anchor.updateMatrixWorld();
