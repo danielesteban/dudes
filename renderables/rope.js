@@ -105,6 +105,11 @@ class Rope extends Mesh {
     this.positionStride = positionStride;
   }
 
+  dispose() {
+    const { geometry } = this;
+    geometry.dispose();
+  }
+
   update(nodes) {
     const {
       aux: {
