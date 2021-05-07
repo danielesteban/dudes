@@ -43,23 +43,31 @@ class Rope extends Mesh {
       }
       tube.setAttribute('color', color);
     }
-    const model = BufferGeometryUtils.mergeVertices(tube);
-    const aux = model.clone();
-    const positionStride = model.getAttribute('position').count * 3;
-    const indexStride = model.getIndex().count;
+    let model = BufferGeometryUtils.mergeVertices(tube);
+    const index = model.getIndex().array;
+    const colors = model.getAttribute('color');
+    model = model.getAttribute('position').array;
+    const transform = new Matrix4();
+    const vertex = new Vector3();
+    const positionStride = model.length;
+    const indexStride = index.length;
     const geometry = new BufferGeometry();
     const position = new BufferAttribute(new Float32Array(segments * positionStride), 3);
     const color = new BufferAttribute(new Float32Array(segments * positionStride), 3);
     const indices = new BufferAttribute(new Uint16Array(segments * indexStride), 1);
     for (let i = 0; i < segments; i += 1) {
-      aux
-        .copy(model)
-        .translate(
+      transform
+        .makeTranslation(
           origin.x,
           origin.y + i * segmentLength,
           origin.z
         );
-      const colors = aux.getAttribute('color');
+      for (let v = 0; v < positionStride; v += 3) {
+        vertex
+          .set(model[v], model[v + 1], model[v + 2])
+          .applyMatrix4(transform);
+        position.array.set([vertex.x, vertex.y, vertex.z], positionStride * i + v);
+      }
       let light;
       for (let i = 0; i < colors.count; i += 1) {
         if (i % 4 === 0) {
@@ -67,9 +75,8 @@ class Rope extends Mesh {
         }
         colors.setXYZ(i, light, light, light);
       }
-      position.array.set(aux.getAttribute('position').array, positionStride * i);
       color.array.set(colors.array, positionStride * i);
-      indices.array.set(aux.getIndex().array.map((j) => j + positionStride * i / 3), indexStride * i);
+      indices.array.set(index.map((j) => j + (positionStride * i) / 3), indexStride * i);
     }
     position.setUsage(DynamicDrawUsage);
     geometry.setIndex(indices);
@@ -80,12 +87,12 @@ class Rope extends Mesh {
       Rope.material
     );
     this.aux = {
-      model: model.getAttribute('position').array,
+      model,
       normal: new Vector3(),
-      quaternion: new Quaternion(),
       matrix: new Matrix4(),
-      transform: new Matrix4(),
-      vertex: new Vector3(),
+      quaternion: new Quaternion(),
+      transform,
+      vertex,
       vertexB: new Vector3(),
       worldUp: new Vector3(0, 1, 0),
     };
@@ -103,8 +110,8 @@ class Rope extends Mesh {
       aux: {
         model,
         normal,
-        quaternion,
         matrix,
+        quaternion,
         transform,
         vertex,
         vertexB,
