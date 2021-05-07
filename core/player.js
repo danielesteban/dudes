@@ -44,6 +44,7 @@ class Player extends Group {
         primary: false,
         secondary: false,
       };
+      controller.joystick = new Vector2();
       controller.pointer = new Pointer();
       controller.add(controller.pointer);
       controller.pulse = (intensity, duration) => {
@@ -202,26 +203,28 @@ class Player extends Group {
     }
   }
 
-  rotate(radians) {
+  rotate(axis, angle, pivot) {
     const {
       aux: {
         matrixA: transform,
         matrixB: matrix,
+        vectorA: vector,
       },
       controllers,
       desktop,
       head,
       position,
     } = this;
+    pivot = pivot || vector.set(head.position.x, position.y, head.position.z);
     transform.makeTranslation(
-      head.position.x, position.y, head.position.z
+      pivot.x, pivot.y, pivot.z
     );
     transform.multiply(
-      matrix.makeRotationY(radians)
+      matrix.makeRotationAxis(axis, angle)
     );
     transform.multiply(
       matrix.makeTranslation(
-        -head.position.x, -position.y, -head.position.z
+        -pivot.x, -pivot.y, -pivot.z
       )
     );
     this.applyMatrix4(transform);
@@ -271,6 +274,7 @@ class Player extends Group {
         buttons,
         hand,
         gamepad,
+        joystick,
         matrixWorld,
         pointer,
         raycaster,
@@ -293,6 +297,7 @@ class Player extends Group {
           buttons[`${key}Up`] = !value && buttons[key] !== value;
           buttons[key] = value;
         });
+        joystick.set(gamepad.axes[2], gamepad.axes[3]);
         hand.setFingers({
           thumb: gamepad.buttons[3] && gamepad.buttons[3].touched,
           index: gamepad.buttons[0] && gamepad.buttons[0].pressed,

@@ -67,6 +67,7 @@ class Dudes extends Group {
       dude.position
         .set(spawn[0] + 0.5, spawn[1], spawn[2] + 0.5)
         .multiplyScalar(world.scale);
+      dude.searchEnabled = true;
       dude.searchTimer = Math.random();
       dude.updateMatrixWorld();
       this.add(dude);
@@ -91,7 +92,7 @@ class Dudes extends Group {
     dudes.forEach((dude) => {
       dude.animate(animation, gazeAt);
       if (
-        !dude.path && dude !== selected
+        dude.searchEnabled && !dude.path && dude !== selected
       ) {
         if (dude.searchTimer) {
           dude.searchTimer = Math.max(dude.searchTimer - animation.delta, 0);
@@ -166,7 +167,7 @@ class Dudes extends Group {
     const { selectionMarker: marker } = this;
     this.selected = dude;
     marker.material.color.copy(dude.marker.material.color);
-    marker.position.y = dude.physics.physics.height + 0.5;
+    marker.position.y = dude.physics[0].height + 0.5;
     marker.updateMatrix();
     marker.visible = true;
     dude.add(marker);

@@ -33,7 +33,7 @@ class Debug extends Gameplay {
     };
     this.projectiles.onDudeContact = (contact) => {
       if (this.projectiles.destroyOnContact(contact)) {
-        contact.triggerMesh.parent.onHit();
+        contact.triggerMesh.onHit();
       }
     };
     Promise.all([...Array(5)].map(() => (
@@ -97,7 +97,7 @@ class Debug extends Gameplay {
       if (buttons.secondaryDown) {
         const hit = physics.raycast(raycaster.ray.origin, raycaster.ray.direction, 4);
         if (hit) {
-          dudes.select(hit.object.parent);
+          dudes.select(hit.object);
           return;
         }
         if (dudes.selected) {
@@ -129,7 +129,7 @@ class Debug extends Gameplay {
         this.spawnProjectile(position, impulse);
         return;
       }
-      if (isXR && hand && buttons.primary) {
+      if (isXR && hand && (buttons.primary || buttons.primaryUp)) {
         if (pointer.visible) {
           return;
         }

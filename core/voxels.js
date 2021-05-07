@@ -73,7 +73,6 @@ class VoxelWorld {
           address += size * type.BYTES_PER_ELEMENT;
         });
         this.world.view.set([width, height, depth]);
-        this.generate();
         if (onLoad) {
           onLoad(this);
         }
@@ -191,6 +190,48 @@ class VoxelWorld {
       queueB.address,
       seed
     );
+    this._propagate(
+      world.address,
+      heightmap.address,
+      voxels.address,
+      queueA.address,
+      queueB.address,
+      queueC.address
+    );
+  }
+
+  generateModel(generator) {
+    const {
+      world,
+      heightmap,
+      voxels,
+      queueA,
+      queueB,
+      queueC,
+      width,
+      height,
+      depth,
+    } = this;
+    heightmap.view.fill(0);
+    voxels.view.fill(0);
+    for (let z = 0, voxel = 0; z < depth; z += 1) {
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1, voxel += 6) {
+          const result = generator(x, y, z);
+          if (!result) {
+            continue;
+          }
+          voxels.view[voxel] = result.type;
+          voxels.view[voxel + 1] = result.r;
+          voxels.view[voxel + 2] = result.g;
+          voxels.view[voxel + 3] = result.b;
+          const heightmapIndex = z * width + x;
+          if (heightmap.view[heightmapIndex] < y) {
+            heightmap.view[heightmapIndex] = y;
+          }
+        }
+      }
+    }
     this._propagate(
       world.address,
       heightmap.address,

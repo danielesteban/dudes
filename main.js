@@ -14,13 +14,16 @@ const renderer = new Renderer({
   scenes,
 });
 
-router.addEventListener('update', ({ route }) => {
+router.addEventListener('update', ({ route, params }) => {
   switch (route) {
     case '':
       renderer.scene.load('Debug');
       break;
     case 'poop':
       renderer.scene.load('Poop');
+      break;
+    case 'rope':
+      renderer.scene.load('Rope', { view: params[0] });
       break;
     default:
       router.replace('/');

@@ -6,16 +6,18 @@ import serve from 'rollup-plugin-serve';
 import { terser } from 'rollup-plugin-terser';
 import { watchExternal } from 'rollup-plugin-watch-external';
 
+const outputPath = path.resolve(__dirname, 'dist');
+
 const cname = (domain) => ({
   writeBundle() {
-    fs.writeFileSync(path.join(__dirname, 'dist', 'CNAME'), domain);
+    fs.writeFileSync(path.join(outputPath, 'CNAME'), domain);
   },
 });
 
 export default {
   input: path.join(__dirname, 'main.js'),
   output: {
-    file: path.join(__dirname, 'dist', 'main.js'),
+    file: path.join(outputPath, 'main.js'),
     format: 'module',
   },
   plugins: [
@@ -30,7 +32,11 @@ export default {
       ],
     }),
     ...(process.env.ROLLUP_WATCH ? [
-      serve({ contentBase: path.join(__dirname, 'dist'), port: 8080 }),
+      serve({
+        contentBase: outputPath,
+        historyApiFallback: true,
+        port: 8080,
+      }),
       watchExternal({ entries: ['core/voxels.wasm'] }),
     ] : [
       cname('dudes.gatunes.com'),

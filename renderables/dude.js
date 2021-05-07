@@ -8,7 +8,6 @@ import {
   Color,
   ConeGeometry,
   Euler,
-  Group,
   LoopPingPong,
   Math as ThreeMath,
   Quaternion,
@@ -223,15 +222,17 @@ class Dude extends SkinnedMesh {
       new Vector3(0, bounds.radius, 0),
       Math.sqrt(bounds.radius * bounds.radius + bounds.radius * bounds.radius)
     );
-    geometry.physics = {
+    geometry.physics = [{
       shape: 'box',
       width: bounds.radius,
       height: bounds.height,
       depth: bounds.radius,
-      x: 0,
-      y: bounds.height * 0.5,
-      z: 0,
-    };
+      position: {
+        x: 0,
+        y: bounds.height * 0.5,
+        z: 0,
+      },
+    }];
     return geometry;
   }
 
@@ -444,13 +445,8 @@ class Dude extends SkinnedMesh {
       sunlight: 0xFF,
     };
     this.marker = new Marker(spec.color);
+    this.physics = this.geometry.physics;
     this.speed = 4 * spec.stamina;
-    this.physics = new Group();
-    this.physics.physics = this.geometry.physics;
-    this.physics.position.copy(this.geometry.physics);
-    this.physics.updateMatrix();
-    this.physics.matrixAutoUpdate = false;
-    this.add(this.physics);
   }
 
   dispose() {

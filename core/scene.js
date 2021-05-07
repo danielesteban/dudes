@@ -76,6 +76,9 @@ class Scene extends ThreeScene {
       physics,
       scene,
     } = this;
+    if (scene && scene.onLocomotionTick) {
+      scene.onLocomotionTick({ animation, camera, isXR });
+    }
     if (physics) {
       physics.simulate(animation.delta);
     }

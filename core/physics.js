@@ -3,24 +3,31 @@ import { Vector3, Quaternion } from '../vendor/three.js';
 class Physics {
   constructor(onLoad) {
     this.bodies = new WeakMap();
+    this.constraints = [];
     this.dynamic = [];
     this.kinematic = [];
+    this.ropes = [];
     window.Ammo()
       .then((Ammo) => {
         const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
         const dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
         const broadphase = new Ammo.btDbvtBroadphase();
         const solver = new Ammo.btSequentialImpulseConstraintSolver();
-        const world = new Ammo.btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+        const softBodySolver = new Ammo.btDefaultSoftBodySolver();
+        const world = new Ammo.btSoftRigidDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration, softBodySolver);
         world.setGravity(new Ammo.btVector3(0, -9.8, 0));
+        world.getWorldInfo().set_m_gravity(new Ammo.btVector3(0, -9.8, 0));
         this.aux = {
           contactCallback: new Ammo.ConcreteContactResultCallback(),
           ghostObject: new Ammo.btGhostObject(),
           rayResultCallback: new Ammo.ClosestRayResultCallback(),
           transform: new Ammo.btTransform(),
           quaternion: new Ammo.btQuaternion(),
+          softBodyHelpers: new Ammo.btSoftBodyHelpers(),
           vector: new Ammo.btVector3(),
           vectorB: new Ammo.btVector3(),
+          vectorC: new Ammo.btVector3(),
+          vectorD: new Ammo.btVector3(),
           zero: new Ammo.btVector3(0, 0, 0),
           worldspace: {
             normal: new Vector3(),
@@ -47,7 +54,7 @@ class Physics {
     if (mesh.isInstancedMesh) {
       const instances = [];
       for (let i = 0, offset = 0, l = mesh.count; i < l; i += 1, offset += 16) {
-        const body = this.createBody(mesh, shape, flags, {
+        const body = this.createBody(shape, flags, {
           matrix: mesh.instanceMatrix.array.slice(offset, offset + 16),
         });
         body.mesh = mesh;
@@ -57,7 +64,7 @@ class Physics {
       }
       bodies.set(mesh, instances);
     } else if (mesh.isGroup || mesh.isMesh) {
-      const body = this.createBody(mesh, shape, flags, {
+      const body = this.createBody(shape, flags, {
         position: mesh.position,
         rotation: mesh.quaternion,
       });
@@ -100,7 +107,186 @@ class Physics {
     }
   }
 
-  createBody(mesh, shape, flags, transform) {
+  addConstraint(mesh, instance, options) {
+    const {
+      aux: {
+        transform,
+        quaternion,
+        vector,
+        vectorB,
+        vectorC,
+        vectorD,
+      },
+      constraints,
+      runtime: Ammo,
+      world,
+    } = this;
+    let constraint;
+    switch (options.type) {
+      case 'hinge':
+        if (options.mesh) {
+          vector.setValue(options.pivotInA.x, options.pivotInA.y, options.pivotInA.z);
+          vectorB.setValue(options.pivotInB.x, options.pivotInB.y, options.pivotInB.z);
+          vectorC.setValue(options.axisInA.x, options.axisInA.y, options.axisInA.z);
+          vectorD.setValue(options.axisInB.x, options.axisInB.y, options.axisInB.z);
+          constraint = new Ammo.btHingeConstraint(
+            this.getBody(mesh, instance),
+            this.getBody(options.mesh, options.instance),
+            vector, vectorB, vectorC, vectorD,
+            true
+          );
+        } else {
+          transform.setIdentity();
+          if (options.position) {
+            vector.setValue(options.position.x, options.position.y, options.position.z);
+            transform.setOrigin(vector);
+          }
+          if (options.rotation) {
+            quaternion.setValue(options.rotation.x, options.rotation.y, options.rotation.z, options.rotation.w);
+            transform.setRotation(quaternion);
+          }
+          constraint = new Ammo.btHingeConstraint(this.getBody(mesh, instance), transform, true);
+        }
+        if (options.friction) {
+          constraint.enableAngularMotor(true, 0, 1);
+        }
+        if (options.limits) {
+          constraint.setLimit(
+            options.limits.low,
+            options.limits.high,
+            options.limits.softness || 0.9,
+            options.limits.biasFactor || 0.3,
+            options.limits.relaxationFactor || 1.0
+          );
+        }
+        break;
+      case 'p2p':
+        vector.setValue(options.pivotInA.x, options.pivotInA.y, options.pivotInA.z);
+        vectorB.setValue(options.pivotInB.x, options.pivotInB.y, options.pivotInB.z);
+        constraint = new Ammo.btPoint2PointConstraint(
+          this.getBody(mesh, instance),
+          this.getBody(options.mesh, options.instance),
+          vector,
+          vectorB
+        );
+        break;
+      case 'slider':
+        transform.setIdentity();
+        if (options.position) {
+          vector.setValue(options.position.x, options.position.y, options.position.z);
+          transform.setOrigin(vector);
+        }
+        if (options.rotation) {
+          quaternion.setValue(options.rotation.x, options.rotation.y, options.rotation.z, options.rotation.w);
+          transform.setRotation(quaternion);
+        }
+        constraint = new Ammo.btSliderConstraint(this.getBody(mesh, instance), transform, true);
+        if (options.limits && options.limits.linear && options.limits.linear.lower !== undefined) {
+          constraint.setLowerLinLimit(options.limits.linear.lower);
+        }
+        if (options.limits && options.limits.linear && options.limits.linear.upper !== undefined) {
+          constraint.setUpperLinLimit(options.limits.linear.upper);
+        }
+        break;
+      default:
+        break;
+    }
+
+    if (constraint) {
+      world.addConstraint(constraint);
+      constraints.push(constraint);
+    }
+
+    return constraint;
+  }
+
+  removeConstraint(constraint) {
+    const { constraints, world } = this;
+    const index = constraints.indexOf(constraint);
+    if (index !== -1) {
+      constraints.splice(index, 1);
+      world.removeConstraint(constraint);
+    }
+  }
+
+  addRope(mesh, {
+    anchorA,
+    anchorB,
+    origin,
+    length,
+    segments,
+  }) {
+    const {
+      aux: {
+        softBodyHelpers,
+        vector: from,
+        vectorB: to,
+      },
+      bodies,
+      ropes,
+      world,
+    } = this;
+    from.setValue(origin.x, origin.y, origin.z);
+    to.setValue(origin.x, origin.y + length, origin.z);
+    const body = softBodyHelpers.CreateRope(
+      world.getWorldInfo(),
+      from,
+      to,
+      segments - 1,
+      0
+    );
+    body.setTotalMass(length * 0.5, false);
+    const DISABLE_DEACTIVATION = 4;
+    body.setActivationState(DISABLE_DEACTIVATION);
+    if (anchorA) {
+      body.appendAnchor(0, this.getBody(anchorA), true, 0.9);
+    }
+    if (anchorB) {
+      body.appendAnchor(segments, this.getBody(anchorB), true, 0.9);
+    }
+    const stride = length / segments;
+    const colliderShape = this.createShape({
+      shape: 'sphere',
+      radius: stride * 0.75,
+    });
+    const colliders = [];
+    for (let i = 1; i < segments; i += 1) {
+      const collider = this.createBody(colliderShape, { angularFactor: { x: 0, y: 0, z: 0 }, mass: (length * 0.5) / segments }, {
+        position: { x: origin.x, y: origin.y + stride * i, z: origin.z },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+      });
+      world.addRigidBody(collider, 8, 1 | 2 | 4);
+      body.appendAnchor(i, collider, true, 1);
+      colliders.push(collider);
+    }
+    body.colliders = colliders;
+    body.colliderShape = colliderShape;
+    body.mesh = mesh;
+    world.addSoftBody(body, 8, 0);
+    bodies.set(mesh, body);
+    ropes.push(mesh);
+  }
+
+  removeRope(mesh) {
+    const { bodies, ropes, runtime: Ammo, world } = this;
+    const index = ropes.indexOf(mesh);
+    if (index !== -1) {
+      ropes.splice(index, 1);
+      const body = bodies.get(mesh);
+      world.removeSoftBody(body);
+      Ammo.destroy(body);
+      bodies.delete(mesh);
+      for (let i = 0, l = body.colliders.length; i < l; i += 1) {
+        const collider = body.colliders[i];
+        world.removeRigidBody(collider);
+        Ammo.destroy(collider.getMotionState());
+        Ammo.destroy(collider);
+      }
+      Ammo.destroy(body.colliderShape);
+    }
+  }
+
+  createBody(shape, flags, transform) {
     const { aux, runtime: Ammo } = this;
 
     flags.mass = flags.mass || 0;
@@ -136,8 +322,12 @@ class Physics {
       body.setCollisionFlags(body.getCollisionFlags() | CF_NO_CONTACT_RESPONSE);
     }
     if (flags.isKinematic) {
-      body.setCollisionFlags((body.getCollisionFlags() & ~CF_STATIC_OBJECT) | CF_KINEMATIC_OBJECT);    
+      body.setCollisionFlags((body.getCollisionFlags() & ~CF_STATIC_OBJECT) | CF_KINEMATIC_OBJECT);
       body.setActivationState(DISABLE_DEACTIVATION);
+    }
+    if (flags.angularFactor) {
+      aux.vector.setValue(flags.angularFactor.x, flags.angularFactor.y, flags.angularFactor.z);
+      body.setAngularFactor(aux.vector);
     }
 
     body.flags = flags;
@@ -317,6 +507,7 @@ class Physics {
       bodies,
       dynamic,
       kinematic,
+      ropes,
       world,
     } = this;
     kinematic.forEach((mesh) => {
@@ -354,6 +545,9 @@ class Physics {
         mesh.position.set(position.x(), position.y(), position.z());
         mesh.quaternion.set(quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w());
       }
+    });
+    ropes.forEach((mesh) => {
+      mesh.update(bodies.get(mesh).get_m_nodes());
     });
     const dispatcher = world.getDispatcher();
     for (let i = 0, il = dispatcher.getNumManifolds(); i < il; i += 1) {

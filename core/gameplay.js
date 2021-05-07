@@ -142,6 +142,8 @@ class Gameplay extends Group {
       world,
     } = this;
 
+    world.generate();
+
     const spawn = (new Vector3(world.width * 0.5, 0, world.depth * 0.5)).floor();
     spawn.y = Math.max(3, world.heightmap.view[spawn.z * world.width + spawn.x] + 1);
     spawn.multiplyScalar(world.scale);
@@ -208,9 +210,9 @@ class Gameplay extends Group {
 
     this.dudes.dudes.forEach((dude) => {
       if (projectiles.onDudeContact) {
-        dude.physics.onContact = projectiles.onDudeContact;
+        dude.onContact = projectiles.onDudeContact;
       }
-      physics.addMesh(dude.physics, { isKinematic: true, isTrigger: !!dude.physics.onContact });
+      physics.addMesh(dude, { isKinematic: true, isTrigger: !!dude.onContact });
     });
     physics.addMesh(projectiles, { mass: 1 });
 
@@ -251,7 +253,6 @@ class Gameplay extends Group {
     if (!hasLoaded) {
       return;
     }
-    this.updateLocomotion({ animation, camera, isXR });
     ambient.animate(animation);
     birds.animate(animation);
     clouds.animate(animation);
@@ -263,6 +264,81 @@ class Gameplay extends Group {
       this.updateLight(
         light + Math.min(Math.max(targetLight - light, -animation.delta), animation.delta)
       );
+    }
+  }
+
+  onLocomotionTick({ animation, camera, isXR }) {
+    const {
+      hasLoaded,
+      locomotion: {
+        direction,
+        forward,
+        right,
+        worldUp,
+      },
+      physics,
+      player,
+    } = this;
+    if (!hasLoaded) {
+      return;
+    }
+    if (isXR) {
+      player.controllers.forEach(({ buttons, hand, worldspace }) => {
+        if (
+          hand && hand.handedness === 'left'
+          && (buttons.leftwardsDown || buttons.rightwardsDown)
+        ) {
+          player.rotate(worldUp, Math.PI * 0.25 * (buttons.leftwardsDown ? 1 : -1));
+        }
+        if (
+          hand && hand.handedness === 'right'
+          && (
+            buttons.backwards || buttons.backwardsUp
+            || buttons.forwards || buttons.forwardsUp
+            || buttons.leftwards || buttons.leftwardsUp
+            || buttons.rightwards || buttons.rightwardsUp
+          )
+        ) {
+          const speed = 6;
+          player.move(
+            direction
+              .set(
+                (buttons.leftwards || buttons.leftwardsUp) ? -1 : ((buttons.rightwards || buttons.rightwardsUp) ? 1 : 0),
+                0,
+                (buttons.backwards || buttons.backwardsUp) ? 1 : ((buttons.forwards || buttons.forwardsUp) ? -1 : 0),
+              )
+              .normalize()
+              .applyQuaternion(worldspace.quaternion)
+              .multiplyScalar(animation.delta * speed),
+            physics
+          );
+        }
+      });
+    } else {
+      const { desktop: { keyboard, speed } } = player;
+      if (
+        keyboard.x !== 0
+        || keyboard.y !== 0
+        || keyboard.z !== 0
+      ) {
+        camera.getWorldDirection(forward);
+        right.crossVectors(worldUp, forward);
+        player.move(
+          direction
+            .set(0, 0, 0)
+            .addScaledVector(right, -keyboard.x)
+            .addScaledVector(worldUp, keyboard.y)
+            .addScaledVector(forward, keyboard.z)
+            .normalize()
+            .multiplyScalar(animation.delta * speed),
+          physics
+        );
+      }
+    }
+    if (player.position.y < 3) {
+      player.move({ x: 0, y: 3 - player.position.y, z: 0 });
+    } else if (player.position.y > 128) {
+      player.move({ x: 0, y: 128 - player.position.y, z: 0 });
     }
   }
 
@@ -345,79 +421,6 @@ class Gameplay extends Group {
       uniforms.lightIntensity.value = Math.min(1.0 - Math.min(intensity, 0.5) * 2, 0.7);
       uniforms.sunlightIntensity.value = Math.min(intensity, 0.7);
     });
-  }
-
-  updateLocomotion({ animation, camera, isXR }) {
-    const {
-      locomotion: {
-        direction,
-        forward,
-        right,
-        worldUp,
-      },
-      physics,
-      player,
-    } = this;
-    if (isXR) {
-      player.controllers.forEach(({ buttons, hand, worldspace }) => {
-        if (
-          hand && hand.handedness === 'left'
-          && (buttons.leftwardsDown || buttons.rightwardsDown)
-        ) {
-          player.rotate(
-            Math.PI * 0.25 * (buttons.leftwardsDown ? 1 : -1)
-          );
-        }
-        if (
-          hand && hand.handedness === 'right'
-          && (
-            buttons.backwards || buttons.backwardsUp
-            || buttons.forwards || buttons.forwardsUp
-            || buttons.leftwards || buttons.leftwardsUp
-            || buttons.rightwards || buttons.rightwardsUp
-          )
-        ) {
-          const speed = 6;
-          player.move(
-            direction
-              .set(
-                (buttons.leftwards || buttons.leftwardsUp) ? -1 : ((buttons.rightwards || buttons.rightwardsUp) ? 1 : 0),
-                0,
-                (buttons.backwards || buttons.backwardsUp) ? 1 : ((buttons.forwards || buttons.forwardsUp) ? -1 : 0),
-              )
-              .normalize()
-              .applyQuaternion(worldspace.quaternion)
-              .multiplyScalar(animation.delta * speed),
-            physics
-          );
-        }
-      });
-    } else {
-      const { desktop: { keyboard, speed } } = player;
-      if (
-        keyboard.x !== 0
-        || keyboard.y !== 0
-        || keyboard.z !== 0
-      ) {
-        camera.getWorldDirection(forward);
-        right.crossVectors(forward, worldUp);
-        player.move(
-          direction
-            .set(0, 0, 0)
-            .addScaledVector(right, keyboard.x)
-            .addScaledVector(worldUp, keyboard.y)
-            .addScaledVector(forward, keyboard.z)
-            .normalize()
-            .multiplyScalar(animation.delta * speed),
-          physics
-        );
-      }
-    }
-    if (player.position.y < 3) {
-      player.move({ x: 0, y: 3 - player.position.y, z: 0 });
-    } else if (player.position.y > 128) {
-      player.move({ x: 0, y: 128 - player.position.y, z: 0 });
-    }
   }
 
   updateRain(enabled) {

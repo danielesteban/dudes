@@ -27,7 +27,7 @@ class Game extends Gameplay {
     const vertex = new Vector3();
     this.projectiles.onDudeContact = (contact) => {
       if (this.projectiles.destroyOnContact(contact)) {
-        const dude = contact.triggerMesh.parent;
+        const dude = contact.triggerMesh;
         this.projectiles.getColorAt(contact.instance, diffuse);
         const color = dude.geometry.getAttribute('color');
         const position = dude.geometry.getAttribute('position');
@@ -61,7 +61,7 @@ class Game extends Gameplay {
       raycaster,
     }) => {
       if (
-        !isXR ? buttons.primaryDown : hand && buttons.triggerDown
+        !isXR ? (buttons.primaryDown || buttons.tertiaryDown) : hand && buttons.triggerDown
       ) {
         const { origin, direction } = raycaster.ray;
         const position = origin
