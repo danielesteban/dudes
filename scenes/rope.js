@@ -124,7 +124,7 @@ class Ropes extends Gameplay {
     }
     player.getWorldDirection(forward);
     if (
-      forward.y > -0.3 && forward.y < 0.3
+      (forward.y > -0.3 || movement.z > 0) && (forward.y < 0.3 || movement.z < 0)
       && (movement.x !== 0 || movement.z !== 0)
     ) {
       right.crossVectors(worldUp, forward);
