@@ -1,5 +1,6 @@
 import { Matrix4 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
+import Voxelizer from '../core/voxelizer.js';
 import Ball from '../renderables/ball.js';
 import Box from '../renderables/box.js';
 import Helicopter from '../renderables/helicopter.js';
@@ -20,6 +21,11 @@ class Ropes extends Gameplay {
     this.helicopter = new Helicopter({
       sfx: scene.sfx,
       sound: '/sounds/engine.ogg',
+      voxelizer: new Voxelizer({
+        maxWidth: 32,
+        maxHeight: 32,
+        maxDepth: 32,
+      }),
     });
     if (options.view === 'thirdpersonhack') {
       this.helicopter.position.set(-0.5, -3, -3);

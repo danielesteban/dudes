@@ -3,7 +3,7 @@ import VoxelWorld from '../core/voxels.js';
 import VoxelChunk from './chunk.js';
 
 class Helicopter extends Group {
-  constructor({ sfx, sound }) {
+  constructor({ sfx, sound, voxelizer }) {
     super();
 
     this.aux = {
@@ -12,6 +12,7 @@ class Helicopter extends Group {
     };
     this.acceleration = new Vector3();
     this.velocity = new Vector3();
+    this.voxelizer = voxelizer;
     if (sfx && sound) {
       sfx.load(sound)
         .then((sound) => {
@@ -41,63 +42,17 @@ class Helicopter extends Group {
   }
 
   voxelize() {
-    return new Promise((resolve) => {
-      const voxelizer = new VoxelWorld({
-        width: 32,
-        height: 32,
-        depth: 32,
+    const { voxelizer } = this;
+    return Promise.all([
+      voxelizer.voxelize({
+        colliders: true,
         scale: 0.125,
-        onLoad: () => generate(),
-      });
-      const meshModel = (offset, colliders) => {
-        const model = new Group();
-        const chunks = {
-          x: voxelizer.width / voxelizer.chunkSize,
-          y: voxelizer.height / voxelizer.chunkSize,
-          z: voxelizer.depth / voxelizer.chunkSize,
-        };
-        for (let z = 0; z < chunks.z; z += 1) {
-          for (let y = 0; y < chunks.y; y += 1) {
-            for (let x = 0; x < chunks.x; x += 1) {
-              const chunk = new VoxelChunk({
-                x: offset.x + x * voxelizer.chunkSize,
-                y: offset.y + y * voxelizer.chunkSize,
-                z: offset.z + z * voxelizer.chunkSize,
-                geometry: voxelizer.mesh(x, y, z),
-                scale: voxelizer.scale,
-              });
-              if (chunk.geometry.getIndex() !== null) {
-                model.add(chunk);
-                if (colliders) {
-                  const boxes = voxelizer.colliders(x, y, z);
-                  if (boxes.length) {
-                    chunk.collider = new Group();
-                    chunk.collider.position.copy(chunk.position);
-                    chunk.collider.physics = [];
-                    for (let i = 0, l = boxes.length; i < l; i += 6) {
-                      chunk.collider.physics.push({
-                        shape: 'box',
-                        width: boxes[i + 3] * voxelizer.scale,
-                        height: boxes[i + 4] * voxelizer.scale,
-                        depth: boxes[i + 5] * voxelizer.scale,
-                        position: {
-                          x: (boxes[i] + boxes[i + 3] * 0.5) * voxelizer.scale,
-                          y: (boxes[i + 1] + boxes[i + 4] * 0.5) * voxelizer.scale,
-                          z: (boxes[i + 2] + boxes[i + 5] * 0.5) * voxelizer.scale,
-                        },
-                      });
-                    }
-                    model.add(chunk.collider);
-                  }
-                }
-              }
-            }
-          }
-        }
-        return model;
-      };
-      const generate = () => {
-        voxelizer.generateModel((x, y, z) => {
+        offset: {
+          x: voxelizer.world.width * -0.5,
+          y: -11,
+          z: voxelizer.world.depth * -0.5,
+        },
+        generator: (x, y, z) => {
           if (
             // Limits
             y === 0
@@ -163,17 +118,16 @@ class Helicopter extends Group {
             g: color.g - Math.random() * 0x11,
             b: color.b - Math.random() * 0x11,
           };
-        });
-        const cockpit = meshModel({
-          x: voxelizer.width * -0.5,
-          y: -11,
-          z: voxelizer.depth * -0.5,
-        }, true);
-        cockpit.position.set(0, 1.25, 0);
-        this.cockpit = cockpit;
-        this.add(cockpit);
-
-        voxelizer.generateModel((x, y, z) => {
+        },
+      }),
+      voxelizer.voxelize({
+        scale: 0.125,
+        offset: {
+          x: voxelizer.world.width * -0.5,
+          y: -1.5,
+          z: voxelizer.world.depth * -0.5,
+        },
+        generator: (x, y, z) => {
           if (
             // Limits
             y !== 1
@@ -195,19 +149,18 @@ class Helicopter extends Group {
             g: 0x33 - Math.random() * 0x11,
             b: 0x33 - Math.random() * 0x11,
           };
-        });
-        const rotor = meshModel({
-          x: voxelizer.width * -0.5,
-          y: -1.5,
-          z: voxelizer.depth * -0.5,
-        });
+        },
+      }),
+    ])
+      .then(([cockpit, rotor]) => {
+        cockpit.position.set(0, 1.25, 0);
+        this.cockpit = cockpit;
+        this.add(cockpit);
         rotor.position.set(0, 2.75, 0);
         rotor.scale.set(1, 0.5, 1);
         this.rotor = rotor;
         this.add(rotor);
-        resolve();
-      };
-    });
+      });
   }
 }
 
