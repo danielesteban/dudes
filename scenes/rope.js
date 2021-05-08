@@ -40,7 +40,7 @@ class Ropes extends Gameplay {
       noise: 0,
       type: 0,
       shape: VoxelWorld.brushShapes.sphere,
-      size: 3,
+      size: 4,
     };
     const inverse = new Matrix4();
     this.projectiles.onDudeContact = ({ mesh, triggerMesh: dude, normal, position }) => {
