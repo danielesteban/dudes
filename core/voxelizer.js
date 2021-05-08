@@ -70,8 +70,10 @@ class Voxelizer {
               continue;
             }
             chunk.collider = new Group();
+            chunk.collider.matrixAutoUpdate = false;
             chunk.collider.position.copy(chunk.position);
             chunk.collider.physics = [];
+            chunk.collider.updateMatrix();
             for (let i = 0, l = boxes.length; i < l; i += 6) {
               chunk.collider.physics.push({
                 shape: 'box',

@@ -55,32 +55,32 @@ class Ropes extends Gameplay {
   onLoad() {
     const { physics, player } = this;
     super.onLoad();
-
     player.move({ x: 0.5, y: 15, z: 5 });
-    player.updateMatrixWorld();
-    const { anchor, ball } = this;
-    const options = {
-      anchorA: ball,
-      anchorB: anchor,
-      length: 10,
-      segments: 12,
-    };
-    anchor.getWorldPosition(ball.position).add({ x: 0, y: -options.length, z: 0 });
-    options.origin = ball.position;
-    const rope = new Rope(options);
-    this.rope = rope;
-    physics.addMesh(anchor, { isKinematic: true });
-    physics.addMesh(ball, { mass: 10, angularFactor: { x: 0, y: 0, z: 0 } });
-    physics.addRope(rope, options);
-    this.add(ball);
-    this.add(rope);
-
     this.helicopter.voxelize()
-      .then(() => (
-        this.helicopter.cockpit.children.forEach(({ collider }) => (
-          collider && physics.addMesh(collider, { isKinematic: true })
-        ))
-      ));
+      .then(() => {
+        const { anchor, ball } = this;
+        const options = {
+          anchorA: ball,
+          anchorB: anchor,
+          length: 10,
+          segments: 12,
+        };
+        anchor.getWorldPosition(ball.position).add({ x: 0, y: -options.length, z: 0 });
+        options.origin = ball.position;
+        const rope = new Rope(options);
+        this.rope = rope;
+        this.helicopter.cockpit.children.forEach(({ collider }) => {
+          if (collider) {
+            collider.updateWorldMatrix(true, false);
+            physics.addMesh(collider, { isKinematic: true });
+          }
+        });
+        physics.addMesh(anchor, { isKinematic: true });
+        physics.addMesh(ball, { mass: 10, angularFactor: { x: 0, y: 0, z: 0 } });
+        physics.addRope(rope, options);
+        this.add(ball);
+        this.add(rope);
+      });
   }
 
   onAnimationTick({ animation, camera, isXR }) {
@@ -165,10 +165,13 @@ class Ropes extends Gameplay {
   }
 
   updateLight(intensity) {
+    const { rope } = this;
     super.updateLight(intensity);
     Box.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
     Ball.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
-    Rope.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
+    if (rope) {
+      Rope.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
+    }
   }
 }
 
