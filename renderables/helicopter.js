@@ -69,11 +69,11 @@ class Helicopter extends Group {
               if (chunk.geometry.getIndex() !== null) {
                 model.add(chunk);
                 if (colliders) {
-                  chunk.collider = new Group();
-                  chunk.collider.position.copy(chunk.position);
-                  chunk.collider.physics = [];
                   const boxes = voxelizer.colliders(x, y, z);
                   if (boxes.length) {
+                    chunk.collider = new Group();
+                    chunk.collider.position.copy(chunk.position);
+                    chunk.collider.physics = [];
                     for (let i = 0, l = boxes.length; i < l; i += 6) {
                       chunk.collider.physics.push({
                         shape: 'box',
@@ -81,12 +81,13 @@ class Helicopter extends Group {
                         height: boxes[i + 4] * voxelizer.scale,
                         depth: boxes[i + 5] * voxelizer.scale,
                         position: {
-                          x: offset.x + (boxes[i] + boxes[i + 3] * 0.5) * voxelizer.scale,
-                          y: offset.y + (boxes[i + 1] + boxes[i + 4] * 0.5) * voxelizer.scale,
-                          z: offset.z + (boxes[i + 2] + boxes[i + 5] * 0.5) * voxelizer.scale,
+                          x: (boxes[i] + boxes[i + 3] * 0.5) * voxelizer.scale,
+                          y: (boxes[i + 1] + boxes[i + 4] * 0.5) * voxelizer.scale,
+                          z: (boxes[i + 2] + boxes[i + 5] * 0.5) * voxelizer.scale,
                         },
                       });
                     }
+                    model.add(chunk.collider);
                   }
                 }
               }

@@ -19,7 +19,6 @@ class Ropes extends Gameplay {
     });
     if (options.view === 'thirdpersonhack') {
       this.helicopter.position.set(-0.5, -3, -3);
-      // this.helicopter.rotation.set(0, Math.PI * 0.5, 0);
     }
     this.add(this.helicopter);
     this.player.add(this.helicopter);
@@ -77,7 +76,7 @@ class Ropes extends Gameplay {
     this.helicopter.voxelize()
       .then(() => (
         this.helicopter.cockpit.children.forEach(({ collider }) => (
-          physics.addMesh(collider, { isKinematic: true })
+          collider && physics.addMesh(collider, { isKinematic: true })
         ))
       ));
   }
