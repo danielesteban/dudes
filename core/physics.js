@@ -64,10 +64,16 @@ class Physics {
       }
       bodies.set(mesh, instances);
     } else if (mesh.isGroup || mesh.isMesh) {
-      const body = this.createBody(shape, flags, {
-        position: mesh.position,
-        rotation: mesh.quaternion,
-      });
+      let transform;
+      if (flags.isKinematic) {
+        transform = { matrix: mesh.matrixWorld.elements };
+      } else {
+        transform = {
+          position: mesh.position,
+          rotation: mesh.quaternion,
+        };
+      }
+      const body = this.createBody(shape, flags, transform);
       body.mesh = mesh;
       world.addRigidBody(body, flags.collisionGroup, -1);
       bodies.set(mesh, body);

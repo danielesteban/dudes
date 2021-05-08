@@ -13,6 +13,10 @@ class Ropes extends Gameplay {
       depth: 160,
     });
 
+    this.anchor = new Box();
+    this.anchor.position.set(0, 0.625, 1.12);
+    const ball = new Ball();
+    this.ball = ball;
     this.helicopter = new Helicopter({
       sfx: scene.sfx,
       sound: '/sounds/engine.ogg',
@@ -20,11 +24,8 @@ class Ropes extends Gameplay {
     if (options.view === 'thirdpersonhack') {
       this.helicopter.position.set(-0.5, -3, -3);
     }
-    this.add(this.helicopter);
+    this.helicopter.add(this.anchor);
     this.player.add(this.helicopter);
-    this.anchor = new Box();
-    const ball = new Ball();
-    this.ball = ball;
 
     const inverse = new Matrix4();
     this.projectiles.onDudeContact = ({ mesh, triggerMesh: dude, position }) => {
@@ -58,18 +59,13 @@ class Ropes extends Gameplay {
       length: 10,
       segments: 12,
     };
-    this.helicopter.getWorldPosition(anchor.position).add({ x: 0, y: 0.625, z: 1.125 });
-    ball.position.copy(anchor.position);
-    ball.position.y -= options.length;
+    anchor.getWorldPosition(ball.position).add({ x: 0, y: -options.length, z: 0 });
     options.origin = ball.position;
     const rope = new Rope(options);
     this.rope = rope;
     physics.addMesh(anchor, { isKinematic: true });
     physics.addMesh(ball, { mass: 10, angularFactor: { x: 0, y: 0, z: 0 } });
     physics.addRope(rope, options);
-    this.helicopter.worldToLocal(anchor.position);
-    this.helicopter.add(anchor);
-    anchor.updateMatrixWorld();
     this.add(ball);
     this.add(rope);
 
