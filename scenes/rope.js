@@ -162,7 +162,6 @@ class Ropes extends Gameplay {
     helicopter.velocity.z = Math.min(Math.max(helicopter.velocity.z * 0.95 + helicopter.acceleration.z, -3), 3);
     forward.y = 0;
     forward.normalize();
-
     helicopter.acceleration.y = movement.y * 0.1;
     helicopter.velocity.y = Math.min(Math.max(helicopter.velocity.y * 0.9 + helicopter.acceleration.y, -3), 3);
     if (helicopter.velocity.y !== 0) {
@@ -177,6 +176,7 @@ class Ropes extends Gameplay {
         // physics
       );
     }
+    helicopter.updateMatrixWorld();
   }
 
   resumeAudio() {
