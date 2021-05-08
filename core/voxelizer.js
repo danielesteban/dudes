@@ -58,31 +58,34 @@ class Voxelizer {
               geometry: world.mesh(x, y, z),
               scale,
             });
-            if (chunk.geometry.getIndex() !== null) {
-              model.add(chunk);
-              if (colliders) {
-                const boxes = world.colliders(x, y, z);
-                if (boxes.length) {
-                  chunk.collider = new Group();
-                  chunk.collider.position.copy(chunk.position);
-                  chunk.collider.physics = [];
-                  for (let i = 0, l = boxes.length; i < l; i += 6) {
-                    chunk.collider.physics.push({
-                      shape: 'box',
-                      width: boxes[i + 3] * scale,
-                      height: boxes[i + 4] * scale,
-                      depth: boxes[i + 5] * scale,
-                      position: {
-                        x: (boxes[i] + boxes[i + 3] * 0.5) * scale,
-                        y: (boxes[i + 1] + boxes[i + 4] * 0.5) * scale,
-                        z: (boxes[i + 2] + boxes[i + 5] * 0.5) * scale,
-                      },
-                    });
-                  }
-                  model.add(chunk.collider);
-                }
-              }
+            if (chunk.geometry.getIndex() === null) {
+              continue;
             }
+            model.add(chunk);
+            if (!colliders) {
+              continue;
+            }
+            const boxes = world.colliders(x, y, z);
+            if (!boxes.length) {
+              continue;
+            }
+            chunk.collider = new Group();
+            chunk.collider.position.copy(chunk.position);
+            chunk.collider.physics = [];
+            for (let i = 0, l = boxes.length; i < l; i += 6) {
+              chunk.collider.physics.push({
+                shape: 'box',
+                width: boxes[i + 3] * scale,
+                height: boxes[i + 4] * scale,
+                depth: boxes[i + 5] * scale,
+                position: {
+                  x: (boxes[i] + boxes[i + 3] * 0.5) * scale,
+                  y: (boxes[i + 1] + boxes[i + 4] * 0.5) * scale,
+                  z: (boxes[i + 2] + boxes[i + 5] * 0.5) * scale,
+                },
+              });
+            }
+            model.add(chunk.collider);
           }
         }
       }
