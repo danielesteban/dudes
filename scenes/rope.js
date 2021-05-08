@@ -58,6 +58,7 @@ class Ropes extends Gameplay {
       );
       dude.searchEnabled = false;
       dude.position.copy(ball.position).add({ x: 0, y: -0.5 - dude.physics[0].height, z: 0 });
+      dude.skeleton.bones[dude.constructor.bones.head].rotation.set(0, 0, 0);
       dude.setAction(dude.actions.fly);
       this.physics.removeMesh(dude);
       this.physics.addMesh(dude, { mass: 1 });

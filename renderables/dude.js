@@ -516,7 +516,7 @@ class Dude extends SkinnedMesh {
       return;
     }
     if (!path && gazeAt) {
-      const head = this.skeleton.bones[1];
+      const head = this.skeleton.bones[Dude.bones.head];
       head.lookAt(gazeAt);
       head.rotation.y = Math.min(Math.max(head.rotation.y, Math.PI * -0.4), Math.PI * 0.4);
       return;
