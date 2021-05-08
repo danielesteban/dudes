@@ -265,6 +265,43 @@ class Dude extends SkinnedMesh {
         duration: 1,
       },
       {
+        clip: new AnimationClip('fly', 1, [
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.leftArm}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * -0.5, Math.PI * -0.25, 0, 'YXZ'),
+              ...eulerToQuat(Math.PI * -1, 0, 0),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.rightArm}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * -1, 0, 0),
+              ...eulerToQuat(Math.PI * -0.5, Math.PI * 0.25, 0, 'YXZ'),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.leftLeg}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * -0.25, Math.PI * -0.125, 0, 'YXZ'),
+              ...eulerToQuat(Math.PI * 0.25, 0, 0),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.rightLeg}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * 0.25, 0, 0),
+              ...eulerToQuat(Math.PI * -0.25, Math.PI * 0.125, 0, 'YXZ'),
+            ])
+          ),
+        ]),
+        duration: 0.25,
+      },
+      {
         clip: new AnimationClip('hit', 1, [
           new QuaternionKeyframeTrack(
             `.bones[${bones.leftArm}].quaternion`,
@@ -468,6 +505,9 @@ class Dude extends SkinnedMesh {
     } = this;
     marker.animate(animation);
     mixer.update(animation.delta);
+    if (this.action === actions.fly) {
+      return;
+    }
     if (this.action === actions.hit) {
       this.hitTimer -= animation.delta;
       if (this.hitTimer <= 0) {
@@ -566,7 +606,7 @@ class Dude extends SkinnedMesh {
 
   setPath(results, scale, showMarker) {
     const { actions, lighting, marker, position } = this;
-    if (this.action === actions.hit) {
+    if (this.action === actions.hit || this.action === actions.fly) {
       return;
     }
     const path = [{

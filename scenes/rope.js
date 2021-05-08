@@ -1,5 +1,6 @@
-import { Matrix4 } from '../vendor/three.js';
+import { Color, Matrix4, Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
+import VoxelWorld from '../core/voxels.js';
 import Voxelizer from '../core/voxelizer.js';
 import Ball from '../renderables/ball.js';
 import Box from '../renderables/box.js';
@@ -33,20 +34,39 @@ class Ropes extends Gameplay {
     this.helicopter.add(this.anchor);
     this.player.add(this.helicopter);
 
+    const explosionOrigin = new Vector3();
+    const explosionBrush = {
+      color: new Color(),
+      noise: 0,
+      type: 0,
+      shape: VoxelWorld.brushShapes.sphere,
+      size: 3,
+    };
     const inverse = new Matrix4();
-    this.projectiles.onDudeContact = ({ mesh, triggerMesh: dude, position }) => {
+    this.projectiles.onDudeContact = ({ mesh, triggerMesh: dude, normal, position }) => {
       if (mesh !== ball) {
         return;
       }
+      this.spawnExplosion(position, ball.material.color);
+      this.updateVoxel(
+        explosionBrush,
+        explosionOrigin
+          .copy(position)
+          .divideScalar(this.world.scale)
+          .addScaledVector(normal, 0.5 * this.world.scale)
+          .floor()
+      );
       dude.searchEnabled = false;
-      dude.setAction(dude.actions.hit);
+      dude.position.copy(ball.position).add({ x: 0, y: -0.5 - dude.physics[0].height, z: 0 });
+      dude.setAction(dude.actions.fly);
       this.physics.removeMesh(dude);
       this.physics.addMesh(dude, { mass: 1 });
-      this.physics.setTransform(dude, 0, ball.position.clone().add({ x: 0, y: -0.5 - dude.physics[0].height, z: 0 }));
       dude.constraint = this.physics.addConstraint(ball, 0, {
         type: 'p2p',
         mesh: dude,
-        pivotInA: this.helicopter.aux.pivot.copy(position).applyMatrix4(inverse.copy(ball.matrixWorld).invert()),
+        pivotInA: this.helicopter.aux.pivot
+          .copy(position)
+          .applyMatrix4(inverse.copy(ball.matrixWorld).invert()),
         pivotInB: { x: 0, y: dude.physics[0].height, z: 0 },
       });
     };
