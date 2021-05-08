@@ -44,7 +44,7 @@ class Gameplay extends Group {
           to: 1.5,
         },
         {
-          url: 'sounds/rain.ogg',
+          url: '/sounds/rain.ogg',
           enabled: false,
         },
       ],
@@ -432,7 +432,7 @@ class Gameplay extends Group {
       rain.reset();
     }
     rain.visible = enabled;
-    ambient.sounds.find(({ url }) => url === 'sounds/rain.ogg').enabled = rain.visible;
+    ambient.sounds.find(({ url }) => url === '/sounds/rain.ogg').enabled = rain.visible;
   }
 
   updateVoxel(brush, voxel) {

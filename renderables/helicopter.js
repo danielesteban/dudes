@@ -1,6 +1,4 @@
 import { Group, Vector3 } from '../vendor/three.js';
-import VoxelWorld from '../core/voxels.js';
-import VoxelChunk from './chunk.js';
 
 class Helicopter extends Group {
   constructor({ sfx, sound, voxelizer }) {
