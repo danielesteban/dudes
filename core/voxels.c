@@ -745,7 +745,7 @@ void generate(
     {
       const int street = 6;
       const int floorHeight = 12 + (rand() % 4);
-      const int floors = type == 1 ? floor((world->height - 16) / floorHeight) : 2;
+      const int floors = type == 1 ? floor((world->height - 17) / floorHeight) : 2;
       const unsigned int tint = rand();
       generateBuilding(
         world,

@@ -55,23 +55,27 @@ class Helicopter extends Group {
           if (
             // Limits
             y === 0
-            || y > 22
+            || y > 20
             || (
-              x < 10 || x > 21
-              || z < 12 || z > 27
+              x < 8 || x > 23 || z < 8 || z > 30
+            ) || (
+              (x < 10 || x > 21 || z < 12)
+              && (
+                (y > 9 && y < 12)
+                || Math.sqrt(
+                  (x - voxelizer.world.width * 0.5 + 0.5) ** 2
+                  + (y - 11 + 0.5) ** 2
+                  + (z - 16 + 0.5) ** 2
+                ) > 9.5
+              )
             )
             // Rotor socket
             || (
-              y > 20
+              y > 18
               && (
                 x < 15 || x > 16
                 || z < 15 || z > 16
               )
-            )
-            // Side hooks
-            || (
-              (x < 12 || x > 19)
-              && (z < 21 || z > 22 || y > 8)
             )
             // Mid cut
             || (
@@ -84,22 +88,25 @@ class Helicopter extends Group {
               z > 19
               && (y < 5 || y > 16)
             )
+            // Back side cut
+            || (
+              z > 22 && (x < 12 || x > 19)
+            )
             // Cockpit
             || (
-              y > 1 && y < 20
+              y > 1 && y < 18
               && x > 12 && x < 19
               && z > 12 && z < 19
             )
             // Side Windows
             || (
-              y > 4 && y < 17
+              y > 4 && y < 16
               && z > 13 && z < 18
             )
             // Front Window
             || (
               y > 6 && y < 15
               && x > 13 && x < 18
-              && z < 28
             )
             // Bottom Window
             || (
@@ -111,7 +118,7 @@ class Helicopter extends Group {
             return false;
           }
           let color;
-          if (y < 2 || y > 19) {
+          if (y < 2 || y > 17) {
             color = { r: 0x33, g: 0x33, b: 0x33 };
           } else if (y < 6 || y > 15) {
             color = { r: 0x99, g: 0x33, b: 0x33 };
@@ -162,7 +169,7 @@ class Helicopter extends Group {
         cockpit.position.set(0, 1.25, 0);
         this.cockpit = cockpit;
         this.add(cockpit);
-        rotor.position.set(0, 2.75, 0);
+        rotor.position.set(0, 2.5, 0);
         rotor.scale.set(1, 0.5, 1);
         this.rotor = rotor;
         this.add(rotor);
