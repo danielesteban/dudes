@@ -42,9 +42,12 @@ class Ropes extends Gameplay {
       shape: VoxelWorld.brushShapes.sphere,
       size: 4,
     };
-    const inverse = new Matrix4();
-    this.projectiles.onDudeContact = ({ mesh, triggerMesh: dude, normal, position }) => {
-      if (mesh !== ball) {
+    this.projectiles.onDudeContact = ({ mesh, triggerMesh: dude, position }) => {
+      if (dude.isFalling) {
+        this.resetDude(dude, position);
+        return;
+      }
+      if (this.hooked || mesh !== ball) {
         return;
       }
       this.spawnExplosion(position, ball.material.color);
@@ -53,23 +56,9 @@ class Ropes extends Gameplay {
         explosionOrigin
           .copy(position)
           .divideScalar(this.world.scale)
-          .addScaledVector(normal, 0.5 * this.world.scale)
           .floor()
       );
-      dude.searchEnabled = false;
-      dude.position.copy(ball.position).add({ x: 0, y: -0.5 - dude.physics[0].height, z: 0 });
-      dude.skeleton.bones[dude.constructor.bones.head].rotation.set(0, 0, 0);
-      dude.setAction(dude.actions.fly);
-      this.physics.removeMesh(dude);
-      this.physics.addMesh(dude, { mass: 1 });
-      dude.constraint = this.physics.addConstraint(ball, 0, {
-        type: 'p2p',
-        mesh: dude,
-        pivotInA: this.helicopter.aux.pivot
-          .copy(position)
-          .applyMatrix4(inverse.copy(ball.matrixWorld).invert()),
-        pivotInB: { x: 0, y: dude.physics[0].height, z: 0 },
-      });
+      this.hook(dude);
     };
   }
 
@@ -130,6 +119,7 @@ class Ropes extends Gameplay {
       return;
     }
     const { pivot, movement } = helicopter.aux;
+    let unHook;
     if (isXR) {
       const controllerL = player.controllers.find(({ hand }) => hand && hand.handedness === 'left');
       const controllerR = player.controllers.find(({ hand }) => hand && hand.handedness === 'right');
@@ -141,8 +131,10 @@ class Ropes extends Gameplay {
         controllerL.buttons.primary ? 1 : (controllerR.buttons.primary ? -1 : 0),
         -controllerR.joystick.y
       );
+      unHook = controllerL.buttons.triggerDown || controllerR.buttons.triggerDown;
     } else {
       movement.copy(player.desktop.keyboard);
+      unHook = player.desktop.buttons.primaryDown || player.desktop.buttons.tertiaryDown;
     }
     player.getWorldDirection(forward);
     if (
@@ -177,6 +169,54 @@ class Ropes extends Gameplay {
       );
     }
     helicopter.updateMatrixWorld();
+    if (unHook) {
+      this.unhook();
+    }
+  }
+
+  hook(dude) {
+    const { ball, physics } = this;
+    delete dude.path;
+    dude.searchEnabled = false;
+    dude.position.copy(ball.position).add({ x: 0, y: -0.5 - dude.physics[0].height, z: 0 });
+    dude.skeleton.bones[dude.constructor.bones.head].rotation.set(0, 0, 0);
+    dude.setAction(dude.actions.fly);
+    physics.removeMesh(dude);
+    physics.addMesh(dude, { mass: 1 });
+    dude.constraint = physics.addConstraint(ball, 0, {
+      type: 'p2p',
+      mesh: dude,
+      pivotInA: { x: 0, y: -0.26, z: 0 },
+      pivotInB: { x: 0, y: dude.physics[0].height, z: 0 },
+    });
+    this.hooked = dude;
+  }
+
+  unhook() {
+    const { hooked: dude, physics } = this;
+    if (!dude) {
+      return;
+    }
+    delete this.hooked;
+    physics.removeConstraint(dude.constraint);
+    delete dude.constraint;
+    dude.isFalling = true;
+    physics.removeMesh(dude);
+    physics.addMesh(dude, { collisionMask: 1, mass: 1, isTrigger: true });
+  }
+
+  resetDude(dude, contact) {
+    const { physics } = this;
+    dude.isFalling = false;
+    dude.searchEnabled = true;
+    dude.searchTimer = Math.random();
+    dude.position.copy(contact);
+    dude.position.y = Math.round(dude.position.y);
+    dude.rotation.set(0, 0, 0);
+    dude.updateMatrixWorld();
+    dude.setAction(dude.actions.idle);
+    physics.removeMesh(dude);
+    physics.addMesh(dude, { isKinematic: true, isTrigger: true });
   }
 
   resumeAudio() {

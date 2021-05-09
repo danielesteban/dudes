@@ -59,7 +59,7 @@ class Physics {
         });
         body.mesh = mesh;
         body.instance = i;
-        world.addRigidBody(body, flags.collisionGroup, -1);
+        world.addRigidBody(body, flags.collisionGroup, flags.collisionMask);
         instances.push(body);
       }
       bodies.set(mesh, instances);
@@ -75,7 +75,7 @@ class Physics {
       }
       const body = this.createBody(shape, flags, transform);
       body.mesh = mesh;
-      world.addRigidBody(body, flags.collisionGroup, -1);
+      world.addRigidBody(body, flags.collisionGroup, flags.collisionMask);
       bodies.set(mesh, body);
     } else {
       Ammo.destroy(shape);
@@ -261,6 +261,7 @@ class Physics {
         position: { x: origin.x, y: origin.y + stride * i, z: origin.z },
         rotation: { x: 0, y: 0, z: 0, w: 1 },
       });
+      collider.mesh = mesh;
       world.addRigidBody(collider, 8, 1 | 2 | 4);
       body.appendAnchor(i, collider, true, 1);
       colliders.push(collider);
@@ -302,6 +303,9 @@ class Physics {
     flags.collisionGroup = 1;
     if (flags.isDynamic) flags.collisionGroup = 2;
     else if (flags.isKinematic) flags.collisionGroup = 4;
+    if (flags.collisionMask === undefined) {
+      flags.collisionMask = flags.isKinematic ? (-1 & ~(1 | 4)) : -1;
+    }
 
     if (transform.matrix) {
       aux.transform.setFromOpenGLMatrix(transform.matrix);
@@ -475,6 +479,7 @@ class Physics {
     to.setValue(direction.x, direction.y, direction.z);
     to.op_mul(far);
     to.op_add(from);
+    rayResultCallback.set_m_collisionFilterGroup(-1);
     rayResultCallback.set_m_collisionFilterMask(mask);
     rayResultCallback.set_m_collisionObject(null);
     rayResultCallback.set_m_closestHitFraction(1);
