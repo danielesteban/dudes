@@ -14,6 +14,24 @@ import {
 } from '../vendor/three.js';
 
 class Rope extends InstancedMesh {
+  static setupGeometry() {
+    const tube = new BoxGeometry(0.1, 1, 0.1, 2, 5, 2).toNonIndexed();
+    tube.translate(0, 0.5, 0);
+    tube.deleteAttribute('normal');
+    tube.deleteAttribute('uv');
+    const { count } = tube.getAttribute('position');
+    const color = new BufferAttribute(new Float32Array(count * 3), 3);
+    let light;
+    for (let i = 0; i < count; i += 1) {
+      if (i % 6 === 0) {
+        light = Math.random();
+      }
+      color.setXYZ(i, light, light, light);
+    }
+    tube.setAttribute('color', color);
+    Rope.geometry = BufferGeometryUtils.mergeVertices(tube);
+  }
+
   static setupMaterial() {
     const { uniforms, vertexShader, fragmentShader } = ShaderLib.basic;
     Rope.material = new ShaderMaterial({
@@ -36,32 +54,15 @@ class Rope extends InstancedMesh {
     length,
     segments,
   }) {
+    if (!Rope.geometry) {
+      Rope.setupGeometry();
+    }
     if (!Rope.material) {
       Rope.setupMaterial();
     }
     const segmentLength = length / segments;
-    let geometry;
-    {
-      let tube;
-      tube = new BoxGeometry(0.1, segmentLength, 0.1, 2, Math.round(segmentLength * 6), 2);
-      tube.deleteAttribute('normal');
-      tube.deleteAttribute('uv');
-      tube.translate(0, segmentLength * 0.5, 0);
-      tube = tube.toNonIndexed();
-      const { count } = tube.getAttribute('position');
-      const color = new BufferAttribute(new Float32Array(count * 3), 3);
-      let light;
-      for (let i = 0; i < count; i += 1) {
-        if (i % 6 === 0) {
-          light = Math.random();
-        }
-        color.setXYZ(i, light, light, light);
-      }
-      tube.setAttribute('color', color);
-      geometry = BufferGeometryUtils.mergeVertices(tube);
-    }
     super(
-      geometry,
+      Rope.geometry,
       Rope.material,
       segments
     );
@@ -96,11 +97,6 @@ class Rope extends InstancedMesh {
     this.segmentLength = segmentLength;
   }
 
-  dispose() {
-    const { geometry } = this;
-    geometry.dispose();
-  }
-
   update(nodes) {
     const {
       aux: {
@@ -115,7 +111,6 @@ class Rope extends InstancedMesh {
       anchorB,
       instanceMatrix,
       segments,
-      segmentLength,
     } = this;
     for (let i = 0; i < segments; i += 1) {
       if (i === 0 && anchorA) {
@@ -138,7 +133,7 @@ class Rope extends InstancedMesh {
           vertexB.y - vertex.y,
           vertexB.z - vertex.z
         );
-      vertexB.set(1, normal.length() / segmentLength, 1);
+      vertexB.set(1, normal.length(), 1);
       normal.normalize();
       quaternion.setFromUnitVectors(worldUp, normal);
       transform.compose(
