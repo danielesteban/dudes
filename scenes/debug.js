@@ -6,10 +6,13 @@ import Billboard from '../renderables/billboard.js';
 class Debug extends Gameplay {
   constructor(scene) {
     super(scene, {
+      generation: {
+        seed: 970297029704,
+        type: 0,
+      },
       width: 400,
       height: 96,
       depth: 400,
-      seed: 970297029704,
     });
     const explosionOrigin = new Vector3();
     const explosionBrush = {
@@ -49,7 +52,7 @@ class Debug extends Gameplay {
   }
 
   onLoad() {
-    const { world, player } = this;
+    const { player, world } = this;
     super.onLoad();
     const billboardPos = player.position
       .clone()

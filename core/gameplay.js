@@ -119,10 +119,10 @@ class Gameplay extends Group {
       scene.getPhysics(),
       new Promise((resolve) => {
         const world = new VoxelWorld({
+          generation: options.generation,
           width: options.width,
           height: options.height,
           depth: options.depth,
-          seed: options.seed,
           onLoad: () => resolve(world),
         });
       }),

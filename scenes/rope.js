@@ -3,6 +3,7 @@ import Gameplay from '../core/gameplay.js';
 import VoxelWorld from '../core/voxels.js';
 import Voxelizer from '../core/voxelizer.js';
 import Ball from '../renderables/ball.js';
+import Billboard from '../renderables/billboard.js';
 import Box from '../renderables/box.js';
 import Helicopter from '../renderables/helicopter.js';
 import Rope from '../renderables/rope.js';
@@ -10,9 +11,13 @@ import Rope from '../renderables/rope.js';
 class Ropes extends Gameplay {
   constructor(scene, options) {
     super(scene, {
-      width: 160,
-      height: 96,
-      depth: 160,
+      generation: {
+        seed: Math.floor(Math.random() * 2147483647),
+        type: 1,
+      },
+      width: 128,
+      height: 128,
+      depth: 128,
     });
 
     this.anchor = new Box(0.25, 0.5, 0.25);
@@ -50,7 +55,7 @@ class Ropes extends Gameplay {
         }
         return;
       }
-      if (this.hooked || mesh !== ball) {
+      if (this.hookedDude || mesh !== ball) {
         return;
       }
       this.spawnExplosion(position, ball.material.color);
@@ -61,14 +66,25 @@ class Ropes extends Gameplay {
           .divideScalar(this.world.scale)
           .floor()
       );
-      this.hook(dude);
+      this.hookDude(dude);
     };
   }
 
   onLoad() {
-    const { physics, player } = this;
+    const { physics, player, world } = this;
     super.onLoad();
-    player.move({ x: 0.5, y: 15, z: 5 });
+    const billboardPos = player.position
+      .clone()
+      .divideScalar(world.scale)
+      .floor()
+      .add({ x: 0, y: 0, z: -23 });
+    this.billboard = new Billboard({
+      x: billboardPos.x * world.scale,
+      y: world.heightmap.view[billboardPos.z * world.width + billboardPos.x] * world.scale,
+      z: billboardPos.z * world.scale,
+    });
+    player.move({ x: 0.5, y: 16, z: 32 });
+    this.add(this.billboard);
     this.helicopter.voxelize()
       .then(() => {
         const { anchor, ball } = this;
@@ -122,7 +138,7 @@ class Ropes extends Gameplay {
       return;
     }
     const { pivot, movement } = helicopter.aux;
-    let unHook;
+    let unhook;
     if (isXR) {
       const controllerL = player.controllers.find(({ hand }) => hand && hand.handedness === 'left');
       const controllerR = player.controllers.find(({ hand }) => hand && hand.handedness === 'right');
@@ -134,10 +150,10 @@ class Ropes extends Gameplay {
         controllerL.buttons.primary ? 1 : (controllerR.buttons.primary ? -1 : 0),
         -controllerR.joystick.y
       );
-      unHook = controllerL.buttons.triggerDown || controllerR.buttons.triggerDown;
+      unhook = controllerL.buttons.triggerDown || controllerR.buttons.triggerDown;
     } else {
       movement.copy(player.desktop.keyboard);
-      unHook = player.desktop.buttons.primaryDown || player.desktop.buttons.tertiaryDown;
+      unhook = player.desktop.buttons.primaryDown || player.desktop.buttons.tertiaryDown;
     }
     player.getWorldDirection(forward);
     if (
@@ -172,12 +188,12 @@ class Ropes extends Gameplay {
       );
     }
     helicopter.updateMatrixWorld();
-    if (unHook) {
-      this.unhook();
+    if (unhook) {
+      this.unhookDude();
     }
   }
 
-  hook(dude) {
+  hookDude(dude) {
     const { ball, physics } = this;
     delete dude.path;
     dude.searchEnabled = false;
@@ -192,15 +208,15 @@ class Ropes extends Gameplay {
       pivotInA: { x: 0, y: -0.3, z: 0 },
       pivotInB: { x: 0, y: dude.physics[0].height, z: 0 },
     });
-    this.hooked = dude;
+    this.hookedDude = dude;
   }
 
-  unhook() {
-    const { hooked: dude, physics } = this;
+  unhookDude() {
+    const { hookedDude: dude, physics } = this;
     if (!dude) {
       return;
     }
-    delete this.hooked;
+    delete this.hookedDude;
     physics.removeConstraint(dude.constraint);
     delete dude.constraint;
     dude.isFalling = true;

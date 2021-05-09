@@ -4,7 +4,10 @@ class VoxelWorld {
   constructor({
     chunkSize = 16,
     scale = 0.5,
-    seed = Math.floor(Math.random() * 2147483647),
+    generation = {
+      seed: Math.floor(Math.random() * 2147483647),
+      type: 0,
+    },
     width,
     height,
     depth,
@@ -20,9 +23,9 @@ class VoxelWorld {
     this.chunks = new Group();
     this.chunks.matrixAutoUpdate = false;
     this.chunkSize = chunkSize;
+    this.generation = generation;
     this.meshes = [];
     this.scale = scale;
-    this.seed = seed;
     this.width = width;
     this.height = height;
     this.depth = depth;
@@ -172,7 +175,7 @@ class VoxelWorld {
       queueA,
       queueB,
       queueC,
-      seed,
+      generation,
     } = this;
     heightmap.view.fill(0);
     voxels.view.fill(0);
@@ -182,7 +185,8 @@ class VoxelWorld {
       voxels.address,
       queueA.address,
       queueB.address,
-      seed
+      generation.seed,
+      generation.type
     );
     this._propagate(
       world.address,

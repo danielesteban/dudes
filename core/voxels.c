@@ -698,7 +698,8 @@ void generate(
   unsigned char* voxels,
   int* queueA,
   int* queueB,
-  const int seed
+  const int seed,
+  const int type
 ) {
   fnl_state noise = fnlCreateState();
   noise.seed = seed;
@@ -742,8 +743,9 @@ void generate(
     const int grid = 80;
     const int plaza = grid * 2;
     {
-      const int street = (rand() % 2) * 8 + 6;
+      const int street = 14;
       const int floorHeight = 12 + (rand() % 4);
+      const int floors = type == 1 ? floor((world->height - 16) / floorHeight) : 2;
       const unsigned int tint = rand();
       generateBuilding(
         world,
@@ -753,7 +755,7 @@ void generate(
         world->depth / 2 - grid / 2 + street,
         tint,
         grid - street * 2,
-        2 * floorHeight + 4,
+        floors * floorHeight + 4,
         floorHeight,
         (1 + (rand() % 2)) * 8
       );
@@ -772,32 +774,34 @@ void generate(
         3
       );
     }
-    const int from = fmax(world->width / 2 - grid * 2, 0);
-    const int to = fmin(world->width / 2 + grid * 2, world->width);
-    for (int z = from; z < to; z += grid) {
-      for (int x = from; x < to; x += grid) {
-        const int dx = x + grid / 2 - centerX;
-        const int dz = z + grid / 2 - centerZ;
-        const int distance = sqrt(dx * dx + dz * dz);
-        if (
-          distance < plaza / 2 || distance > plaza
-        ) {
-          continue;
+    if (type == 0) {
+      const int from = fmax(world->width / 2 - grid * 2, 0);
+      const int to = fmin(world->width / 2 + grid * 2, world->width);
+      for (int z = from; z < to; z += grid) {
+        for (int x = from; x < to; x += grid) {
+          const int dx = x + grid / 2 - centerX;
+          const int dz = z + grid / 2 - centerZ;
+          const int distance = sqrt(dx * dx + dz * dz);
+          if (
+            distance < plaza / 2 || distance > plaza
+          ) {
+            continue;
+          }
+          const int street = (rand() % 2) * 8 + 6;
+          const int floorHeight = 12 + (rand() % 4);
+          generateBuilding(
+            world,
+            heightmap,
+            voxels,
+            x + street,
+            z + street,
+            rand(),
+            grid - street * 2,
+            (floor((rand() % (world->height - floorHeight * 3 - 8)) / floorHeight) + 3) * floorHeight + 4,
+            floorHeight,
+            (1 + (rand() % 2)) * 8
+          );
         }
-        const int street = (rand() % 2) * 8 + 6;
-        const int floorHeight = 12 + (rand() % 4);
-        generateBuilding(
-          world,
-          heightmap,
-          voxels,
-          x + street,
-          z + street,
-          rand(),
-          grid - street * 2,
-          (floor((rand() % (world->height - floorHeight * 3 - 4)) / floorHeight) + 3) * floorHeight + 4,
-          floorHeight,
-          (1 + (rand() % 2)) * 8
-        );
       }
     }
   }
