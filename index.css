@@ -33,7 +33,7 @@ canvas {
   opacity: 0.3;
 }
 
-body.pointerlock #cursor {
+body.pointerlock #cursor.enabled {
   display: block;
 }
 

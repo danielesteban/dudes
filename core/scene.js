@@ -61,6 +61,7 @@ class Scene extends ThreeScene {
     }
     this.background = null;
     this.fog = null;
+    player.cursor.classList.add('enabled');
     player.detachAll();
     if (physics) physics.reset();
     this.scene = new scenes[scene](this, options);

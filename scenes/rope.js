@@ -15,9 +15,9 @@ class Ropes extends Gameplay {
         seed: Math.floor(Math.random() * 2147483647),
         type: 1,
       },
-      width: 128,
+      width: 160,
       height: 128,
-      depth: 128,
+      depth: 160,
     });
 
     this.anchor = new Box(0.25, 0.5, 0.25);
@@ -34,10 +34,11 @@ class Ropes extends Gameplay {
       }),
     });
     if (options.view === 'thirdpersonhack') {
-      this.helicopter.position.set(-0.5, -3, -3);
+      this.helicopter.position.set(-1, -2, -3);
     }
     this.helicopter.add(this.anchor);
     this.player.add(this.helicopter);
+    this.player.cursor.classList.remove('enabled');
 
     const explosionOrigin = new Vector3();
     const explosionBrush = {

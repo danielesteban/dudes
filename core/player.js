@@ -28,6 +28,7 @@ class Player extends Group {
       vectorA: new Vector3(),
       vectorB: new Vector3(),
     };
+    this.cursor = dom.cursor;
     this.head = new AudioListener();
     this.head.rotation.order = 'YXZ';
     this.add(camera);
