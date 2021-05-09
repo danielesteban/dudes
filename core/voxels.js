@@ -48,15 +48,9 @@ class VoxelWorld {
       total + size * type.BYTES_PER_ELEMENT
     ), 0) / 65536) + 2;
     const memory = new WebAssembly.Memory({ initial: pages, maximum: pages });
-    const source = fetch('/voxels.wasm');
-    (WebAssembly.instantiateStreaming ? (
-      WebAssembly.instantiateStreaming(source, { env: { memory } })
-    ) : (
-      source
-        .then((res) => res.arrayBuffer())
-        .then((buffer) => WebAssembly.instantiate(buffer, { env: { memory } }))
-    ))
-      .then(({ instance }) => {
+    VoxelWorld.getWASM()
+      .then((wasm) => WebAssembly.instantiate(wasm, { env: { memory } }))
+      .then((instance) => {
         this._colliders = instance.exports.colliders;
         this._findPath = instance.exports.findPath;
         this._findTarget = instance.exports.findTarget;
@@ -348,6 +342,33 @@ class VoxelWorld {
       brushes.set(key, brush);
     }
     return brush;
+  }
+
+  static getWASM() {
+    if (VoxelWorld.wasm) {
+      return Promise.resolve(VoxelWorld.wasm);
+    }
+    return new Promise((resolve) => {
+      if (VoxelWorld.loadingWASM) {
+        VoxelWorld.loadingWASM.push(resolve);
+        return;
+      }
+      VoxelWorld.loadingWASM = [resolve];
+      const source = fetch('/voxels.wasm');
+      (WebAssembly.compileStreaming ? (
+        WebAssembly.compileStreaming(source)
+      ) : (
+        source
+          .then((res) => res.arrayBuffer())
+          .then((buffer) => WebAssembly.compile(buffer))
+      ))
+        .then((wasm) => {
+          VoxelWorld.wasm = wasm;
+          VoxelWorld.loadingWASM.forEach((resolve) => resolve(wasm));
+          delete VoxelWorld.loadingWASM;
+        })
+        .catch((e) => console.error(e));
+    });
   }
 }
 

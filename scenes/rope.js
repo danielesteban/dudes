@@ -181,7 +181,7 @@ class Ropes extends Gameplay {
     const { ball, physics } = this;
     delete dude.path;
     dude.searchEnabled = false;
-    dude.position.copy(ball.position).add({ x: 0, y: -0.5 - dude.physics[0].height, z: 0 });
+    dude.position.copy(ball.position).add({ x: 0, y: -0.3 - dude.physics[0].height, z: 0 });
     dude.skeleton.bones[dude.constructor.bones.head].rotation.set(0, 0, 0);
     dude.setAction(dude.actions.fly);
     physics.removeMesh(dude);
@@ -189,7 +189,7 @@ class Ropes extends Gameplay {
     dude.constraint = physics.addConstraint(ball, 0, {
       type: 'p2p',
       mesh: dude,
-      pivotInA: { x: 0, y: -0.26, z: 0 },
+      pivotInA: { x: 0, y: -0.3, z: 0 },
       pivotInB: { x: 0, y: dude.physics[0].height, z: 0 },
     });
     this.hooked = dude;
