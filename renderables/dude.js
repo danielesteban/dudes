@@ -482,7 +482,7 @@ class Dude extends SkinnedMesh {
     this.speed = 4 * spec.stamina;
 
     // const debug = this.physics[0];
-    // const box = new Box(debug.width, debug.height, debug.depth, true);
+    // const box = new Box(debug.width, debug.height, debug.depth);
     // box.position.copy(debug.position);
     // this.add(box);
   }

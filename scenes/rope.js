@@ -20,10 +20,6 @@ class Ropes extends Gameplay {
       depth: 160,
     });
 
-    this.anchor = new Box(0.25, 0.5, 0.25);
-    this.anchor.position.set(0, 0.625, 1.12);
-    const ball = new Ball();
-    this.ball = ball;
     this.helicopter = new Helicopter({
       sfx: scene.sfx,
       sound: '/sounds/engine.ogg',
@@ -36,7 +32,6 @@ class Ropes extends Gameplay {
     if (options.view === 'thirdpersonhack') {
       this.helicopter.position.set(-1, -2, -3);
     }
-    this.helicopter.add(this.anchor);
     this.player.add(this.helicopter);
     this.player.cursor.classList.remove('enabled');
 
@@ -56,10 +51,10 @@ class Ropes extends Gameplay {
         }
         return;
       }
-      if (this.hookedDude || mesh !== ball) {
+      if (!mesh.isHook || mesh.hookedDude) {
         return;
       }
-      this.spawnExplosion(position, ball.material.color);
+      this.spawnExplosion(position, mesh.material.color);
       this.updateVoxel(
         explosionBrush,
         explosionOrigin
@@ -67,7 +62,7 @@ class Ropes extends Gameplay {
           .divideScalar(this.world.scale)
           .floor()
       );
-      this.hookDude(dude);
+      this.hookDude(dude, mesh);
     };
   }
 
@@ -88,28 +83,37 @@ class Ropes extends Gameplay {
     this.add(this.billboard);
     this.helicopter.voxelize()
       .then(() => {
-        const { anchor, ball } = this;
-        const options = {
-          anchorA: ball,
-          anchorB: anchor,
-          length: 10,
-          segments: 12,
-        };
-        anchor.getWorldPosition(ball.position).add({ x: 0, y: -options.length, z: 0 });
-        options.origin = ball.position;
-        const rope = new Rope(options);
-        this.rope = rope;
-        this.helicopter.cockpit.children.forEach(({ collider }) => {
-          if (collider) {
-            collider.updateWorldMatrix(true, false);
-            physics.addMesh(collider, { isKinematic: true });
-          }
+        this.hooks = [-0.625, 0.625].map((x) => {
+          const anchor = new Box(0.25, 0.5, 0.25);
+          anchor.position.set(x, 0.75, 0.75);
+          anchor.visible = false;
+          const ball = new Ball();
+          ball.isHook = true;
+          const options = {
+            anchorA: ball,
+            anchorB: anchor,
+            length: 10,
+            segments: 12,
+          };
+          this.helicopter.add(anchor);
+          anchor.getWorldPosition(ball.position).add({ x: 0, y: -options.length, z: 0 });
+          options.origin = ball.position;
+          const rope = new Rope(options);
+          this.rope = rope;
+          this.helicopter.cockpit.children.forEach(({ collider }) => {
+            if (collider) {
+              collider.updateWorldMatrix(true, false);
+              physics.addMesh(collider, { isKinematic: true });
+            }
+          });
+          physics.addMesh(anchor, { isKinematic: true });
+          physics.addMesh(ball, { mass: 10, angularFactor: { x: 0, y: 0, z: 0 } });
+          physics.addRope(rope, options);
+          this.add(ball);
+          this.add(rope);
+          return ball;
         });
-        physics.addMesh(anchor, { isKinematic: true });
-        physics.addMesh(ball, { mass: 10, angularFactor: { x: 0, y: 0, z: 0 } });
-        physics.addRope(rope, options);
-        this.add(ball);
-        this.add(rope);
+        this.updateLight(this.light);
       });
   }
 
@@ -139,7 +143,7 @@ class Ropes extends Gameplay {
       return;
     }
     const { pivot, movement } = helicopter.aux;
-    let unhook;
+    let unhookDudes;
     if (isXR) {
       const controllerL = player.controllers.find(({ hand }) => hand && hand.handedness === 'left');
       const controllerR = player.controllers.find(({ hand }) => hand && hand.handedness === 'right');
@@ -151,10 +155,10 @@ class Ropes extends Gameplay {
         controllerL.buttons.primary ? 1 : (controllerR.buttons.primary ? -1 : 0),
         -controllerR.joystick.y
       );
-      unhook = controllerL.buttons.triggerDown || controllerR.buttons.triggerDown;
+      unhookDudes = controllerL.buttons.triggerDown || controllerR.buttons.triggerDown;
     } else {
       movement.copy(player.desktop.keyboard);
-      unhook = player.desktop.buttons.primaryDown || player.desktop.buttons.tertiaryDown;
+      unhookDudes = player.desktop.buttons.primaryDown || player.desktop.buttons.tertiaryDown;
     }
     player.getWorldDirection(forward);
     if (
@@ -162,7 +166,7 @@ class Ropes extends Gameplay {
       && (movement.x !== 0 || movement.z !== 0)
     ) {
       right.crossVectors(worldUp, forward);
-      helicopter.localToWorld(pivot.copy(helicopter.cockpit.position));
+      helicopter.localToWorld(pivot.copy(helicopter.cockpit.position).add({ x: 0, y: 0.5, z: 0.5 }));
       if (movement.z !== 0) {
         player.rotate(right, movement.z * animation.delta * -0.125, pivot);
       }
@@ -189,39 +193,42 @@ class Ropes extends Gameplay {
       );
     }
     helicopter.updateMatrixWorld();
-    if (unhook) {
-      this.unhookDude();
+    if (unhookDudes) {
+      this.unhookDudes();
     }
   }
 
-  hookDude(dude) {
-    const { ball, physics } = this;
+  hookDude(dude, hook) {
+    const { physics } = this;
     delete dude.path;
     dude.searchEnabled = false;
-    dude.position.copy(ball.position).add({ x: 0, y: -0.3 - dude.physics[0].height, z: 0 });
+    dude.position.copy(hook.position).add({ x: 0, y: -0.3 - dude.physics[0].height, z: 0 });
     dude.skeleton.bones[dude.constructor.bones.head].rotation.set(0, 0, 0);
     dude.setAction(dude.actions.fly);
     physics.removeMesh(dude);
     physics.addMesh(dude, { mass: 1 });
-    dude.constraint = physics.addConstraint(ball, 0, {
+    dude.constraint = physics.addConstraint(hook, 0, {
       type: 'p2p',
       mesh: dude,
       pivotInA: { x: 0, y: -0.3, z: 0 },
       pivotInB: { x: 0, y: dude.physics[0].height, z: 0 },
     });
-    this.hookedDude = dude;
+    hook.hookedDude = dude;
   }
 
-  unhookDude() {
-    const { hookedDude: dude, physics } = this;
-    if (!dude) {
-      return;
-    }
-    delete this.hookedDude;
-    physics.removeConstraint(dude.constraint);
-    delete dude.constraint;
-    dude.isFalling = true;
-    physics.getBody(dude).flags.isTrigger = true;
+  unhookDudes() {
+    const { hooks, physics } = this;
+    hooks.forEach((hook) => {
+      if (!hook.hookedDude) {
+        return;
+      }
+      const { hookedDude: dude } = hook;
+      delete hook.hookedDude;
+      physics.removeConstraint(dude.constraint);
+      delete dude.constraint;
+      dude.isFalling = true;
+      physics.getBody(dude).flags.isTrigger = true;
+    });
   }
 
   resetDude(dude, contact) {
@@ -247,11 +254,11 @@ class Ropes extends Gameplay {
   updateLight(intensity) {
     const { rope } = this;
     super.updateLight(intensity);
-    Box.materials.default.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
-    Ball.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
-    if (rope) {
-      Rope.material.uniforms.diffuse.value.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
+    if (!rope) {
+      return;
     }
+    Ball.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
+    Rope.material.uniforms.diffuse.value.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
   }
 }
 

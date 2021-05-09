@@ -56,14 +56,21 @@ class Helicopter extends Group {
             y === 0
             || y > 22
             || (
+              x < 10 || x > 21
+              || z < 12 || z > 27
+            )
+            // Rotor socket
+            || (
               y > 20
               && (
                 x < 15 || x > 16
                 || z < 15 || z > 16
               )
-            ) || (
-              x < 12 || x > 19
-              || z < 12 || z > 27
+            )
+            // Side hooks
+            || (
+              (x < 12 || x > 19)
+              && (z < 21 || z > 22 || y > 8)
             )
             // Mid cut
             || (
