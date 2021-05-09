@@ -30,7 +30,7 @@ class Ropes extends Gameplay {
       }),
     });
     if (options.view === 'thirdpersonhack') {
-      this.helicopter.position.set(-1, -2, -4);
+      this.helicopter.position.set(-1.25, -1.5, -5);
     }
     this.player.add(this.helicopter);
     this.player.cursor.classList.remove('enabled');
