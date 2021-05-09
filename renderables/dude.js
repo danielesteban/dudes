@@ -215,22 +215,17 @@ class Dude extends SkinnedMesh {
     const geometry = BufferGeometryUtils.mergeVertices(
       BufferGeometryUtils.mergeBufferGeometries(geometries)
     );
-    const bounds = {
-      height: (head.height + torso.height + legs.height + feet.height) * height,
-      radius: Math.max(height, waist) * 0.5,
-    };
-    geometry.boundingSphere = new Sphere(
-      new Vector3(0, bounds.radius, 0),
-      Math.sqrt(bounds.radius * bounds.radius + bounds.radius * bounds.radius)
-    );
+    const boundsHeight = (head.height + torso.height + legs.height + feet.height) * height;
+    const radius = Math.max(boundsHeight, waist) * 0.5;
+    geometry.boundingSphere = new Sphere(new Vector3(0, radius, 0), radius);
     geometry.physics = [{
       shape: 'box',
       width: waist,
-      height: bounds.height,
+      height: boundsHeight,
       depth: waist,
       position: {
         x: 0,
-        y: bounds.height * 0.5,
+        y: boundsHeight * 0.5,
         z: 0,
       },
     }];
