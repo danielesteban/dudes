@@ -1,4 +1,4 @@
-import { Color, Matrix4, Vector3 } from '../vendor/three.js';
+import { Color, Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
 import VoxelWorld from '../core/voxels.js';
 import Voxelizer from '../core/voxelizer.js';
@@ -15,7 +15,7 @@ class Ropes extends Gameplay {
       depth: 160,
     });
 
-    this.anchor = new Box();
+    this.anchor = new Box(0.25, 0.5, 0.25);
     this.anchor.position.set(0, 0.625, 1.12);
     const ball = new Ball();
     this.ball = ball;
@@ -228,7 +228,7 @@ class Ropes extends Gameplay {
   updateLight(intensity) {
     const { rope } = this;
     super.updateLight(intensity);
-    Box.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
+    Box.materials.default.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
     Ball.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
     if (rope) {
       Rope.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));

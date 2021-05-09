@@ -21,6 +21,7 @@ import {
   Vector3,
 } from '../vendor/three.js';
 import Marker from './marker.js';
+// import Box from './box.js';
 
 class Dude extends SkinnedMesh {
   static createGeometry({
@@ -215,7 +216,7 @@ class Dude extends SkinnedMesh {
       BufferGeometryUtils.mergeBufferGeometries(geometries)
     );
     const bounds = {
-      height: (head.height + torso.height + legs.height) * height,
+      height: (head.height + torso.height + legs.height + feet.height) * height,
       radius: Math.max(height, waist) * 0.5,
     };
     geometry.boundingSphere = new Sphere(
@@ -224,9 +225,9 @@ class Dude extends SkinnedMesh {
     );
     geometry.physics = [{
       shape: 'box',
-      width: bounds.radius,
+      width: waist,
       height: bounds.height,
-      depth: bounds.radius,
+      depth: waist,
       position: {
         x: 0,
         y: bounds.height * 0.5,
@@ -484,6 +485,11 @@ class Dude extends SkinnedMesh {
     this.marker = new Marker(spec.color);
     this.physics = this.geometry.physics;
     this.speed = 4 * spec.stamina;
+
+    // const debug = this.physics[0];
+    // const box = new Box(debug.width, debug.height, debug.depth, true);
+    // box.position.copy(debug.position);
+    // this.add(box);
   }
 
   dispose() {

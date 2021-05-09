@@ -8,7 +8,7 @@ import {
 
 class Box extends Mesh {
   static setupGeometry() {
-    const box = new BoxBufferGeometry(0.25, 0.5, 0.25, 4, 4, 4).toNonIndexed();
+    const box = new BoxBufferGeometry(1, 1, 1, 4, 4, 4).toNonIndexed();
     box.deleteAttribute('normal');
     box.deleteAttribute('uv');
     const { count } = box.getAttribute('position');
@@ -22,32 +22,39 @@ class Box extends Mesh {
     }
     box.setAttribute('color', color);
     Box.geometry = BufferGeometryUtils.mergeVertices(box);
-    Box.geometry.physics = {
-      shape: 'box',
-      width: 0.25,
-      height: 0.5,
-      depth: 0.25,
+  }
+
+  static setupMaterials() {
+    Box.materials = {
+      default: new MeshBasicMaterial({
+        vertexColors: true,
+      }),
+      transparent: new MeshBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.5,
+      }),
     };
   }
 
-  static setupMaterial() {
-    Box.material = new MeshBasicMaterial({
-      vertexColors: true,
-    });
-  }
-
-  constructor() {
+  constructor(width, height, depth, transparent = false) {
     if (!Box.geometry) {
       Box.setupGeometry();
     }
-    if (!Box.material) {
-      Box.setupMaterial();
+    if (!Box.materials) {
+      Box.setupMaterials();
     }
     super(
       Box.geometry,
-      Box.material
+      Box.materials[transparent ? 'transparent' : 'default']
     );
-    this.physics = Box.geometry.physics;
+    this.scale.set(width, height, depth);
+    this.physics = {
+      shape: 'box',
+      width,
+      height,
+      depth,
+    };
   }
 }
 
