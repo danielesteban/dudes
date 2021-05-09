@@ -1,19 +1,34 @@
 import {
+  BoxGeometry,
   BufferAttribute,
-  BufferGeometry,
   BufferGeometryUtils,
+  Color,
   DynamicDrawUsage,
-  MeshBasicMaterial,
-  Mesh,
-  BoxBufferGeometry,
+  InstancedMesh,
+  Matrix4,
+  ShaderMaterial,
+  ShaderLib,
+  UniformsUtils,
   Vector3,
   Quaternion,
-  Matrix4,
 } from '../vendor/three.js';
 
-class Rope extends Mesh {
+class Rope extends InstancedMesh {
   static setupMaterial() {
-    Rope.material = new MeshBasicMaterial({ vertexColors: true });
+    const { uniforms, vertexShader, fragmentShader } = ShaderLib.basic;
+    Rope.material = new ShaderMaterial({
+      uniforms: UniformsUtils.clone(uniforms),
+      vertexShader: vertexShader
+        .replace(
+          '#include <color_vertex>',
+          [
+            'vColor = vec3(1.0 - mod(color - instanceColor.xyz, vec3(1.0)) * 0.5);',
+          ].join('\n')
+        ),
+      fragmentShader,
+      vertexColors: true,
+      fog: true,
+    });
   }
 
   constructor({
@@ -27,9 +42,12 @@ class Rope extends Mesh {
       Rope.setupMaterial();
     }
     const segmentLength = length / segments;
-    let tube;
+    let geometry;
     {
-      tube = new BoxBufferGeometry(0.1, segmentLength, 0.1, 2, Math.round(segmentLength * 6), 2);
+      let tube;
+      tube = new BoxGeometry(0.1, segmentLength, 0.1, 2, Math.round(segmentLength * 6), 2);
+      tube.deleteAttribute('normal');
+      tube.deleteAttribute('uv');
       tube.translate(0, segmentLength * 0.5, 0);
       tube = tube.toNonIndexed();
       const { count } = tube.getAttribute('position');
@@ -42,19 +60,15 @@ class Rope extends Mesh {
         color.setXYZ(i, light, light, light);
       }
       tube.setAttribute('color', color);
+      geometry = BufferGeometryUtils.mergeVertices(tube);
     }
-    let model = BufferGeometryUtils.mergeVertices(tube);
-    const index = model.getIndex().array;
-    const colors = model.getAttribute('color');
-    model = model.getAttribute('position').array;
+    super(
+      geometry,
+      Rope.material,
+      segments
+    );
+    const color = new Color();
     const transform = new Matrix4();
-    const vertex = new Vector3();
-    const positionStride = model.length;
-    const indexStride = index.length;
-    const geometry = new BufferGeometry();
-    const position = new BufferAttribute(new Float32Array(segments * positionStride), 3);
-    const color = new BufferAttribute(new Float32Array(segments * positionStride), 3);
-    const indices = new BufferAttribute(new Uint16Array(segments * indexStride), 1);
     for (let i = 0; i < segments; i += 1) {
       transform
         .makeTranslation(
@@ -62,47 +76,26 @@ class Rope extends Mesh {
           origin.y + i * segmentLength,
           origin.z
         );
-      for (let v = 0; v < positionStride; v += 3) {
-        vertex
-          .set(model[v], model[v + 1], model[v + 2])
-          .applyMatrix4(transform);
-        position.array.set([vertex.x, vertex.y, vertex.z], positionStride * i + v);
-      }
-      let light;
-      for (let i = 0; i < colors.count; i += 1) {
-        if (i % 4 === 0) {
-          light = 1 - Math.random() * 0.5;
-        }
-        colors.setXYZ(i, light, light, light);
-      }
-      color.array.set(colors.array, positionStride * i);
-      indices.array.set(index.map((j) => j + (positionStride * i) / 3), indexStride * i);
+      this.setMatrixAt(i, transform);
+      const light = Math.random();
+      this.setColorAt(i, color.setRGB(light, light, light));
     }
-    position.setUsage(DynamicDrawUsage);
-    geometry.setIndex(indices);
-    geometry.setAttribute('position', position);
-    geometry.setAttribute('color', color);
-    super(
-      geometry,
-      Rope.material
-    );
     this.aux = {
-      model,
       normal: new Vector3(),
-      matrix: new Matrix4(),
       quaternion: new Quaternion(),
       transform,
-      vertex,
+      vertex: new Vector3(),
       vertexB: new Vector3(),
       worldUp: new Vector3(0, 1, 0),
     };
-    this.isRope = true;
     this.anchorA = anchorA;
     this.anchorB = anchorB;
+    this.isRope = true;
+    this.instanceMatrix.setUsage(DynamicDrawUsage);
     this.length = length;
+    this.matrixAutoUpdate = false;
     this.segments = segments;
     this.segmentLength = segmentLength;
-    this.positionStride = positionStride;
   }
 
   dispose() {
@@ -113,9 +106,7 @@ class Rope extends Mesh {
   update(nodes) {
     const {
       aux: {
-        model,
         normal,
-        matrix,
         quaternion,
         transform,
         vertex,
@@ -124,12 +115,10 @@ class Rope extends Mesh {
       },
       anchorA,
       anchorB,
-      geometry,
-      positionStride,
+      instanceMatrix,
       segments,
       segmentLength,
     } = this;
-    const position = geometry.getAttribute('position');
     for (let i = 0; i < segments; i += 1) {
       if (i === 0 && anchorA) {
         anchorA.getWorldPosition(vertex);
@@ -151,30 +140,17 @@ class Rope extends Mesh {
           vertexB.y - vertex.y,
           vertexB.z - vertex.z
         );
-      const scale = normal.length() / segmentLength;
+      vertexB.set(1, normal.length() / segmentLength, 1);
       normal.normalize();
       quaternion.setFromUnitVectors(worldUp, normal);
-      transform
-        .makeTranslation(
-          vertex.x,
-          vertex.y,
-          vertex.z
-        )
-        .multiply(
-          matrix.makeRotationFromQuaternion(quaternion)
-        )
-        .multiply(
-          matrix.makeScale(1, scale, 1)
-        );
-      for (let v = 0, l = model.length; v < l; v += 3) {
-        vertex
-          .set(model[v], model[v + 1], model[v + 2])
-          .applyMatrix4(transform);
-        position.array.set([vertex.x, vertex.y, vertex.z], positionStride * i + v);
-      }
+      transform.compose(
+        vertex,
+        quaternion,
+        vertexB
+      );
+      this.setMatrixAt(i, transform);
     }
-    position.needsUpdate = true;
-    geometry.computeBoundingSphere();
+    instanceMatrix.needsUpdate = true;
   }
 }
 

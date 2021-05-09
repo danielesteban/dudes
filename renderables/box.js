@@ -1,5 +1,5 @@
 import {
-  BoxBufferGeometry,
+  BoxGeometry,
   BufferAttribute,
   BufferGeometryUtils,
   Mesh,
@@ -8,7 +8,7 @@ import {
 
 class Box extends Mesh {
   static setupGeometry() {
-    const box = new BoxBufferGeometry(1, 1, 1, 4, 4, 4).toNonIndexed();
+    const box = new BoxGeometry(1, 1, 1, 4, 4, 4).toNonIndexed();
     box.deleteAttribute('normal');
     box.deleteAttribute('uv');
     const { count } = box.getAttribute('position');

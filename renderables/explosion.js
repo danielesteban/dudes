@@ -1,7 +1,7 @@
 import {
   BufferAttribute,
   BufferGeometryUtils,
-  IcosahedronBufferGeometry,
+  IcosahedronGeometry,
   InstancedBufferGeometry,
   InstancedBufferAttribute,
   Mesh,
@@ -12,7 +12,7 @@ import {
 
 class Explosion extends Mesh {
   static setupGeometry() {
-    const sphere = new IcosahedronBufferGeometry(0.5, 3);
+    const sphere = new IcosahedronGeometry(0.5, 3);
     sphere.deleteAttribute('normal');
     sphere.deleteAttribute('uv');
     const scale = 1 / Explosion.chunks;

@@ -1,13 +1,13 @@
 import {
   BufferAttribute,
   BufferGeometryUtils,
-  IcosahedronBufferGeometry,
+  IcosahedronGeometry,
 } from '../vendor/three.js';
 import Bodies from './bodies.js';
 
 class Spheres extends Bodies {
   static setupGeometry() {
-    const sphere = new IcosahedronBufferGeometry(0.15, 3);
+    const sphere = new IcosahedronGeometry(0.15, 3);
     sphere.deleteAttribute('normal');
     sphere.deleteAttribute('uv');
     const { count } = sphere.getAttribute('position');

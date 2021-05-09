@@ -1,14 +1,14 @@
 import {
   BufferAttribute,
   BufferGeometryUtils,
-  IcosahedronBufferGeometry,
+  IcosahedronGeometry,
   Mesh,
   MeshBasicMaterial,
 } from '../vendor/three.js';
 
 class Ball extends Mesh {
   static setupGeometry() {
-    const sphere = new IcosahedronBufferGeometry(0.3, 3);
+    const sphere = new IcosahedronGeometry(0.3, 3);
     sphere.deleteAttribute('normal');
     sphere.deleteAttribute('uv');
     const { count } = sphere.getAttribute('position');

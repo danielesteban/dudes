@@ -250,7 +250,7 @@ class Ropes extends Gameplay {
     Box.materials.default.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
     Ball.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
     if (rope) {
-      Rope.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
+      Rope.material.uniforms.diffuse.value.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
     }
   }
 }
