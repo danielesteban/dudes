@@ -15,6 +15,7 @@ class Helicopter extends Group {
       sfx.load(sound)
         .then((sound) => {
           sound.setLoop(true);
+          sound.setVolume(0.8);
           sound.position.set(0, 2.75, 0);
           this.sound = sound;
           this.add(sound);

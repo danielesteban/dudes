@@ -743,7 +743,7 @@ void generate(
     const int grid = 80;
     const int plaza = grid * 2;
     {
-      const int street = 14;
+      const int street = 6;
       const int floorHeight = 12 + (rand() % 4);
       const int floors = type == 1 ? floor((world->height - 16) / floorHeight) : 2;
       const unsigned int tint = rand();

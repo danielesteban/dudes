@@ -55,7 +55,7 @@ class Game extends Gameplay {
       .clone()
       .divideScalar(world.scale)
       .floor()
-      .add({ x: 0, y: 0, z: -23 });
+      .add({ x: 0, y: 0, z: -31 });
     this.billboard = new Billboard({
       x: billboardPos.x * world.scale,
       y: world.heightmap.view[billboardPos.z * world.width + billboardPos.x] * world.scale,
