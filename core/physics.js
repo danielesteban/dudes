@@ -262,14 +262,14 @@ class Physics {
         rotation: { x: 0, y: 0, z: 0, w: 1 },
       });
       collider.mesh = mesh;
-      world.addRigidBody(collider, 8, 1 | 2 | 4);
+      world.addRigidBody(collider, 8, -1 & ~8);
       body.appendAnchor(i, collider, true, 1);
       colliders.push(collider);
     }
     body.colliders = colliders;
     body.colliderShape = colliderShape;
     body.mesh = mesh;
-    world.addSoftBody(body, 8, 0);
+    world.addSoftBody(body, 8, -1);
     bodies.set(mesh, body);
     ropes.push(mesh);
   }
