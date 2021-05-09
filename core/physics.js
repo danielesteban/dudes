@@ -245,10 +245,10 @@ class Physics {
     const DISABLE_DEACTIVATION = 4;
     body.setActivationState(DISABLE_DEACTIVATION);
     if (anchorA) {
-      body.appendAnchor(0, this.getBody(anchorA), true, 0.9);
+      body.appendAnchor(0, this.getBody(anchorA), true, 0.5);
     }
     if (anchorB) {
-      body.appendAnchor(segments, this.getBody(anchorB), true, 0.9);
+      body.appendAnchor(segments, this.getBody(anchorB), true, 0.5);
     }
     const stride = length / segments;
     const colliderShape = this.createShape({
@@ -263,7 +263,7 @@ class Physics {
       });
       collider.mesh = mesh;
       world.addRigidBody(collider, 8, -1 & ~8);
-      body.appendAnchor(i, collider, true, 1);
+      body.appendAnchor(i, collider, true, 0.5);
       colliders.push(collider);
     }
     body.colliders = colliders;
