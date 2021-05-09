@@ -45,6 +45,7 @@ class Ropes extends Gameplay {
     this.projectiles.onDudeContact = ({ mesh, triggerMesh: dude, position }) => {
       if (dude.isFalling) {
         if (mesh.isChunk) {
+          this.spawnExplosion(position, dude.marker.material.color);
           this.resetDude(dude, position);
         }
         return;
