@@ -21,9 +21,7 @@ class Rope extends InstancedMesh {
       vertexShader: vertexShader
         .replace(
           '#include <color_vertex>',
-          [
-            'vColor = vec3(1.0 - mod(color - instanceColor.xyz, vec3(1.0)) * 0.5);',
-          ].join('\n')
+          'vColor = vec3(1.0 - mod(color - instanceColor.xyz, vec3(1.0)) * 0.5);'
         ),
       fragmentShader,
       vertexColors: true,
