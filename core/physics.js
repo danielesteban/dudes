@@ -303,9 +303,7 @@ class Physics {
     flags.collisionGroup = 1;
     if (flags.isDynamic) flags.collisionGroup = 2;
     else if (flags.isKinematic) flags.collisionGroup = 4;
-    if (flags.collisionMask === undefined) {
-      flags.collisionMask = flags.isKinematic ? (-1 & ~(1 | 4)) : -1;
-    }
+    flags.collisionMask = flags.isKinematic ? (-1 & ~(1 | 4)) : -1;
 
     if (transform.matrix) {
       aux.transform.setFromOpenGLMatrix(transform.matrix);

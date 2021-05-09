@@ -194,6 +194,7 @@ class Gameplay extends Group {
             scale: world.scale,
           });
           chunk.collider = new Group();
+          chunk.collider.isChunk = true;
           chunk.collider.position.copy(chunk.position);
           chunk.collider.physics = [];
           if (projectiles.onColliderContact) {

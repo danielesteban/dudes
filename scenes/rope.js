@@ -44,7 +44,9 @@ class Ropes extends Gameplay {
     };
     this.projectiles.onDudeContact = ({ mesh, triggerMesh: dude, position }) => {
       if (dude.isFalling) {
-        this.resetDude(dude, position);
+        if (mesh.isChunk) {
+          this.resetDude(dude, position);
+        }
         return;
       }
       if (this.hooked || mesh !== ball) {
@@ -201,8 +203,7 @@ class Ropes extends Gameplay {
     physics.removeConstraint(dude.constraint);
     delete dude.constraint;
     dude.isFalling = true;
-    physics.removeMesh(dude);
-    physics.addMesh(dude, { collisionMask: 1, mass: 1, isTrigger: true });
+    physics.getBody(dude).flags.isTrigger = true;
   }
 
   resetDude(dude, contact) {
