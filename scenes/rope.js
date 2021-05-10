@@ -246,6 +246,7 @@ class Ropes extends Gameplay {
     dude.position.copy(contact);
     dude.position.y = Math.round(dude.position.y);
     dude.rotation.set(0, 0, 0);
+    dude.updateMatrixWorld();
     dude.setAction(dude.actions.idle);
     physics.removeMesh(dude);
     physics.addMesh(dude, { isKinematic: true, isTrigger: true });
