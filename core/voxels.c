@@ -707,7 +707,7 @@ void generate(
   const int centerX = world->width * 0.5f;
   const int centerZ = world->depth * 0.5f;
   const int radius = sqrt(centerX * centerX + centerZ * centerZ) * 0.65f;
-  const int maxTerrainHeight = world->height / 2.5f;
+  const int maxTerrainHeight = world->height / (type == 1 ? 3.0f : 2.5f);
   for (int z = 0; z < world->depth; z++) {
     for (int y = 0; y < maxTerrainHeight; y++) {
       for (int x = 0; x < world->width; x++) {

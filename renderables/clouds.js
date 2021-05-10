@@ -16,8 +16,8 @@ class Clouds extends Group {
     const aux = new Vector2();
     const center = new Vector2();
     const simplex = new SimplexNoise();
-    for (let gx = -1; gx <= 1; gx += 1) {
-      for (let gy = -1; gy <= 1; gy += 1) {
+    for (let gx = -2; gx <= 2; gx += 1) {
+      for (let gy = -2; gy <= 2; gy += 1) {
         if (Math.sqrt(gx ** 2 + gy ** 2) > 2.5) {
           continue;
         }
