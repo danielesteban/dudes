@@ -741,16 +741,16 @@ void generate(
   srand(seed);
   if (type == 1) {
     // Rescue gameplay building
-    const int width = 120;
-    const int height = world->height - 15;
-    const int depth = 120;
     const int grid = 40;
+    const int width = 120;
+    const int depth = 120;
+    const int count = (width / grid) * (depth / grid);
+    const int height = floor((world->height - 12) / count) * count;
     const int originX = world->width / 2 - width / 2;
     const int originZ = world->depth / 2 - depth / 2;
-    const int count = (width / grid) * (depth / grid);
-    const int step = (height - maxTerrainHeight * 0.5) / count;
+    const int step = (height - maxTerrainHeight * 0.7f) / count;
     for (int i = 0; i < count; i++) {
-      queueA[i] = maxTerrainHeight * 0.5 + i * step;
+      queueA[i] = (i + 3) * step;
     }
     for (int i = count - 1; i >= 0; i--) {
       const int random = rand() % count;
@@ -758,7 +758,7 @@ void generate(
       queueA[i] = queueA[random];
       queueA[random] = temp;
     }
-    queueA[(int) (ceil(depth / grid / 2) * (width / grid) + ceil(width / grid / 2))] = height;
+    queueA[(int) (ceil(depth / grid / 2) * (width / grid) + ceil(width / grid / 2))] = height + 4;
     for (int bz = 0, i = 0; bz < depth; bz += grid) {
       for (int bx = 0; bx < width; bx += grid, i++) {
         const int bHeight = queueA[i];
@@ -767,7 +767,7 @@ void generate(
           for (int y = 0; y < bHeight; y++) {
             for (int x = 0; x < grid; x++) {
               if (
-                y > bHeight - 2
+                y > bHeight - 3
                 && (
                   (x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
                 )
@@ -775,11 +775,14 @@ void generate(
                 continue;
               }
               const int voxel = getVoxel(world, originX + bx + x, y, originZ + bz + z);
-              int type = y > bHeight - 2 ? TYPE_LIGHT : TYPE_STONE;
+              int type = (
+                y > bHeight - 2
+                || (
+                  (y - 2) % step < 2
+                  && ((x + 3) % 4 < 2 || (z + 3) % 4 < 2)
+                )
+              ) ? TYPE_LIGHT : TYPE_STONE;
               voxels[voxel] = type;
-              if (y % step < 2) {
-                type = TYPE_LIGHT;
-              }
               voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
               voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
               voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);

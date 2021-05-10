@@ -83,7 +83,7 @@ class Ropes extends Gameplay {
       z: billboardPos.z * world.scale,
     });
     this.add(this.billboard);
-    player.move({ x: 0, y: 10, z: 40 });
+    player.move({ x: 0, y: 10, z: 20 });
     this.helicopter.voxelize(voxelizer)
       .then(() => {
         this.hooks = [-0.625, 0.625].map((x) => {
