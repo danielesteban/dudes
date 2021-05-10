@@ -23,11 +23,6 @@ class Ropes extends Gameplay {
     this.helicopter = new Helicopter({
       sfx: scene.sfx,
       sound: '/sounds/engine.ogg',
-      voxelizer: new Voxelizer({
-        maxWidth: 32,
-        maxHeight: 32,
-        maxDepth: 32,
-      }),
     });
     this.player.add(this.helicopter);
     this.player.cursor.classList.remove('enabled');
@@ -36,6 +31,11 @@ class Ropes extends Gameplay {
       // Legacy sponsors link
       this.updateView(Ropes.views.thirdPerson);
     }
+    this.voxelizer = new Voxelizer({
+      maxWidth: 32,
+      maxHeight: 32,
+      maxDepth: 32,
+    });
 
     const explosionOrigin = new Vector3();
     const explosionBrush = {
@@ -69,7 +69,7 @@ class Ropes extends Gameplay {
   }
 
   onLoad() {
-    const { physics, player, world } = this;
+    const { physics, player, voxelizer, world } = this;
     super.onLoad();
     const billboardPos = player.position
       .clone()
@@ -83,7 +83,7 @@ class Ropes extends Gameplay {
     });
     player.move({ x: 0.5, y: 8, z: 32 });
     this.add(this.billboard);
-    this.helicopter.voxelize()
+    this.helicopter.voxelize(voxelizer)
       .then(() => {
         this.hooks = [-0.625, 0.625].map((x) => {
           const anchor = new Box(0.25, 0.5, 0.25);

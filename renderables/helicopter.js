@@ -1,7 +1,7 @@
 import { Group, Vector3 } from '../vendor/three.js';
 
 class Helicopter extends Group {
-  constructor({ sfx, sound, voxelizer }) {
+  constructor({ sfx, sound }) {
     super();
     this.aux = {
       pivot: new Vector3(),
@@ -9,7 +9,6 @@ class Helicopter extends Group {
     };
     this.acceleration = new Vector3();
     this.velocity = new Vector3();
-    this.voxelizer = voxelizer;
     if (sfx && sound) {
       sfx.load(sound)
         .then((sound) => {
@@ -39,8 +38,7 @@ class Helicopter extends Group {
     }
   }
 
-  voxelize() {
-    const { voxelizer } = this;
+  voxelize(voxelizer) {
     return Promise.all([
       voxelizer.voxelize({
         colliders: true,
@@ -56,17 +54,28 @@ class Helicopter extends Group {
             y === 0
             || y > 20
             || (
-              x < 8 || x > 23 || z < 7 || z > 30
-            ) || (
+              x < 8 || x > 23 || z < 8 || z > 30
+            )
+          ) {
+            return false;
+          }
+          const cockpitDistance = Math.sqrt(
+            (x - voxelizer.world.width * 0.5 + 0.5) ** 2
+            + (y - 11 + 0.5) ** 2
+            + (z - 16 + 0.5) ** 2
+          );
+          if (
+            // Cockpit rounding
+            (
               (x < 10 || x > 21 || z < 12)
               && (
-                (y > 9 && y < 12)
-                || Math.sqrt(
-                  (x - voxelizer.world.width * 0.5 + 0.5) ** 2
-                  + (y - 11 + 0.5) ** 2
-                  + (z - 16 + 0.5) ** 2
-                ) > 9.5
+                (y > 9 && y < 12 && z < 19)
+                || cockpitDistance > 9.5
               )
+            )
+            || (
+              z < 19 && y > 6 && y < 18
+              && cockpitDistance < 8.5
             )
             // Rotor socket
             || (
