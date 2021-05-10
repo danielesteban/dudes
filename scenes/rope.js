@@ -1,9 +1,9 @@
 import { Color, Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
-import VoxelWorld from '../core/voxels.js';
 import Voxelizer from '../core/voxelizer.js';
-import Ball from '../renderables/ball.js';
+import VoxelWorld from '../core/voxels.js';
 import Billboard from '../renderables/billboard.js';
+import Ball from '../renderables/ball.js';
 import Box from '../renderables/box.js';
 import Helicopter from '../renderables/helicopter.js';
 import Rope from '../renderables/rope.js';
@@ -76,14 +76,14 @@ class Ropes extends Gameplay {
       .clone()
       .divideScalar(world.scale)
       .floor()
-      .add({ x: 0, y: 0, z: -31 });
+      .add({ x: 0, y: 0, z: -18 });
     this.billboard = new Billboard({
       x: billboardPos.x * world.scale,
       y: world.heightmap.view[billboardPos.z * world.width + billboardPos.x] * world.scale,
       z: billboardPos.z * world.scale,
     });
-    player.move({ x: 0.5, y: 8, z: 32 });
     this.add(this.billboard);
+    player.move({ x: 0, y: 10, z: 40 });
     this.helicopter.voxelize(voxelizer)
       .then(() => {
         this.hooks = [-0.625, 0.625].map((x) => {

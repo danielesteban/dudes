@@ -739,13 +739,85 @@ void generate(
   }
 
   srand(seed);
-  {
+  if (type == 1) {
+    // Rescue gameplay building
+    const int width = 120;
+    const int height = world->height - 15;
+    const int depth = 120;
+    const int grid = 40;
+    const int originX = world->width / 2 - width / 2;
+    const int originZ = world->depth / 2 - depth / 2;
+    const int count = (width / grid) * (depth / grid);
+    const int step = (height - maxTerrainHeight * 0.5) / count;
+    for (int i = 0; i < count; i++) {
+      queueA[i] = maxTerrainHeight * 0.5 + i * step;
+    }
+    for (int i = count - 1; i >= 0; i--) {
+      const int random = rand() % count;
+      const int temp = queueA[i];
+      queueA[i] = queueA[random];
+      queueA[random] = temp;
+    }
+    queueA[(int) (ceil(depth / grid / 2) * (width / grid) + ceil(width / grid / 2))] = height;
+    for (int bz = 0, i = 0; bz < depth; bz += grid) {
+      for (int bx = 0; bx < width; bx += grid, i++) {
+        const int bHeight = queueA[i];
+        const unsigned int color = getColorFromNoise(rand() % 255);
+        for (int z = 0; z < grid; z++) {
+          for (int y = 0; y < bHeight; y++) {
+            for (int x = 0; x < grid; x++) {
+              if (
+                y > bHeight - 2
+                && (
+                  (x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
+                )
+              ) {
+                continue;
+              }
+              const int voxel = getVoxel(world, originX + bx + x, y, originZ + bz + z);
+              int type = y > bHeight - 2 ? TYPE_LIGHT : TYPE_STONE;
+              voxels[voxel] = type;
+              if (y % step < 2) {
+                type = TYPE_LIGHT;
+              }
+              voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+              voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+              voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+              if (y <= seaLevel) {
+                voxels[voxel + VOXEL_R] /= 2;
+                voxels[voxel + VOXEL_G] /= 2;
+              }
+              const int heightmapIndex = (originZ + bz + z) * world->width + (originX + bx + x);
+              if (heightmap[heightmapIndex] < y) {
+                heightmap[heightmapIndex] = y;
+              }
+            }
+          }
+        }
+      }
+    }
+    const int bx = world->width / 2 - 6;
+    const int bz = world->depth / 2 - grid / 2;
+    generateBillboard(
+      world,
+      heightmap,
+      voxels,
+      bx,
+      heightmap[bz * world->width + bx] - 1,
+      bz,
+      rand(),
+      12,
+      14,
+      3
+    );
+  } else {
+    // Default city with inner plaza
     const int grid = 80;
     const int plaza = grid * 2;
     {
       const int street = 6;
       const int floorHeight = 12 + (rand() % 4);
-      const int floors = type == 1 ? floor((world->height - 17) / floorHeight) : 2;
+      const int floors = 2;
       const unsigned int tint = rand();
       generateBuilding(
         world,
@@ -774,34 +846,32 @@ void generate(
         3
       );
     }
-    if (type == 0) {
-      const int from = fmax(world->width / 2 - grid * 2, 0);
-      const int to = fmin(world->width / 2 + grid * 2, world->width);
-      for (int z = from; z < to; z += grid) {
-        for (int x = from; x < to; x += grid) {
-          const int dx = x + grid / 2 - centerX;
-          const int dz = z + grid / 2 - centerZ;
-          const int distance = sqrt(dx * dx + dz * dz);
-          if (
-            distance < plaza / 2 || distance > plaza
-          ) {
-            continue;
-          }
-          const int street = (rand() % 2) * 8 + 6;
-          const int floorHeight = 12 + (rand() % 4);
-          generateBuilding(
-            world,
-            heightmap,
-            voxels,
-            x + street,
-            z + street,
-            rand(),
-            grid - street * 2,
-            (floor((rand() % (world->height - floorHeight * 3 - 8)) / floorHeight) + 3) * floorHeight + 4,
-            floorHeight,
-            (1 + (rand() % 2)) * 8
-          );
+    const int from = fmax(world->width / 2 - grid * 2, 0);
+    const int to = fmin(world->width / 2 + grid * 2, world->width);
+    for (int z = from; z < to; z += grid) {
+      for (int x = from; x < to; x += grid) {
+        const int dx = x + grid / 2 - centerX;
+        const int dz = z + grid / 2 - centerZ;
+        const int distance = sqrt(dx * dx + dz * dz);
+        if (
+          distance < plaza / 2 || distance > plaza
+        ) {
+          continue;
         }
+        const int street = (rand() % 2) * 8 + 6;
+        const int floorHeight = 12 + (rand() % 4);
+        generateBuilding(
+          world,
+          heightmap,
+          voxels,
+          x + street,
+          z + street,
+          rand(),
+          grid - street * 2,
+          (floor((rand() % (world->height - floorHeight * 3 - 8)) / floorHeight) + 3) * floorHeight + 4,
+          floorHeight,
+          (1 + (rand() % 2)) * 8
+        );
       }
     }
   }

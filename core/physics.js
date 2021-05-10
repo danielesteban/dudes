@@ -261,6 +261,7 @@ class Physics {
         position: { x: origin.x, y: origin.y + stride * i, z: origin.z },
         rotation: { x: 0, y: 0, z: 0, w: 1 },
       });
+      collider.setActivationState(DISABLE_DEACTIVATION);
       collider.mesh = mesh;
       world.addRigidBody(collider, 8, -1 & ~8);
       body.appendAnchor(i, collider, true, 0.75);

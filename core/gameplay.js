@@ -156,7 +156,7 @@ class Gameplay extends Group {
       count: 32,
       spawn: {
         origin: spawn.clone().divideScalar(world.scale).floor(),
-        radius: 64,
+        radius: 60,
       },
       world,
     });
