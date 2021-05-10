@@ -104,6 +104,7 @@ class Player extends Group {
         primary: false,
         secondary: false,
         tertiary: false,
+        view: false,
       },
       keyboard: new Vector3(0, 0, 0),
       pointer: new Vector2(0, 0),
@@ -333,7 +334,7 @@ class Player extends Group {
         camera.quaternion.setFromEuler(euler);
         pointer.set(0, 0);
       }
-      ['primary', 'secondary', 'tertiary'].forEach((button) => {
+      ['primary', 'secondary', 'tertiary', 'view'].forEach((button) => {
         const state = buttonState[button];
         buttons[`${button}Down`] = state && buttons[button] !== state;
         buttons[`${button}Up`] = !state && buttons[button] !== state;
@@ -349,6 +350,7 @@ class Player extends Group {
     buttonState.primary = false;
     buttonState.secondary = false;
     buttonState.tertiary = false;
+    buttonState.view = false;
     keyboard.set(0, 0, 0);
   }
 
@@ -377,6 +379,9 @@ class Player extends Group {
       case 70:
         buttonState.tertiary = true;
         break;
+      case 86:
+        buttonState.view = true;
+        break;
       default:
         break;
     }
@@ -400,6 +405,9 @@ class Player extends Group {
         break;
       case 70:
         buttonState.tertiary = false;
+        break;
+      case 86:
+        buttonState.view = false;
         break;
       default:
         break;

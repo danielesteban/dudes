@@ -15,9 +15,9 @@ class Ropes extends Gameplay {
         seed: Math.floor(Math.random() * 2147483647),
         type: 1,
       },
-      width: 160,
+      width: 256,
       height: 128,
-      depth: 160,
+      depth: 256,
     });
 
     this.helicopter = new Helicopter({
@@ -29,11 +29,13 @@ class Ropes extends Gameplay {
         maxDepth: 32,
       }),
     });
-    if (options.view === 'thirdpersonhack') {
-      this.helicopter.position.set(-1.25, -1.5, -5);
-    }
     this.player.add(this.helicopter);
     this.player.cursor.classList.remove('enabled');
+    this.view = Ropes.views.firstPerson;
+    if (options.view === 'thirdpersonhack') {
+      // Legacy sponsors link
+      this.updateView(Ropes.views.thirdPerson);
+    }
 
     const explosionOrigin = new Vector3();
     const explosionBrush = {
@@ -79,7 +81,7 @@ class Ropes extends Gameplay {
       y: world.heightmap.view[billboardPos.z * world.width + billboardPos.x] * world.scale,
       z: billboardPos.z * world.scale,
     });
-    player.move({ x: 0.5, y: 16, z: 32 });
+    player.move({ x: 0.5, y: 8, z: 32 });
     this.add(this.billboard);
     this.helicopter.voxelize()
       .then(() => {
@@ -196,6 +198,12 @@ class Ropes extends Gameplay {
     if (unhookDudes) {
       this.unhookDudes();
     }
+    if (player.desktop.buttons.viewDown) {
+      const { views } = Ropes;
+      this.updateView(
+        this.view === views.firstPerson ? views.thirdPerson : views.firstPerson
+      );
+    }
   }
 
   hookDude(dude, hook) {
@@ -260,6 +268,27 @@ class Ropes extends Gameplay {
     Ball.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
     Rope.material.uniforms.diffuse.value.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
   }
+
+  updateView(view) {
+    const { helicopter, player } = this;
+    const { views } = Ropes;
+    if (view === this.view) {
+      return;
+    }
+    const { aux: { pivot: offset } } = helicopter;
+    offset.set(1.25, 1.5, 5);
+    if (view === views.thirdPerson) {
+      offset.negate();
+    }
+    helicopter.position.add(offset);
+    player.move(offset.negate());
+    this.view = view;
+  }
 }
+
+Ropes.views = {
+  firstPerson: 0,
+  thirdPerson: 1,
+};
 
 export default Ropes;
