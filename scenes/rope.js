@@ -1,4 +1,4 @@
-import { Color, Vector3 } from '../vendor/three.js';
+import { Box3, Color, Quaternion, Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
 import Voxelizer from '../core/voxelizer.js';
 import VoxelWorld from '../core/voxels.js';
@@ -84,6 +84,7 @@ class Ropes extends Gameplay {
     });
     this.add(this.billboard);
     player.move({ x: 0, y: 10, z: 20 });
+
     this.helicopter.voxelize(voxelizer)
       .then(() => {
         this.hooks = [-0.625, 0.625].map((x) => {
@@ -117,6 +118,19 @@ class Ropes extends Gameplay {
           return ball;
         });
         this.updateLight(this.light);
+        const box = new Box3();
+        box.setFromObject(this.helicopter);
+        const size = box.getSize(new Vector3());
+        const center = box.getCenter(new Vector3());
+        this.helicopter.collider = {
+          shape: 'box',
+          width: size.x,
+          height: size.y,
+          depth: size.z,
+          origin: center.sub(this.helicopter.getWorldPosition(size)),
+          position: new Vector3(),
+          rotation: new Quaternion(),
+        };
       });
   }
 
@@ -139,12 +153,13 @@ class Ropes extends Gameplay {
         right,
         worldUp,
       },
-      // physics,
+      physics,
       player,
     } = this;
     if (!hasLoaded || !helicopter.cockpit) {
       return;
     }
+    // THIS CODE IS CRAP AND NEEDS TO BE REWRITTEN!!
     const { pivot, movement } = helicopter.aux;
     let unhookDudes;
     if (isXR) {
@@ -184,15 +199,21 @@ class Ropes extends Gameplay {
     helicopter.acceleration.y = movement.y * 0.1;
     helicopter.velocity.y = Math.min(Math.max(helicopter.velocity.y * 0.9 + helicopter.acceleration.y, -3), 3);
     if (helicopter.velocity.y !== 0) {
+      helicopter.localToWorld(helicopter.collider.position.copy(helicopter.collider.origin));
+      helicopter.getWorldQuaternion(helicopter.collider.rotation);
       player.move(
         direction.copy(worldUp).multiplyScalar(animation.delta * helicopter.velocity.y),
-        // physics
+        physics,
+        helicopter.collider
       );
     }
-    if (helicopter.velocity.z) {
+    if (helicopter.velocity.z !== 0) {
+      helicopter.localToWorld(helicopter.collider.position.copy(helicopter.collider.origin));
+      helicopter.getWorldQuaternion(helicopter.collider.rotation);
       player.move(
         direction.copy(forward).multiplyScalar(animation.delta * helicopter.velocity.z),
-        // physics
+        physics,
+        helicopter.collider
       );
     }
     if (unhookDudes) {

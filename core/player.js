@@ -156,7 +156,7 @@ class Player extends Group {
     attachments.right.length = 0;
   }
 
-  move(offset, physics) {
+  move(offset, physics, collider) {
     const {
       controllers,
       desktop,
@@ -181,16 +181,23 @@ class Player extends Group {
     if (physics) {
       const radius = 0.2;
       const height = Math.max(head.position.y - position.y - radius, 0) + radius * 2;
+      if (collider) {
+        collider.position.add(offset);
+      } else {
+        collider = {
+          shape: 'capsule',
+          radius,
+          height: height - (radius * 2),
+          position: {
+            x: head.position.x,
+            y: (head.position.y + radius) - height * 0.5,
+            z: head.position.z,
+          },
+        };
+      }
       const contacts = physics.getContacts({
         static: true,
-        shape: 'capsule',
-        radius,
-        height: height - (radius * 2),
-        position: {
-          x: head.position.x,
-          y: (head.position.y + radius) - height * 0.5,
-          z: head.position.z,
-        },
+        ...collider,
       });
       if (contacts.length) {
         const { aux: { vectorA: movement, vectorB: direction } } = this;

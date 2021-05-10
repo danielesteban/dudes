@@ -11,7 +11,6 @@ class Box extends Mesh {
 
   static setupMaterial() {
     Box.material = new MeshBasicMaterial({
-      vertexColors: true,
       transparent: true,
       opacity: 0.5,
     });
