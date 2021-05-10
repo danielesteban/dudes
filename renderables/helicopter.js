@@ -1,4 +1,5 @@
 import { Group, Vector3 } from '../vendor/three.js';
+import Instruments from './instruments.js';
 
 class Helicopter extends Group {
   constructor({ sfx, sound }) {
@@ -9,6 +10,10 @@ class Helicopter extends Group {
     };
     this.acceleration = new Vector3();
     this.velocity = new Vector3();
+    this.instruments = new Instruments({
+      x: 0, y: 0.625, z: -0.625,
+    });
+    this.add(this.instruments);
     if (sfx && sound) {
       sfx.load(sound)
         .then((sound) => {

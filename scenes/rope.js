@@ -25,6 +25,7 @@ class Ropes extends Gameplay {
       sound: '/sounds/engine.ogg',
     });
     this.player.add(this.helicopter);
+    this.player.children[0].position.y = 1.25; // HACK!
     this.player.cursor.classList.remove('enabled');
     this.view = Ropes.views.firstPerson;
     if (options.view === 'thirdpersonhack') {
