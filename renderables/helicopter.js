@@ -3,7 +3,6 @@ import { Group, Vector3 } from '../vendor/three.js';
 class Helicopter extends Group {
   constructor({ sfx, sound, voxelizer }) {
     super();
-
     this.aux = {
       pivot: new Vector3(),
       movement: new Vector3(),

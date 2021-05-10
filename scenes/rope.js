@@ -194,7 +194,6 @@ class Ropes extends Gameplay {
         // physics
       );
     }
-    helicopter.updateMatrixWorld();
     if (unhookDudes) {
       this.unhookDudes();
     }
@@ -247,7 +246,6 @@ class Ropes extends Gameplay {
     dude.position.copy(contact);
     dude.position.y = Math.round(dude.position.y);
     dude.rotation.set(0, 0, 0);
-    dude.updateMatrixWorld();
     dude.setAction(dude.actions.idle);
     physics.removeMesh(dude);
     physics.addMesh(dude, { isKinematic: true, isTrigger: true });
@@ -281,7 +279,7 @@ class Ropes extends Gameplay {
       offset.negate();
     }
     helicopter.position.add(offset);
-    player.move(offset.negate());
+    player.move(offset.applyQuaternion(player.quaternion).negate());
     this.view = view;
   }
 }
