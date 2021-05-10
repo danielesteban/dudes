@@ -45,7 +45,7 @@ class Helicopter extends Group {
         scale: 0.125,
         offset: {
           x: voxelizer.world.width * -0.5,
-          y: -11,
+          y: -2,
           z: voxelizer.world.depth * -0.5,
         },
         generator: (x, y, z) => {
@@ -174,10 +174,9 @@ class Helicopter extends Group {
       }),
     ])
       .then(([cockpit, rotor]) => {
-        cockpit.position.set(0, 1.25, 0);
         this.cockpit = cockpit;
         this.add(cockpit);
-        rotor.position.set(0, 2.5, 0);
+        rotor.position.set(0, 2.375, 0);
         rotor.scale.set(1, 0.5, 1);
         this.rotor = rotor;
         this.add(rotor);
