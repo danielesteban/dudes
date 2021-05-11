@@ -26,7 +26,7 @@ class Gameplay extends Group {
     this.ambient = new Ambient({
       anchor: this.player.head,
       isRunning: this.player.head.context.state === 'running',
-      range: { from: 0, to: Math.round(options.height * 0.7) },
+      range: { from: 0, to: Math.round(options.world.height * 0.7) },
       sounds: [
         {
           url: '/sounds/sea.ogg',
@@ -120,10 +120,11 @@ class Gameplay extends Group {
       scene.getPhysics(),
       new Promise((resolve) => {
         const world = new VoxelWorld({
-          generation: options.generation,
-          width: options.width,
-          height: options.height,
-          depth: options.depth,
+          generation: options.world.generation,
+          width: options.world.width,
+          height: options.world.height,
+          depth: options.world.depth,
+          onContact: options.world.onContact,
           onLoad: () => resolve(world),
         });
       }),
@@ -153,6 +154,14 @@ class Gameplay extends Group {
     this.birds = new Birds({ anchor: player });
     this.clouds = new Clouds(spawn);
     const dome = new Dome(spawn);
+    const ocean = new Ocean({
+      x: spawn.x,
+      y: 3.2,
+      z: spawn.z,
+    });
+    this.rain = new Rain({ anchor: player, world });
+    const starfield = new Starfield(spawn);
+
     this.dudes = new Dudes({
       count: 32,
       searchRadius: 64,
@@ -164,13 +173,7 @@ class Gameplay extends Group {
       },
       world,
     });
-    const ocean = new Ocean({
-      x: spawn.x,
-      y: 3.2,
-      z: spawn.z,
-    });
-    this.rain = new Rain({ anchor: player, world });
-    const starfield = new Starfield(spawn);
+    delete this.dudesOptions;
 
     this.add(world.chunks);
     this.add(this.dudes);
@@ -201,8 +204,8 @@ class Gameplay extends Group {
           chunk.collider.isChunk = true;
           chunk.collider.position.copy(chunk.position);
           chunk.collider.physics = [];
-          if (projectiles.onColliderContact) {
-            chunk.collider.onContact = projectiles.onColliderContact;
+          if (world.onContact) {
+            chunk.collider.onContact = world.onContact;
           }
           world.meshes.push(chunk);
           if (chunk.geometry.getIndex() !== null) {
@@ -212,13 +215,15 @@ class Gameplay extends Group {
         }
       }
     }
+    delete world.onContact;
 
     this.dudes.dudes.forEach((dude) => {
-      if (projectiles.onDudeContact) {
-        dude.onContact = projectiles.onDudeContact;
+      if (this.dudes.onContact) {
+        dude.onContact = this.dudes.onContact;
       }
       physics.addMesh(dude, { isKinematic: true, isTrigger: !!dude.onContact });
     });
+    delete this.dudes.onContact;
     physics.addMesh(projectiles, { mass: 1 });
 
     const loading = document.getElementById('loading');

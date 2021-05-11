@@ -5,6 +5,7 @@ import Selected from '../renderables/selected.js';
 class Dudes extends Group {
   constructor({
     count,
+    onContact,
     searchRadius,
     spawn: { algorithm, origin, radius },
     world,
@@ -13,6 +14,7 @@ class Dudes extends Group {
     this.matrixAutoUpdate = false;
     this.auxVector = new Vector3();
     this.dudes = [];
+    this.onContact = onContact;
     this.searchRadius = searchRadius;
     this.selectionMarker = new Selected();
     this.world = world;

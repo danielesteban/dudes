@@ -11,6 +11,7 @@ class VoxelWorld {
     width,
     height,
     depth,
+    onContact,
     onLoad,
   }) {
     this.brush = {
@@ -25,6 +26,7 @@ class VoxelWorld {
     this.chunkSize = chunkSize;
     this.generation = generation;
     this.meshes = [];
+    this.onContact = onContact;
     this.scale = scale;
     this.width = width;
     this.height = height;

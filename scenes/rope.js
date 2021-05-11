@@ -12,13 +12,41 @@ class Ropes extends Gameplay {
   constructor(scene, options) {
     const buildings = (3 * 3) - 1;
     const dudesPerBuilding = 3;
+
+    const explosionOrigin = new Vector3();
+    const explosionBrush = {
+      color: new Color(),
+      noise: 0,
+      type: 0,
+      shape: VoxelWorld.brushShapes.sphere,
+      size: 3,
+    };
+    const floorNormal = new Vector3(0, -1, 0);
+
     super(scene, {
-      generation: {
-        seed: Math.floor(Math.random() * 2147483647),
-        type: 1,
-      },
       dudes: {
         count: dudesPerBuilding * buildings,
+        onContact: ({ mesh, triggerMesh: dude, position, normal }) => {
+          if (dude.isFalling) {
+            if (mesh.isChunk && floorNormal.dot(normal) > 0) {
+              this.spawnExplosion(position, dude.marker.material.color);
+              this.resetDude(dude, position);
+            }
+            return;
+          }
+          if (!mesh.isHook || mesh.hookedDude) {
+            return;
+          }
+          this.spawnExplosion(position, mesh.material.color);
+          this.updateVoxel(
+            explosionBrush,
+            explosionOrigin
+              .copy(position)
+              .divideScalar(this.world.scale)
+              .floor()
+          );
+          this.hookDude(dude, mesh);
+        },
         searchRadius: 16,
         spawn: {
           algorithm: (i) => {
@@ -32,9 +60,15 @@ class Ropes extends Gameplay {
           },
         },
       },
-      width: 256,
-      height: 128,
-      depth: 256,
+      world: {
+        generation: {
+          seed: Math.floor(Math.random() * 2147483647),
+          type: 1,
+        },
+        width: 256,
+        height: 128,
+        depth: 256,
+      },
     });
 
     this.helicopter = new Helicopter({
@@ -44,47 +78,18 @@ class Ropes extends Gameplay {
     this.player.add(this.helicopter);
     this.player.children[0].position.y = 1.25; // HACK!
     this.player.cursor.classList.remove('enabled');
+
     this.view = Ropes.views.firstPerson;
     if (options.view === 'thirdpersonhack') {
       // Legacy sponsors link
       this.updateView(Ropes.views.thirdPerson);
     }
+
     this.voxelizer = new Voxelizer({
       maxWidth: 32,
       maxHeight: 32,
       maxDepth: 32,
     });
-
-    const explosionOrigin = new Vector3();
-    const explosionBrush = {
-      color: new Color(),
-      noise: 0,
-      type: 0,
-      shape: VoxelWorld.brushShapes.sphere,
-      size: 3,
-    };
-    const floorNormal = new Vector3(0, -1, 0);
-    this.projectiles.onDudeContact = ({ mesh, triggerMesh: dude, position, normal }) => {
-      if (dude.isFalling) {
-        if (mesh.isChunk && floorNormal.dot(normal) > 0) {
-          this.spawnExplosion(position, dude.marker.material.color);
-          this.resetDude(dude, position);
-        }
-        return;
-      }
-      if (!mesh.isHook || mesh.hookedDude) {
-        return;
-      }
-      this.spawnExplosion(position, mesh.material.color);
-      this.updateVoxel(
-        explosionBrush,
-        explosionOrigin
-          .copy(position)
-          .divideScalar(this.world.scale)
-          .floor()
-      );
-      this.hookDude(dude, mesh);
-    };
   }
 
   onLoad() {

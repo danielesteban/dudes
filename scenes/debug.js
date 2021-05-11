@@ -5,15 +5,6 @@ import Billboard from '../renderables/billboard.js';
 
 class Debug extends Gameplay {
   constructor(scene) {
-    super(scene, {
-      generation: {
-        seed: 970297029704,
-        type: 0,
-      },
-      width: 400,
-      height: 96,
-      depth: 400,
-    });
     const explosionOrigin = new Vector3();
     const explosionBrush = {
       color: new Color(),
@@ -22,23 +13,38 @@ class Debug extends Gameplay {
       shape: VoxelWorld.brushShapes.sphere,
       size: 3,
     };
-    this.projectiles.onColliderContact = (contact) => {
-      if (this.projectiles.destroyOnContact(contact)) {
-        this.updateVoxel(
-          explosionBrush,
-          explosionOrigin
-            .copy(contact.position)
-            .divideScalar(this.world.scale)
-            .addScaledVector(contact.normal, 0.5 * this.world.scale)
-            .floor()
-        );
-      }
-    };
-    this.projectiles.onDudeContact = (contact) => {
-      if (this.projectiles.destroyOnContact(contact)) {
-        contact.triggerMesh.onHit();
-      }
-    };
+
+    super(scene, {
+      dudes: {
+        onContact: (contact) => {
+          if (this.projectiles.destroyOnContact(contact)) {
+            contact.triggerMesh.onHit();
+          }
+        },
+      },
+      world: {
+        generation: {
+          seed: 970297029704,
+          type: 0,
+        },
+        onContact: (contact) => {
+          if (this.projectiles.destroyOnContact(contact)) {
+            this.updateVoxel(
+              explosionBrush,
+              explosionOrigin
+                .copy(contact.position)
+                .divideScalar(this.world.scale)
+                .addScaledVector(contact.normal, 0.5 * this.world.scale)
+                .floor()
+            );
+          }
+        },
+        width: 400,
+        height: 96,
+        depth: 400,
+      },
+    });
+
     Promise.all([...Array(5)].map(() => (
       scene.sfx.load('/sounds/plop.ogg')
         .then((sound) => {
