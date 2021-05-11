@@ -63,9 +63,10 @@ class Ropes extends Gameplay {
       shape: VoxelWorld.brushShapes.sphere,
       size: 3,
     };
-    this.projectiles.onDudeContact = ({ mesh, triggerMesh: dude, position }) => {
+    const floorNormal = new Vector3(0, -1, 0);
+    this.projectiles.onDudeContact = ({ mesh, triggerMesh: dude, position, normal }) => {
       if (dude.isFalling) {
-        if (mesh.isChunk) {
+        if (mesh.isChunk && floorNormal.dot(normal) > 0) {
           this.spawnExplosion(position, dude.marker.material.color);
           this.resetDude(dude, position);
         }
