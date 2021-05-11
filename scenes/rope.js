@@ -206,15 +206,15 @@ class Ropes extends Gameplay {
         player.rotate(right, movement.z * animation.delta * -0.125, pivot);
       }
       if (movement.x !== 0) {
-        player.rotate(worldUp, movement.x * animation.delta * -0.25, pivot);
+        player.rotate(worldUp, movement.x * animation.delta * -0.3, pivot);
       }
     }
     helicopter.acceleration.z = -forward.y * 0.5;
-    helicopter.velocity.z = Math.min(Math.max(helicopter.velocity.z * 0.95 + helicopter.acceleration.z, -3), 3);
+    helicopter.velocity.z = helicopter.velocity.z * 0.95 + helicopter.acceleration.z;
     forward.y = 0;
     forward.normalize();
-    helicopter.acceleration.y = movement.y * 0.1;
-    helicopter.velocity.y = Math.min(Math.max(helicopter.velocity.y * 0.9 + helicopter.acceleration.y, -3), 3);
+    helicopter.acceleration.y = movement.y * 0.5;
+    helicopter.velocity.y = helicopter.velocity.y * 0.8 + helicopter.acceleration.y;
     if (helicopter.velocity.y !== 0) {
       helicopter.localToWorld(helicopter.collider.position.copy(helicopter.collider.origin));
       helicopter.getWorldQuaternion(helicopter.collider.rotation);
