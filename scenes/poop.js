@@ -58,7 +58,7 @@ class Game extends Gameplay {
       .add({ x: 0, y: 0, z: -31 });
     this.billboard = new Billboard({
       x: billboardPos.x * world.scale,
-      y: world.heightmap.view[billboardPos.z * world.width + billboardPos.x] * world.scale,
+      y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale,
       z: billboardPos.z * world.scale,
     });
     this.add(this.billboard);

@@ -80,7 +80,7 @@ static const unsigned int getColorFromNoise(unsigned char noise) {
   );
 }
 
-static const unsigned int getLight(
+static const unsigned int getLighting(
   const unsigned char* voxels,
   const unsigned char light,
   const unsigned char sunlight,
@@ -938,6 +938,42 @@ void generate(
   }
 }
 
+int getHeight(
+  const World* world,
+  const int* heightmap,
+  const int x,
+  const int z
+) {
+  if (
+    x < 0 || x >= world->width
+    || z < 0 || z >= world->depth
+  ) {
+    return 0;
+  }
+  return heightmap[ z * world->width + x];
+}
+
+unsigned short getLight(
+  const World* world,
+  unsigned char* voxels,
+  const int x,
+  const int y,
+  const int z
+) {
+  if (
+    x < 1 || x >= world->width - 1
+    || y < 1 || y >= world->height - 1
+    || z < 1 || z >= world->depth - 1
+  ) {
+    return 0xFF;
+  }
+  const int voxel = getVoxel(world, x, y, z);
+  return (
+    (((unsigned char) ((float) voxels[voxel + VOXEL_LIGHT] / maxLight * 0xFF)) << 8)
+    | ((unsigned char) ((float) voxels[voxel + VOXEL_SUNLIGHT] / maxLight * 0xFF))
+  );
+}
+
 void propagate(
   const World* world,
   const int* heightmap,
@@ -1174,13 +1210,13 @@ const int mesh(
             chunkX, chunkY, chunkZ,
             r, g, b,
             x, y + 1, z + 1,
-            getLight(voxels, light, sunlight, tw, ts, getVoxel(world, x - 1, y + 1, z + 1)),
+            getLighting(voxels, light, sunlight, tw, ts, getVoxel(world, x - 1, y + 1, z + 1)),
             x + 1, y + 1, z + 1,
-            getLight(voxels, light, sunlight, te, ts, getVoxel(world, x + 1, y + 1, z + 1)),
+            getLighting(voxels, light, sunlight, te, ts, getVoxel(world, x + 1, y + 1, z + 1)),
             x + 1, y + 1, z,
-            getLight(voxels, light, sunlight, te, tn, getVoxel(world, x + 1, y + 1, z - 1)),
+            getLighting(voxels, light, sunlight, te, tn, getVoxel(world, x + 1, y + 1, z - 1)),
             x, y + 1, z,
-            getLight(voxels, light, sunlight, tw, tn, getVoxel(world, x - 1, y + 1, z - 1))
+            getLighting(voxels, light, sunlight, tw, tn, getVoxel(world, x - 1, y + 1, z - 1))
           );
         }
         if (bottom != -1 && voxels[bottom] == TYPE_AIR) {
@@ -1198,13 +1234,13 @@ const int mesh(
             chunkX, chunkY, chunkZ,
             r, g, b,
             x, y, z,
-            getLight(voxels, light, sunlight, bw, bn, getVoxel(world, x - 1, y - 1, z - 1)),
+            getLighting(voxels, light, sunlight, bw, bn, getVoxel(world, x - 1, y - 1, z - 1)),
             x + 1, y, z,
-            getLight(voxels, light, sunlight, be, bn, getVoxel(world, x + 1, y - 1, z - 1)),
+            getLighting(voxels, light, sunlight, be, bn, getVoxel(world, x + 1, y - 1, z - 1)),
             x + 1, y, z + 1,
-            getLight(voxels, light, sunlight, be, bs, getVoxel(world, x + 1, y - 1, z + 1)),
+            getLighting(voxels, light, sunlight, be, bs, getVoxel(world, x + 1, y - 1, z + 1)),
             x, y, z + 1,
-            getLight(voxels, light, sunlight, bw, bs, getVoxel(world, x - 1, y - 1, z + 1))
+            getLighting(voxels, light, sunlight, bw, bs, getVoxel(world, x - 1, y - 1, z + 1))
           );
         }
         if (south != -1 && voxels[south] == 0) {
@@ -1222,13 +1258,13 @@ const int mesh(
             chunkX, chunkY, chunkZ,
             r, g, b,
             x, y, z + 1,
-            getLight(voxels, light, sunlight, sw, sb, getVoxel(world, x - 1, y - 1, z + 1)),
+            getLighting(voxels, light, sunlight, sw, sb, getVoxel(world, x - 1, y - 1, z + 1)),
             x + 1, y, z + 1,
-            getLight(voxels, light, sunlight, se, sb, getVoxel(world, x + 1, y - 1, z + 1)),
+            getLighting(voxels, light, sunlight, se, sb, getVoxel(world, x + 1, y - 1, z + 1)),
             x + 1, y + 1, z + 1,
-            getLight(voxels, light, sunlight, se, st, getVoxel(world, x + 1, y + 1, z + 1)),
+            getLighting(voxels, light, sunlight, se, st, getVoxel(world, x + 1, y + 1, z + 1)),
             x, y + 1, z + 1,
-            getLight(voxels, light, sunlight, sw, st, getVoxel(world, x - 1, y + 1, z + 1))
+            getLighting(voxels, light, sunlight, sw, st, getVoxel(world, x - 1, y + 1, z + 1))
           );
         }
         if (north != -1 && voxels[north] == TYPE_AIR) {
@@ -1246,13 +1282,13 @@ const int mesh(
             chunkX, chunkY, chunkZ,
             r, g, b,
             x + 1, y, z,
-            getLight(voxels, light, sunlight, ne, nb, getVoxel(world, x + 1, y - 1, z - 1)),
+            getLighting(voxels, light, sunlight, ne, nb, getVoxel(world, x + 1, y - 1, z - 1)),
             x, y, z,
-            getLight(voxels, light, sunlight, nw, nb, getVoxel(world, x - 1, y - 1, z - 1)),
+            getLighting(voxels, light, sunlight, nw, nb, getVoxel(world, x - 1, y - 1, z - 1)),
             x, y + 1, z,
-            getLight(voxels, light, sunlight, nw, nt, getVoxel(world, x - 1, y + 1, z - 1)),
+            getLighting(voxels, light, sunlight, nw, nt, getVoxel(world, x - 1, y + 1, z - 1)),
             x + 1, y + 1, z,
-            getLight(voxels, light, sunlight, ne, nt, getVoxel(world, x + 1, y + 1, z - 1))
+            getLighting(voxels, light, sunlight, ne, nt, getVoxel(world, x + 1, y + 1, z - 1))
           );
         }
         if (east != -1 && voxels[east] == TYPE_AIR) {
@@ -1270,13 +1306,13 @@ const int mesh(
             chunkX, chunkY, chunkZ,
             r, g, b,
             x + 1, y, z + 1,
-            getLight(voxels, light, sunlight, es, eb, getVoxel(world, x + 1, y - 1, z + 1)),
+            getLighting(voxels, light, sunlight, es, eb, getVoxel(world, x + 1, y - 1, z + 1)),
             x + 1, y, z,
-            getLight(voxels, light, sunlight, en, eb, getVoxel(world, x + 1, y - 1, z - 1)),
+            getLighting(voxels, light, sunlight, en, eb, getVoxel(world, x + 1, y - 1, z - 1)),
             x + 1, y + 1, z,
-            getLight(voxels, light, sunlight, en, et, getVoxel(world, x + 1, y + 1, z - 1)),
+            getLighting(voxels, light, sunlight, en, et, getVoxel(world, x + 1, y + 1, z - 1)),
             x + 1, y + 1, z + 1,
-            getLight(voxels, light, sunlight, es, et, getVoxel(world, x + 1, y + 1, z + 1))
+            getLighting(voxels, light, sunlight, es, et, getVoxel(world, x + 1, y + 1, z + 1))
           );
         }
         if (west != -1 && voxels[west] == TYPE_AIR) {
@@ -1294,13 +1330,13 @@ const int mesh(
             chunkX, chunkY, chunkZ,
             r, g, b,
             x, y, z,
-            getLight(voxels, light, sunlight, wn, wb, getVoxel(world, x - 1, y - 1, z - 1)),
+            getLighting(voxels, light, sunlight, wn, wb, getVoxel(world, x - 1, y - 1, z - 1)),
             x, y, z + 1,
-            getLight(voxels, light, sunlight, ws, wb, getVoxel(world, x - 1, y - 1, z + 1)),
+            getLighting(voxels, light, sunlight, ws, wb, getVoxel(world, x - 1, y - 1, z + 1)),
             x, y + 1, z + 1,
-            getLight(voxels, light, sunlight, ws, wt, getVoxel(world, x - 1, y + 1, z + 1)),
+            getLighting(voxels, light, sunlight, ws, wt, getVoxel(world, x - 1, y + 1, z + 1)),
             x, y + 1, z,
-            getLight(voxels, light, sunlight, wn, wt, getVoxel(world, x - 1, y + 1, z - 1))
+            getLighting(voxels, light, sunlight, wn, wt, getVoxel(world, x - 1, y + 1, z - 1))
           );
         }
       }
@@ -1615,12 +1651,7 @@ const unsigned char findTarget(
       }
     }
     if (isValid) {
-      const int light = getVoxel(world, point[0], y + 2, point[2]);
       point[1] = y + 1;
-      point[3] = (
-        (((unsigned char) ((float) voxels[light + VOXEL_LIGHT] / maxLight * 0xFF)) << 8)
-        | ((unsigned char) ((float) voxels[light + VOXEL_SUNLIGHT] / maxLight * 0xFF))
-      );
       return 1;
     }
   }

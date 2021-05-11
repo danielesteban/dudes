@@ -5,13 +5,15 @@ import Selected from '../renderables/selected.js';
 class Dudes extends Group {
   constructor({
     count,
-    spawn: { origin, radius },
+    searchRadius,
+    spawn: { algorithm, origin, radius },
     world,
   }) {
     super();
     this.matrixAutoUpdate = false;
     this.auxVector = new Vector3();
     this.dudes = [];
+    this.searchRadius = searchRadius;
     this.selectionMarker = new Selected();
     this.world = world;
     const spec = Dude.defaultSpec;
@@ -54,16 +56,21 @@ class Dudes extends Group {
         } : false,
       });
       let spawn;
-      while (!spawn) {
-        spawn = world.findTarget({
-          height: 4,
-          origin,
-          radius,
-          obstacles: this.computeObstacles(),
-        });
+      if (algorithm) {
+        spawn = algorithm(i);
+      } else {
+        while (!spawn) {
+          spawn = world.findTarget({
+            height: 4,
+            origin,
+            radius,
+            obstacles: this.computeObstacles(),
+          });
+        }
       }
-      dude.lighting.light = spawn[3] >> 8;
-      dude.lighting.sunlight = spawn[3] & 0xFF;
+      const light = world.getLight(spawn[0], spawn[1] + 1, spawn[2]);
+      dude.lighting.light = light >> 8;
+      dude.lighting.sunlight = light & 0xFF;
       dude.position
         .set(spawn[0] + 0.5, spawn[1], spawn[2] + 0.5)
         .multiplyScalar(world.scale);
@@ -84,6 +91,7 @@ class Dudes extends Group {
   animate(animation, gazeAt) {
     const {
       dudes,
+      searchRadius,
       selected,
       selectionMarker,
       world,
@@ -104,7 +112,7 @@ class Dudes extends Group {
         const target = world.findTarget({
           height: 4,
           origin,
-          radius: 64,
+          radius: searchRadius,
           obstacles,
         });
         if (!target) {

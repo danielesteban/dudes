@@ -10,10 +10,27 @@ import Rope from '../renderables/rope.js';
 
 class Ropes extends Gameplay {
   constructor(scene, options) {
+    const buildings = (3 * 3) - 1;
+    const dudesPerBuilding = 3;
     super(scene, {
       generation: {
         seed: Math.floor(Math.random() * 2147483647),
         type: 1,
+      },
+      dudes: {
+        count: dudesPerBuilding * buildings,
+        searchRadius: 16,
+        spawn: {
+          algorithm: (i) => {
+            const { world } = this;
+            let building = Math.floor(i / dudesPerBuilding);
+            if (building > 3) building += 1;
+            const x = world.width * 0.5 - 60 + Math.floor(building % 3) * 40 + 4 + Math.floor(Math.random() * 32);
+            const z = world.depth * 0.5 - 60 + Math.floor(building / 3) * 40 + 4 + Math.floor(Math.random() * 32);
+            const y = world.getHeight(x, z) + 1;
+            return [x, y, z];
+          },
+        },
       },
       width: 256,
       height: 128,
@@ -79,7 +96,7 @@ class Ropes extends Gameplay {
       .add({ x: 0, y: 0, z: -18 });
     this.billboard = new Billboard({
       x: billboardPos.x * world.scale,
-      y: world.heightmap.view[billboardPos.z * world.width + billboardPos.x] * world.scale,
+      y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale,
       z: billboardPos.z * world.scale,
     });
     this.add(this.billboard);

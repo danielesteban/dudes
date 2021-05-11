@@ -49,6 +49,7 @@ class Gameplay extends Group {
         },
       ],
     });
+    this.dudesOptions = options.dudes;
     this.light = 0;
     this.targetLight = 1;
     this.locomotion = {
@@ -145,7 +146,7 @@ class Gameplay extends Group {
     world.generate();
 
     const spawn = (new Vector3(world.width * 0.5, 0, world.depth * 0.5)).floor();
-    spawn.y = Math.max(3, world.heightmap.view[spawn.z * world.width + spawn.x] + 1);
+    spawn.y = Math.max(3, world.getHeight(spawn.x, spawn.z) + 1);
     spawn.multiplyScalar(world.scale);
     player.teleport(spawn);
 
@@ -154,9 +155,12 @@ class Gameplay extends Group {
     const dome = new Dome(spawn);
     this.dudes = new Dudes({
       count: 32,
+      searchRadius: 64,
+      ...(this.dudesOptions || {}),
       spawn: {
         origin: spawn.clone().divideScalar(world.scale).floor(),
-        radius: 60,
+        radius: 64,
+        ...(this.dudesOptions ? this.dudesOptions.spawn || {} : {}),
       },
       world,
     });

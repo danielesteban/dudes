@@ -13,6 +13,8 @@ clang --target=wasm32-unknown-wasi --sysroot=../vendor/wasi-libc/sysroot -nostar
 -Wl,--import-memory -Wl,--no-entry -Wl,--lto-O3 \
 -Wl,--export=__heap_base \
 -Wl,--export=generate \
+-Wl,--export=getHeight \
+-Wl,--export=getLight \
 -Wl,--export=propagate \
 -Wl,--export=update \
 -Wl,--export=mesh \

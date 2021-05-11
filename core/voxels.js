@@ -58,6 +58,8 @@ class VoxelWorld {
         this._findPath = instance.exports.findPath;
         this._findTarget = instance.exports.findTarget;
         this._generate = instance.exports.generate;
+        this._getHeight = instance.exports.getHeight;
+        this._getLight = instance.exports.getLight;
         this._mesh = instance.exports.mesh;
         this._propagate = instance.exports.propagate;
         this._update = instance.exports.update;
@@ -162,7 +164,7 @@ class VoxelWorld {
       origin.z
     );
     if (found === 1) {
-      return queueA.view.subarray(0, 4);
+      return queueA.view.subarray(0, 3);
     }
     return false;
   }
@@ -237,6 +239,30 @@ class VoxelWorld {
       queueA.address,
       queueB.address,
       queueC.address
+    );
+  }
+
+  getHeight(x, z) {
+    const {
+      world,
+      heightmap,
+    } = this;
+    return this._getHeight(
+      world.address,
+      heightmap.address,
+      x, z
+    );
+  }
+
+  getLight(x, y, z) {
+    const {
+      world,
+      voxels,
+    } = this;
+    return this._getLight(
+      world.address,
+      voxels.address,
+      x, y, z
     );
   }
 

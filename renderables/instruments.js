@@ -60,7 +60,7 @@ class Instruments extends Mesh {
     };
     [
       { id: 'hook', value: 'ready' },
-      { id: 'awaiting', value: 32 },
+      { id: 'awaiting', value: 24 },
       { id: 'rescued', value: 0 },
       { id: 'deaths', value: 0 },
     ].forEach(({ id, value }) => {
