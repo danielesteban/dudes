@@ -780,7 +780,8 @@ void generate(
               int type = (
                 y > bHeight - 2
                 || (
-                  (y - 1) % step < 4
+                  !(x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
+                  && (y - 1) % step < 4
                   && ((x + 6) % 8 < 4 || (z + 6) % 8 < 4)
                 )
               ) ? TYPE_LIGHT : TYPE_STONE;
