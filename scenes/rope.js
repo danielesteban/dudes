@@ -271,8 +271,9 @@ class Ropes extends Gameplay {
     if (dude.position.y >= topBuildingY) {
       instruments.setValue('awaiting', instruments.getValue('awaiting') + 1);
       instruments.setValue('rescued', instruments.getValue('rescued') - 1);
-      instruments.draw();
     }
+    instruments.setValue('hook', 'engaged');
+    instruments.draw();
     delete dude.path;
     dude.searchEnabled = false;
     dude.position.copy(hook.position).add({ x: 0, y: -0.3 - dude.physics[0].height, z: 0 });
@@ -292,7 +293,7 @@ class Ropes extends Gameplay {
   }
 
   unhookDudes() {
-    const { hooks, physics } = this;
+    const { helicopter: { instruments }, hooks, physics } = this;
     hooks.forEach((hook) => {
       if (!hook.hookedDude) {
         return;
@@ -304,6 +305,7 @@ class Ropes extends Gameplay {
       dude.isFalling = true;
       physics.getBody(dude).flags.isTrigger = true;
     });
+    instruments.setValue('hook', 'ready');
   }
 
   resetDude(dude, contact) {
@@ -358,7 +360,7 @@ class Ropes extends Gameplay {
     offset.set(1.25, 1.5, 5);
     if (view === views.thirdPerson) {
       offset.negate();
-      instruments.scale.setScalar(0.2);
+      instruments.scale.setScalar(0.25);
       this.add(instruments);
     } else {
       instruments.position.copy(instruments.origin);
