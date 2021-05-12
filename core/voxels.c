@@ -745,20 +745,22 @@ void generate(
     const int width = 120;
     const int depth = 120;
     const int count = (width / grid) * (depth / grid);
-    const int height = floor((world->height - 12) / count) * count;
+    const int height = floor((world->height - 16) / count) * count;
     const int originX = world->width / 2 - width / 2;
     const int originZ = world->depth / 2 - depth / 2;
-    const int step = (height - maxTerrainHeight * 0.7f) / count;
-    for (int i = 0; i < count; i++) {
+    const int step = (height - maxTerrainHeight * 0.7f) / (count - 1);
+    for (int i = 0; i < count - 1; i++) {
       queueA[i] = (i + 3) * step;
     }
-    for (int i = count - 1; i >= 0; i--) {
-      const int random = rand() % count;
+    for (int i = count - 2; i >= 0; i--) {
+      const int random = rand() % i;
       const int temp = queueA[i];
       queueA[i] = queueA[random];
       queueA[random] = temp;
     }
-    queueA[(int) (ceil(depth / grid / 2) * (width / grid) + ceil(width / grid / 2))] = height + 4;
+    const int center = (ceil(depth / grid / 2) * (width / grid) + ceil(width / grid / 2));
+    queueA[count - 1] = queueA[center];
+    queueA[center] = height;
     for (int bz = 0, i = 0; bz < depth; bz += grid) {
       for (int bx = 0; bx < width; bx += grid, i++) {
         const int bHeight = queueA[i];
@@ -778,8 +780,8 @@ void generate(
               int type = (
                 y > bHeight - 2
                 || (
-                  (y - 2) % step < 2
-                  && ((x + 3) % 4 < 2 || (z + 3) % 4 < 2)
+                  (y - 1) % step < 4
+                  && ((x + 6) % 8 < 4 || (z + 6) % 8 < 4)
                 )
               ) ? TYPE_LIGHT : TYPE_STONE;
               voxels[voxel] = type;

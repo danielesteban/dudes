@@ -11,7 +11,7 @@ import Rope from '../renderables/rope.js';
 class Ropes extends Gameplay {
   constructor(scene, options) {
     const buildings = (3 * 3) - 1;
-    const dudesPerBuilding = 3;
+    const dudesPerBuilding = 2;
     const explosionOrigin = new Vector3();
     const explosionBrush = {
       color: new Color(),
