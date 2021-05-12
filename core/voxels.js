@@ -34,7 +34,7 @@ class VoxelWorld {
     // worst possible case
     const maxVoxelsPerChunk = Math.ceil(chunkSize * chunkSize * chunkSize * 0.5);
     const maxFacesPerChunk = maxVoxelsPerChunk * 6;
-    const queueSize = width * depth * 4;
+    const queueSize = width * depth * 5;
     const layout = [
       { id: 'voxels', type: Uint8Array, size: width * height * depth * 6 },
       { id: 'colliderBoxes', type: Uint8Array, size: maxVoxelsPerChunk * 6 },
