@@ -12,7 +12,6 @@ class Ropes extends Gameplay {
   constructor(scene, options) {
     const buildings = (3 * 3) - 1;
     const dudesPerBuilding = 3;
-
     const explosionOrigin = new Vector3();
     const explosionBrush = {
       color: new Color(),
@@ -219,7 +218,7 @@ class Ropes extends Gameplay {
     helicopter.velocity.z = helicopter.velocity.z * 0.95 + helicopter.acceleration.z;
     forward.y = 0;
     forward.normalize();
-    helicopter.acceleration.y = movement.y * 0.5;
+    helicopter.acceleration.y = movement.y * 0.25;
     helicopter.velocity.y = helicopter.velocity.y * 0.8 + helicopter.acceleration.y;
     if (helicopter.velocity.y !== 0) {
       helicopter.localToWorld(helicopter.collider.position.copy(helicopter.collider.origin));
@@ -256,6 +255,8 @@ class Ropes extends Gameplay {
     dude.searchEnabled = false;
     dude.position.copy(hook.position).add({ x: 0, y: -0.3 - dude.physics[0].height, z: 0 });
     dude.skeleton.bones[dude.constructor.bones.head].rotation.set(0, 0, 0);
+    dude.lighting.light = 0;
+    dude.lighting.sunlight = 0xFF;
     dude.setAction(dude.actions.fly);
     physics.removeMesh(dude);
     physics.addMesh(dude, { mass: 1 });
@@ -284,7 +285,7 @@ class Ropes extends Gameplay {
   }
 
   resetDude(dude, contact) {
-    const { physics } = this;
+    const { physics, world } = this;
     dude.isFalling = false;
     dude.searchEnabled = true;
     dude.searchTimer = Math.random();
@@ -292,6 +293,13 @@ class Ropes extends Gameplay {
     dude.position.y = Math.round(dude.position.y);
     dude.rotation.set(0, 0, 0);
     dude.updateMatrixWorld();
+    const light = world.getLight(
+      Math.floor(dude.position.x / world.scale),
+      Math.floor(dude.position.y / world.scale) + 1,
+      Math.floor(dude.position.z / world.scale)
+    );
+    dude.lighting.light = light >> 8;
+    dude.lighting.sunlight = light & 0xFF;
     dude.setAction(dude.actions.idle);
     physics.removeMesh(dude);
     physics.addMesh(dude, { isKinematic: true, isTrigger: true });
