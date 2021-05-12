@@ -340,6 +340,7 @@ class Player extends Group {
         euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
         camera.quaternion.setFromEuler(euler);
         pointer.set(0, 0);
+        camera.updateMatrixWorld();
       }
       ['primary', 'secondary', 'tertiary', 'view'].forEach((button) => {
         const state = buttonState[button];

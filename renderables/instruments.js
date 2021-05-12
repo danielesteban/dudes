@@ -14,7 +14,10 @@ class Instruments extends Mesh {
     Instruments.geometry.deleteAttribute('normal');
   }
 
-  constructor(origin) {
+  constructor({
+    instruments,
+    origin,
+  }) {
     if (!Instruments.geometry) {
       Instruments.setupGeometry();
     }
@@ -26,7 +29,7 @@ class Instruments extends Mesh {
     ctx.textBaseline = 'middle';
     ctx.lineWidth = 3;
     ctx.font = '700 18px monospace';
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 4;
     ctx.shadowOffsetY = 2;
     ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
     const texture = new CanvasTexture(renderer);
@@ -40,32 +43,20 @@ class Instruments extends Mesh {
       Instruments.geometry,
       material
     );
+    this.origin = origin;
     this.position.set(origin.x, origin.y, origin.z);
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
     this.context = ctx;
     this.renderer = renderer;
     this.texture = texture;
-    this.instruments = {
-      hook: 0,
-      awaiting: 1,
-      rescued: 2,
-      deaths: 3,
-    };
-    this.colors = {
-      hook: '#393',
-      awaiting: '#339',
-      rescued: '#993',
-      deaths: '#933',
-    };
-    [
-      { id: 'hook', value: 'ready' },
-      { id: 'awaiting', value: 24 },
-      { id: 'rescued', value: 0 },
-      { id: 'deaths', value: 0 },
-    ].forEach(({ id, value }) => {
-      this.updateInstrument(id, value);
-    });
+    this.instruments = instruments;
+    this.index = instruments.reduce((index, { id }, i) => {
+      index[id] = i;
+      return index;
+    }, {});
+    this.draw();
+    this.renderOrder = 2;
   }
 
   dispose() {
@@ -74,22 +65,34 @@ class Instruments extends Mesh {
     material.dispose();
   }
 
-  updateInstrument(id, value) {
-    const { colors, context: ctx, instruments, renderer, texture } = this;
-    const index = instruments[id];
-    const width = (renderer.width - 8) / 4;
-    const fill = ctx.createLinearGradient(0, 0, 0, renderer.height * 1.2);
-    fill.addColorStop(0, colors[id]);
-    fill.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = fill;
-    ctx.strokeStyle = fill;
-    ctx.strokeRect(width * index + 8, 8, width - 8, renderer.height - 16);
-    ctx.beginPath();
-    ctx.arc(width * (index + 0.5) + 4, renderer.height * 0.5, width * 0.4, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillText(id.toUpperCase(), width * (index + 0.5) + 4, renderer.height * 0.4);
-    ctx.fillText(`${value}`.toUpperCase(), width * (index + 0.5) + 4, renderer.height * 0.6);
+  draw() {
+    const { context: ctx, instruments, renderer, texture } = this;
+    ctx.clearRect(0, 0, renderer.width, renderer.height);
+    instruments.forEach(({ id, color, value }, index) => {
+      const width = (renderer.width - 8) / 4;
+      const fill = ctx.createLinearGradient(0, 0, 0, renderer.height * 1.2);
+      fill.addColorStop(0, color);
+      fill.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = fill;
+      ctx.strokeStyle = fill;
+      ctx.strokeRect(width * index + 8, 8, width - 8, renderer.height - 16);
+      ctx.beginPath();
+      ctx.arc(width * (index + 0.5) + 4, renderer.height * 0.5, width * 0.4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillText(id.toUpperCase(), width * (index + 0.5) + 4, renderer.height * 0.4);
+      ctx.fillText(`${value}`.toUpperCase(), width * (index + 0.5) + 4, renderer.height * 0.6);
+    });
     texture.needsUpdate = true;
+  }
+
+  getValue(id) {
+    const { index, instruments } = this;
+    return instruments[index[id]].value;
+  }
+
+  setValue(id, value) {
+    const { index, instruments } = this;
+    instruments[index[id]].value = value;
   }
 }
 

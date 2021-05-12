@@ -2,7 +2,7 @@ import { Group, Vector3 } from '../vendor/three.js';
 import Instruments from './instruments.js';
 
 class Helicopter extends Group {
-  constructor({ sfx, sound }) {
+  constructor({ instruments, sfx, sound }) {
     super();
     this.aux = {
       pivot: new Vector3(),
@@ -11,7 +11,10 @@ class Helicopter extends Group {
     this.acceleration = new Vector3();
     this.velocity = new Vector3();
     this.instruments = new Instruments({
-      x: 0, y: 0.625, z: -0.625,
+      instruments,
+      origin: {
+        x: 0, y: 0.625, z: -0.625,
+      },
     });
     this.add(this.instruments);
     if (sfx && sound) {

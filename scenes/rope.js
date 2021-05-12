@@ -71,6 +71,12 @@ class Ropes extends Gameplay {
     });
 
     this.helicopter = new Helicopter({
+      instruments: [
+        { id: 'hook', color: '#393', value: 'ready' },
+        { id: 'awaiting', color: '#339', value: 24 },
+        { id: 'rescued', color: '#993', value: 0 },
+        { id: 'deaths', color: '#933', value: 0 },
+      ],
       sfx: scene.sfx,
       sound: '/sounds/engine.ogg',
     });
@@ -94,6 +100,7 @@ class Ropes extends Gameplay {
   onLoad() {
     const { physics, player, voxelizer, world } = this;
     super.onLoad();
+
     const billboardPos = player.position
       .clone()
       .divideScalar(world.scale)
@@ -105,8 +112,13 @@ class Ropes extends Gameplay {
       z: billboardPos.z * world.scale,
     });
     this.add(this.billboard);
-    player.move({ x: 0, y: 10, z: 20 });
 
+    this.topBuildingY = world.getHeight(
+      Math.floor(player.position.x / world.scale),
+      Math.floor(player.position.z / world.scale)
+    ) * world.scale;
+
+    player.move({ x: 0, y: 10, z: 20 });
     this.helicopter.voxelize(voxelizer)
       .then(() => {
         this.hooks = [-0.625, 0.625].map((x) => {
@@ -163,6 +175,11 @@ class Ropes extends Gameplay {
     }
     super.onAnimationTick({ animation, camera, isXR });
     helicopter.animate(animation);
+    if (this.view === Ropes.views.thirdPerson) {
+      helicopter.instruments.position.copy(helicopter.aux.pivot.set(0, -1, 0.5).unproject(camera));
+      camera.getWorldQuaternion(helicopter.instruments.quaternion);
+      helicopter.instruments.updateMatrix();
+    }
   }
 
   onLocomotionTick({ animation, isXR }) {
@@ -250,7 +267,12 @@ class Ropes extends Gameplay {
   }
 
   hookDude(dude, hook) {
-    const { physics } = this;
+    const { helicopter: { instruments }, physics, topBuildingY } = this;
+    if (dude.position.y >= topBuildingY) {
+      instruments.setValue('awaiting', instruments.getValue('awaiting') + 1);
+      instruments.setValue('rescued', instruments.getValue('rescued') - 1);
+      instruments.draw();
+    }
     delete dude.path;
     dude.searchEnabled = false;
     dude.position.copy(hook.position).add({ x: 0, y: -0.3 - dude.physics[0].height, z: 0 });
@@ -285,7 +307,7 @@ class Ropes extends Gameplay {
   }
 
   resetDude(dude, contact) {
-    const { physics, world } = this;
+    const { helicopter: { instruments }, physics, topBuildingY, world } = this;
     dude.isFalling = false;
     dude.searchEnabled = true;
     dude.searchTimer = Math.random();
@@ -303,6 +325,11 @@ class Ropes extends Gameplay {
     dude.setAction(dude.actions.idle);
     physics.removeMesh(dude);
     physics.addMesh(dude, { isKinematic: true, isTrigger: true });
+    if (dude.position.y >= topBuildingY) {
+      instruments.setValue('awaiting', instruments.getValue('awaiting') - 1);
+      instruments.setValue('rescued', instruments.getValue('rescued') + 1);
+      instruments.draw();
+    }
   }
 
   resumeAudio() {
@@ -327,11 +354,19 @@ class Ropes extends Gameplay {
     if (view === this.view) {
       return;
     }
-    const { aux: { pivot: offset } } = helicopter;
+    const { aux: { pivot: offset }, instruments } = helicopter;
     offset.set(1.25, 1.5, 5);
     if (view === views.thirdPerson) {
       offset.negate();
+      instruments.scale.setScalar(0.2);
+      this.add(instruments);
+    } else {
+      instruments.position.copy(instruments.origin);
+      instruments.rotation.set(0, 0, 0);
+      instruments.scale.setScalar(1);
+      helicopter.add(instruments);
     }
+    instruments.updateMatrix();
     helicopter.position.add(offset);
     player.move(offset.applyQuaternion(player.quaternion).negate());
     this.view = view;
