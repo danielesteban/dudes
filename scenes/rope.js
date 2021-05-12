@@ -73,9 +73,9 @@ class Ropes extends Gameplay {
     this.helicopter = new Helicopter({
       instruments: [
         { id: 'hook', color: '#393', value: 'ready' },
-        { id: 'awaiting', color: '#339', value: dudesPerBuilding * buildings },
+        { id: 'awaiting', color: '#933', value: dudesPerBuilding * buildings },
         { id: 'rescued', color: '#993', value: 0 },
-        { id: 'deaths', color: '#933', value: 0 },
+        { id: 'time', color: '#339', value: 0 },
       ],
       sfx: scene.sfx,
       sound: '/sounds/engine.ogg',
@@ -83,6 +83,8 @@ class Ropes extends Gameplay {
     this.player.add(this.helicopter);
     this.player.children[0].position.y = 1.25; // HACK!
     this.player.cursor.classList.remove('enabled');
+
+    this.time = 0;
 
     this.view = Ropes.views.firstPerson;
     if (options.view === 'thirdpersonhack') {
@@ -174,12 +176,17 @@ class Ropes extends Gameplay {
       return;
     }
     super.onAnimationTick({ animation, camera, isXR });
-    helicopter.animate(animation);
     if (this.view === Ropes.views.thirdPerson) {
       helicopter.instruments.position.copy(helicopter.aux.pivot.set(0, -1, 0.5).unproject(camera));
       camera.getWorldQuaternion(helicopter.instruments.quaternion);
       helicopter.instruments.updateMatrix();
     }
+    this.time += animation.delta;
+    helicopter.instruments.setValue(
+      'time',
+      `${`${Math.floor(this.time / 60)}`.padStart(2, '0')}:${`${Math.floor(this.time % 60)}`.padStart(2, '0')}`
+    );
+    helicopter.animate(animation);
   }
 
   onLocomotionTick({ animation, isXR }) {
@@ -273,7 +280,6 @@ class Ropes extends Gameplay {
       instruments.setValue('rescued', instruments.getValue('rescued') - 1);
     }
     instruments.setValue('hook', 'engaged');
-    instruments.draw();
     delete dude.path;
     dude.searchEnabled = false;
     dude.position.copy(hook.position).add({ x: 0, y: -0.3 - dude.physics[0].height, z: 0 });
@@ -330,7 +336,6 @@ class Ropes extends Gameplay {
     if (dude.position.y >= topBuildingY) {
       instruments.setValue('awaiting', instruments.getValue('awaiting') - 1);
       instruments.setValue('rescued', instruments.getValue('rescued') + 1);
-      instruments.draw();
     }
   }
 

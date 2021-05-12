@@ -50,12 +50,29 @@ class Instruments extends Mesh {
     this.context = ctx;
     this.renderer = renderer;
     this.texture = texture;
-    this.instruments = instruments;
-    this.index = instruments.reduce((index, { id }, i) => {
-      index[id] = i;
-      return index;
-    }, {});
-    this.draw();
+    this.map = new Map();
+    this.instruments = instruments.map(({
+      color,
+      ...instrument
+    }, index) => {
+      const fill = ctx.createLinearGradient(0, 0, 0, renderer.height * 1.2);
+      fill.addColorStop(0, color);
+      fill.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      const width = (renderer.width - 8) / 4;
+      const rect = new Path2D();
+      rect.rect(width * index + 8, 8, width - 8, renderer.height - 16);
+      const arc = new Path2D();
+      arc.arc(width * (index + 0.5) + 4, renderer.height * 0.5, width * 0.4, 0, Math.PI * 2);
+      rect.addPath(arc);
+      instrument = {
+        ...instrument,
+        fill,
+        path: rect,
+        width,
+      };
+      this.map.set(instrument.id, instrument);
+      return instrument;
+    });
     this.renderOrder = 2;
   }
 
@@ -66,19 +83,28 @@ class Instruments extends Mesh {
   }
 
   draw() {
-    const { context: ctx, instruments, renderer, texture } = this;
+    const {
+      context: ctx,
+      instruments,
+      needsUpdate,
+      renderer,
+      texture,
+    } = this;
+    if (!needsUpdate) {
+      return;
+    }
+    this.needsUpdate = false;
     ctx.clearRect(0, 0, renderer.width, renderer.height);
-    instruments.forEach(({ id, color, value }, index) => {
-      const width = (renderer.width - 8) / 4;
-      const fill = ctx.createLinearGradient(0, 0, 0, renderer.height * 1.2);
-      fill.addColorStop(0, color);
-      fill.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    instruments.forEach(({
+      id,
+      fill,
+      path,
+      value,
+      width,
+    }, index) => {
       ctx.fillStyle = fill;
       ctx.strokeStyle = fill;
-      ctx.strokeRect(width * index + 8, 8, width - 8, renderer.height - 16);
-      ctx.beginPath();
-      ctx.arc(width * (index + 0.5) + 4, renderer.height * 0.5, width * 0.4, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.stroke(path);
       ctx.fillText(id.toUpperCase(), width * (index + 0.5) + 4, renderer.height * 0.4);
       ctx.fillText(`${value}`.toUpperCase(), width * (index + 0.5) + 4, renderer.height * 0.6);
     });
@@ -86,13 +112,18 @@ class Instruments extends Mesh {
   }
 
   getValue(id) {
-    const { index, instruments } = this;
-    return instruments[index[id]].value;
+    const { map } = this;
+    return map.get(id).value;
   }
 
   setValue(id, value) {
-    const { index, instruments } = this;
-    instruments[index[id]].value = value;
+    const { map } = this;
+    const instrument = map.get(id);
+    if (instrument.value === value) {
+      return;
+    }
+    instrument.value = value;
+    this.needsUpdate = true;
   }
 }
 

@@ -33,7 +33,8 @@ class Helicopter extends Group {
   }
 
   animate(animation) {
-    const { rotor } = this;
+    const { instruments, rotor } = this;
+    instruments.draw();
     if (rotor) {
       rotor.rotation.y += animation.delta * 5;
     }
