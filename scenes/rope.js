@@ -46,7 +46,7 @@ class Ropes extends Gameplay {
           );
           this.hookDude(dude, mesh);
         },
-        searchRadius: 16,
+        searchRadius: 10,
         spawn: {
           algorithm: (i) => {
             const { world } = this;
@@ -73,7 +73,7 @@ class Ropes extends Gameplay {
     this.helicopter = new Helicopter({
       instruments: [
         { id: 'hook', color: '#393', value: 'ready' },
-        { id: 'awaiting', color: '#339', value: 24 },
+        { id: 'awaiting', color: '#339', value: dudesPerBuilding * buildings },
         { id: 'rescued', color: '#993', value: 0 },
         { id: 'deaths', color: '#933', value: 0 },
       ],
