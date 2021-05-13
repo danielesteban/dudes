@@ -75,6 +75,11 @@ class Scene extends ThreeScene {
       physics,
       scene,
     } = this;
+    player.onAnimationTick({
+      animation,
+      camera,
+      isXR,
+    });
     if (scene && scene.onLocomotionTick) {
       scene.onLocomotionTick({ animation, camera, isXR });
       player.updateMatrixWorld();
@@ -82,11 +87,6 @@ class Scene extends ThreeScene {
     if (physics) {
       physics.simulate(animation.delta);
     }
-    player.onAnimationTick({
-      animation,
-      camera,
-      isXR,
-    });
     if (scene && scene.onAnimationTick) {
       scene.onAnimationTick({ animation, camera, isXR });
     }
