@@ -63,8 +63,8 @@ class Party extends Gameplay {
             }
             let building = Math.floor(i / dudesPerBuilding);
             if (building > 3) building += 1;
-            const x = world.width * 0.5 - 60 + Math.floor(building % 3) * 40 + 4 + Math.floor(Math.random() * 32);
-            const z = world.depth * 0.5 - 60 + Math.floor(building / 3) * 40 + 4 + Math.floor(Math.random() * 32);
+            const x = world.width * 0.5 - 60 + Math.floor(building % 3) * 40 + 10 + Math.floor(Math.random() * 21);
+            const z = world.depth * 0.5 - 60 + Math.floor(building / 3) * 40 + 10 + Math.floor(Math.random() * 21);
             const y = world.getHeight(x, z) + 1;
             return [x, y, z];
           },
@@ -75,9 +75,9 @@ class Party extends Gameplay {
           seed: Math.floor(Math.random() * 2147483647),
           type: 1,
         },
-        width: 256,
+        width: 192,
         height: 128,
-        depth: 256,
+        depth: 192,
       },
     });
 
@@ -210,7 +210,7 @@ class Party extends Gameplay {
       this.add(speaker);
     });
 
-    player.move({ x: -1.25, y: 8, z: 20 });
+    player.move({ x: 0, y: 8, z: 24 });
     this.helicopter.voxelize(voxelizer)
       .then(() => {
         this.hooks = [-0.625, 0.625].map((x) => {

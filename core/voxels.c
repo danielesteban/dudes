@@ -723,21 +723,22 @@ static void generatePartyBuildings(
     queueA[center] = height;
     for (int bz = 0, i = 0; bz < depth; bz += grid) {
       for (int bx = 0; bx < width; bx += grid, i++) {
+        const int street = i == center ? 0 : (1 + (rand() % 2)) * 4;
         const int bHeight = queueA[i];
         const unsigned int color = getColorFromNoise(rand() % 255);
         if (i == center) mainBuildingColor = color;
-        for (int z = 0; z < grid; z++) {
+        for (int z = street; z < grid - street; z++) {
           for (int y = 0; y < bHeight; y++) {
-            for (int x = 0; x < grid; x++) {
+            for (int x = street; x < grid - street; x++) {
               if (
                 (
                   y > bHeight - 3
                   && (
-                    (x > 1 && x < grid - 2 && z > 1 && z < grid - 2)
+                    (x > street + 1 && x < grid - street - 2 && z > street + 1 && z < grid - street - 2)
                   )
                 ) || (
                   y % step == step -2
-                  && !(x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
+                  && !(x > street && x < grid - street - 1 && z > street && z < grid - street - 1)
                 ) || (
                   i == center
                   && y > bHeight - 7
@@ -750,9 +751,9 @@ static void generatePartyBuildings(
               int type = (
                 y > bHeight - 2
                 || (
-                  !(x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
+                  !(x > street && x < grid - street - 1 && z > street && z < grid - street - 1)
                   && (y - 1) % step < 4
-                  && ((x + 6) % 8 < 4 || (z + 6) % 8 < 4)
+                  && ((x - street + 6) % 8 < 4 || (z - street + 6) % 8 < 4)
                 )
               ) ? TYPE_LIGHT : TYPE_STONE;
               voxels[voxel] = type;
