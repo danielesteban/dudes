@@ -692,6 +692,179 @@ static void generateTree(
   );
 }
 
+static void generatePartyBuildings(
+  const World* world,
+  int* heightmap,
+  unsigned char* voxels,
+  int* queueA
+) {
+  const int grid = 40;
+  const int width = 120;
+  const int depth = 120;
+  const int center = (ceil(depth / grid / 2) * (width / grid) + ceil(width / grid / 2));
+  const int maxTerrainHeight = world->height / 3.0f;
+  int mainBuildingColor;
+  {
+    const int count = (width / grid) * (depth / grid);
+    const int height = floor((world->height - 16) / count) * count;
+    const int originX = world->width / 2 - width / 2;
+    const int originZ = world->depth / 2 - depth / 2;
+    const int step = (height - maxTerrainHeight * 0.7f) / (count - 1);
+    for (int i = 0; i < count - 1; i++) {
+      queueA[i] = (i + 3) * step;
+    }
+    for (int i = count - 2; i >= 0; i--) {
+      const int random = rand() % i;
+      const int temp = queueA[i];
+      queueA[i] = queueA[random];
+      queueA[random] = temp;
+    }
+    queueA[count - 1] = queueA[center];
+    queueA[center] = height;
+    for (int bz = 0, i = 0; bz < depth; bz += grid) {
+      for (int bx = 0; bx < width; bx += grid, i++) {
+        const int bHeight = queueA[i];
+        const unsigned int color = getColorFromNoise(rand() % 255);
+        if (i == center) mainBuildingColor = color;
+        for (int z = 0; z < grid; z++) {
+          for (int y = 0; y < bHeight; y++) {
+            for (int x = 0; x < grid; x++) {
+              if (
+                y > bHeight - 3
+                && (
+                  (x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
+                )
+              ) {
+                continue;
+              }
+              const int voxel = getVoxel(world, originX + bx + x, y, originZ + bz + z);
+              int type = (
+                y > bHeight - 2
+                || (
+                  !(x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
+                  && (y - 1) % step < 4
+                  && ((x + 6) % 8 < 4 || (z + 6) % 8 < 4)
+                )
+              ) ? TYPE_LIGHT : TYPE_STONE;
+              voxels[voxel] = type;
+              voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+              voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+              voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+              if (y <= seaLevel) {
+                voxels[voxel + VOXEL_R] /= 2;
+                voxels[voxel + VOXEL_G] /= 2;
+              }
+              const int heightmapIndex = (originZ + bz + z) * world->width + (originX + bx + x);
+              if (heightmap[heightmapIndex] < y) {
+                heightmap[heightmapIndex] = y;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  {
+    // Stage
+    const int width = 16;
+    const int height = 4;
+    const int depth = 8;
+    const int originX = world->width / 2 - width / 2;
+    const int originY = queueA[center] - 2;
+    const int originZ = world->depth / 2 - grid / 2 + 4;
+    for (int z = 0; z < depth; z++) {
+      for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+          if (
+            y > 0
+            && x > 0
+            && x < width - 1
+            && z > 0
+            && (
+              z < depth - 2
+              || (z == depth - 2 && (x < width / 2 - 3 || x > width / 2 + 2))
+            )
+          ) {
+            continue;
+          }
+          const int voxel = getVoxel(world, originX + x, originY + y, originZ + z);
+          const int type = y == height - 2 ? TYPE_LIGHT : TYPE_STONE;
+          voxels[voxel] = type;
+          voxels[voxel + VOXEL_R] = fmin(fmax((int) ((mainBuildingColor >> 16) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_G] = fmin(fmax((int) ((mainBuildingColor >> 8) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_B] = fmin(fmax((int) (mainBuildingColor & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          const int heightmapIndex = (originZ + z) * world->width + (originX + x);
+          if (heightmap[heightmapIndex] < originY + y) {
+            heightmap[heightmapIndex] = originY + y;
+          }
+        }
+      }
+    }
+  }
+  const unsigned int speakersColor = getColorFromNoise(rand() % 0xFF);
+  for (int i = 0; i < 4; i += 1) {
+    // Speakers
+    const int width = 8;
+    const int height = 9;
+    const int depth = 8;
+    const int originX = world->width / 2 + (i < 2 ? -19 : 19 - width);
+    const int originY = queueA[center] - 2 + (i % 2 == 1 ? height : 0);
+    const int originZ = world->depth / 2 - grid / 2 + 1;
+    for (int z = 0; z < depth; z++) {
+      for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+          if (
+            (
+              z == depth - 1
+              && x > 0 && x < width - 1
+              && y > 0 && y < height - 2
+            ) || (
+              z == depth - 2
+              && x > 1 && x < width - 2
+              && y > 1 && y < height - 3
+            )
+          ) {
+            continue;
+          }
+          const int voxel = getVoxel(world, originX + x, originY + y, originZ + z);
+          const int type = (
+            (
+              y == height - 1
+              && (x == 0 || x == width - 1 || z == 0 || z == depth - 1)
+            ) || (
+              z == depth - 3
+              && x > 2 && x < width - 3
+              && y > 2 && y < height - 4
+            )
+          ) ? TYPE_LIGHT : TYPE_STONE;
+          voxels[voxel] = type;
+          voxels[voxel + VOXEL_R] = fmin(fmax((int) ((speakersColor >> 16) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_G] = fmin(fmax((int) ((speakersColor >> 8) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          voxels[voxel + VOXEL_B] = fmin(fmax((int) (speakersColor & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
+          const int heightmapIndex = (originZ + z) * world->width + (originX + x);
+          if (heightmap[heightmapIndex] < originY + y) {
+            heightmap[heightmapIndex] = originY + y;
+          }
+        }
+      }
+    }
+  }
+  const int bx = world->width / 2 - 6;
+  const int bz = world->depth / 2 - grid / 2 + 1;
+  generateBillboard(
+    world,
+    heightmap,
+    voxels,
+    bx,
+    heightmap[bz * world->width + bx] + 1,
+    bz,
+    rand(),
+    12,
+    14,
+    3
+  );
+}
+
 void generate(
   const World* world,
   int* heightmap,
@@ -740,81 +913,12 @@ void generate(
 
   srand(seed);
   if (type == 1) {
-    // Rescue gameplay building
-    const int grid = 40;
-    const int width = 120;
-    const int depth = 120;
-    const int count = (width / grid) * (depth / grid);
-    const int height = floor((world->height - 16) / count) * count;
-    const int originX = world->width / 2 - width / 2;
-    const int originZ = world->depth / 2 - depth / 2;
-    const int step = (height - maxTerrainHeight * 0.7f) / (count - 1);
-    for (int i = 0; i < count - 1; i++) {
-      queueA[i] = (i + 3) * step;
-    }
-    for (int i = count - 2; i >= 0; i--) {
-      const int random = rand() % i;
-      const int temp = queueA[i];
-      queueA[i] = queueA[random];
-      queueA[random] = temp;
-    }
-    const int center = (ceil(depth / grid / 2) * (width / grid) + ceil(width / grid / 2));
-    queueA[count - 1] = queueA[center];
-    queueA[center] = height;
-    for (int bz = 0, i = 0; bz < depth; bz += grid) {
-      for (int bx = 0; bx < width; bx += grid, i++) {
-        const int bHeight = queueA[i];
-        const unsigned int color = getColorFromNoise(rand() % 255);
-        for (int z = 0; z < grid; z++) {
-          for (int y = 0; y < bHeight; y++) {
-            for (int x = 0; x < grid; x++) {
-              if (
-                y > bHeight - 3
-                && (
-                  (x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
-                )
-              ) {
-                continue;
-              }
-              const int voxel = getVoxel(world, originX + bx + x, y, originZ + bz + z);
-              int type = (
-                y > bHeight - 2
-                || (
-                  !(x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
-                  && (y - 1) % step < 4
-                  && ((x + 6) % 8 < 4 || (z + 6) % 8 < 4)
-                )
-              ) ? TYPE_LIGHT : TYPE_STONE;
-              voxels[voxel] = type;
-              voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
-              voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
-              voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + (rand() % 0x11) * (type == TYPE_LIGHT ? 2 : -1), 0), 0xFF);
-              if (y <= seaLevel) {
-                voxels[voxel + VOXEL_R] /= 2;
-                voxels[voxel + VOXEL_G] /= 2;
-              }
-              const int heightmapIndex = (originZ + bz + z) * world->width + (originX + bx + x);
-              if (heightmap[heightmapIndex] < y) {
-                heightmap[heightmapIndex] = y;
-              }
-            }
-          }
-        }
-      }
-    }
-    const int bx = world->width / 2 - 6;
-    const int bz = world->depth / 2 - grid / 2;
-    generateBillboard(
+    // Party gameplay buildings
+    generatePartyBuildings(
       world,
       heightmap,
       voxels,
-      bx,
-      heightmap[bz * world->width + bx] - 1,
-      bz,
-      rand(),
-      12,
-      14,
-      3
+      queueA
     );
   } else {
     // Default city with inner plaza
@@ -883,6 +987,7 @@ void generate(
   }
 
   {
+    // Terrain lamps
     const int grid = 32;
     for (int z = 0; z < world->depth; z += grid) {
       for (int x = 0; x < world->width; x += grid) {
@@ -910,6 +1015,7 @@ void generate(
   }
 
   {
+    // Trees
     const int grid = 16;
     for (int z = 0; z < world->depth; z += grid) {
       for (int x = 0; x < world->width; x += grid) {

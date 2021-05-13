@@ -1,5 +1,4 @@
 import { Scene as ThreeScene } from '../vendor/three.js';
-import Music from './music.js';
 import Physics from './physics.js';
 import Player from './player.js';
 import SFX from './sfx.js';
@@ -20,7 +19,6 @@ class Scene extends ThreeScene {
     this.clock = clock;
     this.player = new Player({ camera, dom, xr: renderer.xr });
     this.add(this.player);
-    this.music = new Music(this.player.head.context.state === 'running');
     this.sfx = new SFX({ listener: this.player.head });
     this.router = router;
     this.scenes = scenes;
@@ -96,11 +94,10 @@ class Scene extends ThreeScene {
   }
 
   resumeAudio() {
-    const { player: { head: { context } }, music, scene } = this;
+    const { player: { head: { context } }, scene } = this;
     if (context.state === 'suspended') {
       context.resume();
     }
-    music.resume();
     if (scene && scene.resumeAudio) {
       scene.resumeAudio();
     }

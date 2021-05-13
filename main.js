@@ -15,15 +15,19 @@ const renderer = new Renderer({
 });
 
 router.addEventListener('update', ({ route, params }) => {
+  if (params.length > 0) {
+    router.replace('/');
+    return;
+  }
   switch (route) {
     case '':
+      renderer.scene.load('Party');
+      break;
+    case 'debug':
       renderer.scene.load('Debug');
       break;
     case 'poop':
       renderer.scene.load('Poop');
-      break;
-    case 'rope':
-      renderer.scene.load('Rope', { view: params[0] });
       break;
     default:
       router.replace('/');

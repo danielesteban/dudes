@@ -58,11 +58,11 @@ class Instruments extends Mesh {
       const fill = ctx.createLinearGradient(0, 0, 0, renderer.height * 1.2);
       fill.addColorStop(0, color);
       fill.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      const width = (renderer.width - 8) / 4;
+      const width = (renderer.width - 8) / 3;
       const rect = new Path2D();
       rect.rect(width * index + 8, 8, width - 8, renderer.height - 16);
       const arc = new Path2D();
-      arc.arc(width * (index + 0.5) + 4, renderer.height * 0.5, width * 0.4, 0, Math.PI * 2);
+      arc.arc(width * (index + 0.5) + 4, renderer.height * 0.5, renderer.height * 0.4, 0, Math.PI * 2);
       rect.addPath(arc);
       instrument = {
         ...instrument,

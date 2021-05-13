@@ -261,6 +261,43 @@ class Dude extends SkinnedMesh {
         duration: 1,
       },
       {
+        clip: new AnimationClip('dance', 1, [
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.hip}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(0, Math.PI * -0.25, 0),
+              ...eulerToQuat(0, Math.PI * 0.25, 0),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.head}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * -0.25, 0, 0),
+              ...eulerToQuat(Math.PI * 0.5, 0, 0),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.leftArm}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * -0.5, 0, 0),
+              ...eulerToQuat(Math.PI * 0.5, 0, 0),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.rightArm}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * 0.5, 0, 0),
+              ...eulerToQuat(Math.PI * -0.5, 0, 0),
+            ])
+          ),
+        ]),
+        duration: 1,
+      },
+      {
         clip: new AnimationClip('fly', 1, [
           new QuaternionKeyframeTrack(
             `.bones[${bones.leftArm}].quaternion`,
@@ -317,6 +354,35 @@ class Dude extends SkinnedMesh {
           ),
         ]),
         duration: 0.25,
+      },
+      {
+        clip: new AnimationClip('hype', 1, [
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.head}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(0, Math.PI * -0.25, 0),
+              ...eulerToQuat(0, Math.PI * 0.25, 0),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.leftArm}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * -0.25, 0, Math.PI * 0.125),
+              ...eulerToQuat(Math.PI * -0.5, 0, Math.PI * -0.125),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.rightArm}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * -0.25, 0, Math.PI * -0.125),
+              ...eulerToQuat(Math.PI * -0.5, 0, Math.PI * 0.125),
+            ])
+          ),
+        ]),
+        duration: 1,
       },
       {
         clip: new AnimationClip('walk', 1, [
@@ -470,7 +536,8 @@ class Dude extends SkinnedMesh {
       actions[clip.name] = action;
       return actions;
     }, {});
-    this.action = this.actions.idle;
+    this.idleAction = this.actions.idle;
+    this.action = this.idleAction;
     this.action.enabled = true;
     this.auxVector = new Vector3();
     this.lighting = {
@@ -506,20 +573,19 @@ class Dude extends SkinnedMesh {
     } = this;
     marker.animate(animation);
     mixer.update(animation.delta);
-    if (this.action === actions.fly) {
-      return;
-    }
     if (this.action === actions.hit) {
       this.hitTimer -= animation.delta;
       if (this.hitTimer <= 0) {
-        this.setAction(actions.idle);
+        this.setAction(this.idleAction);
       }
       return;
     }
-    if (!path && gazeAt) {
-      const head = this.skeleton.bones[Dude.bones.head];
-      head.lookAt(gazeAt);
-      head.rotation.y = Math.min(Math.max(head.rotation.y, Math.PI * -0.4), Math.PI * 0.4);
+    if (!path) {
+      if (gazeAt && this.action === actions.idle) {
+        const head = this.skeleton.bones[Dude.bones.head];
+        head.lookAt(gazeAt);
+        head.rotation.y = Math.min(Math.max(head.rotation.y, Math.PI * -0.4), Math.PI * 0.4);
+      }
       return;
     }
     const from = path[step];
@@ -574,7 +640,7 @@ class Dude extends SkinnedMesh {
       if (this.step >= path.length - 1) {
         delete this.path;
         marker.visible = false;
-        this.setAction(actions.idle);
+        this.setAction(this.idleAction);
       }
     }
   }
@@ -605,9 +671,17 @@ class Dude extends SkinnedMesh {
     action.reset().crossFadeFrom(current, 0.25, false);
   }
 
+  setIdleAction(action) {
+    const { idleAction: current } = this;
+    this.idleAction = action;
+    if (this.action === current) {
+      this.setAction(action);
+    }
+  }
+
   setPath(results, scale, showMarker) {
     const { actions, lighting, marker, position } = this;
-    if (this.action === actions.hit || this.action === actions.fly) {
+    if (this.action !== this.idleAction && this.action !== actions.walk) {
       return;
     }
     const path = [{
@@ -639,7 +713,7 @@ class Dude extends SkinnedMesh {
     marker.position.copy(path[path.length - 1].position);
     marker.updateMatrix();
     marker.visible = !!showMarker;
-    if (this.action === actions.idle) {
+    if (this.action === this.idleAction) {
       this.setAction(actions.walk);
     }
   }

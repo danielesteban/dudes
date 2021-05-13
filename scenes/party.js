@@ -1,17 +1,20 @@
 import { Box3, Color, Quaternion, Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
+import Music from '../core/music.js';
 import Voxelizer from '../core/voxelizer.js';
 import VoxelWorld from '../core/voxels.js';
 import Billboard from '../renderables/billboard.js';
 import Ball from '../renderables/ball.js';
 import Box from '../renderables/box.js';
+import Dude from '../renderables/dude.js';
 import Helicopter from '../renderables/helicopter.js';
 import Rope from '../renderables/rope.js';
 
-class Ropes extends Gameplay {
-  constructor(scene, options) {
+class Party extends Gameplay {
+  constructor(scene) {
     const buildings = (3 * 3) - 1;
     const dudesPerBuilding = 2;
+    const dudesAtParty = 6;
     const explosionOrigin = new Vector3();
     const explosionBrush = {
       color: new Color(),
@@ -24,7 +27,7 @@ class Ropes extends Gameplay {
 
     super(scene, {
       dudes: {
-        count: dudesPerBuilding * buildings,
+        count: dudesPerBuilding * buildings + dudesAtParty,
         onContact: ({ mesh, triggerMesh: dude, position, normal }) => {
           if (dude.isFalling) {
             if (mesh.isChunk && floorNormal.dot(normal) > 0) {
@@ -50,6 +53,14 @@ class Ropes extends Gameplay {
         spawn: {
           algorithm: (i) => {
             const { world } = this;
+            if (i >= dudesPerBuilding * buildings) {
+              const angle = Math.PI * Math.random();
+              const dist = 4 + Math.random() * 12;
+              const x = world.width * 0.5 + Math.floor(Math.cos(angle) * dist);
+              const z = world.depth * 0.5 + Math.floor(Math.sin(angle) * dist);
+              const y = world.getHeight(x, z) + 1;
+              return [x, y, z];
+            }
             let building = Math.floor(i / dudesPerBuilding);
             if (building > 3) building += 1;
             const x = world.width * 0.5 - 60 + Math.floor(building % 3) * 40 + 4 + Math.floor(Math.random() * 32);
@@ -72,24 +83,23 @@ class Ropes extends Gameplay {
 
     this.helicopter = new Helicopter({
       instruments: [
-        { id: 'hook', color: '#393', value: 'ready' },
-        { id: 'awaiting', color: '#933', value: dudesPerBuilding * buildings },
-        { id: 'rescued', color: '#993', value: 0 },
-        { id: 'time', color: '#339', value: 0 },
+        { id: 'awaiting', color: '#966', value: dudesPerBuilding * buildings },
+        { id: 'dropped', color: '#696', value: 0 },
+        { id: 'time', color: '#669', value: 0 },
       ],
       sfx: scene.sfx,
       sound: '/sounds/engine.ogg',
     });
     this.player.add(this.helicopter);
     this.player.children[0].position.y = 1.25; // HACK!
+    this.player.children[0].rotation.x = Math.PI * -0.1; // HACK!
     this.player.cursor.classList.remove('enabled');
 
     this.time = 0;
 
-    this.view = Ropes.views.firstPerson;
-    if (options.view === 'thirdpersonhack') {
-      // Legacy sponsors link
-      this.updateView(Ropes.views.thirdPerson);
+    this.view = Party.views.firstPerson;
+    if (!navigator.userAgent.includes('Quest')) {
+      this.updateView(Party.views.thirdPerson);
     }
 
     this.voxelizer = new Voxelizer({
@@ -107,7 +117,7 @@ class Ropes extends Gameplay {
       .clone()
       .divideScalar(world.scale)
       .floor()
-      .add({ x: 0, y: 0, z: -18 });
+      .add({ x: 0, y: 0, z: -17 });
     this.billboard = new Billboard({
       x: billboardPos.x * world.scale,
       y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale,
@@ -120,7 +130,83 @@ class Ropes extends Gameplay {
       Math.floor(player.position.z / world.scale)
     ) * world.scale;
 
-    player.move({ x: 0, y: 10, z: 20 });
+    this.dudes.dudes.forEach((dude) => {
+      if (dude.position.y >= this.topBuildingY) {
+        dude.rotation.y += Math.PI * (0.5 + Math.random());
+        dude.minSearchTime = 10;
+        dude.maxSearchTime = 20;
+        dude.searchTimer = (
+          dude.minSearchTime + (dude.maxSearchTime - dude.minSearchTime) * Math.random()
+        );
+        delete dude.onContact;
+        dude.setIdleAction(dude.actions.dance);
+        physics.getBody(dude).flags.isTrigger = false;
+      }
+    });
+
+    {
+      const spec = Dude.defaultSpec;
+      const height = 2;
+      const head = 1;
+      const legs = 1;
+      const torso = 1;
+      const waist = 0.5;
+      const dude = new Dude({
+        color: (new Color()).setHSL(
+          Math.random(),
+          0.5 + Math.random() * 0.25,
+          0.5 + Math.random() * 0.25
+        ),
+        stamina: 1,
+        height,
+        waist,
+        torso: {
+          width: spec.torso.width,
+          height: spec.torso.height * torso,
+          depth: spec.torso.depth * 1.5,
+        },
+        head: {
+          shape: 'box',
+          width: spec.head.width,
+          height: spec.head.height * head,
+          depth: spec.head.depth,
+        },
+        legs: {
+          ...spec.legs,
+          height: spec.legs.height * legs,
+        },
+        arms: {
+          ...spec.arms,
+          height: spec.arms.height,
+        },
+        hat: {
+          ...spec.hat,
+          width: spec.hat.width * 3,
+          height: spec.hat.height * 4,
+          offsetY: spec.hat.offsetY * 0.5,
+        },
+      });
+      dude.position.copy(player.position).add({ x: 0, y: 0.5, z: -6 });
+      dude.updateMatrixWorld();
+      dude.setAction(dude.actions.hype);
+      const light = world.getLight(
+        Math.floor(dude.position.x / world.scale),
+        Math.floor(dude.position.y / world.scale) + 1,
+        Math.floor(dude.position.z / world.scale)
+      );
+      dude.lighting.light = light >> 8;
+      dude.lighting.sunlight = light & 0xFF;
+      this.mainDude = dude;
+      this.add(this.mainDude);
+    }
+
+    this.music = new Music(player.head);
+    this.music.speakers.forEach((speaker, channel) => {
+      speaker.position.copy(player.position).add({ x: channel === 0 ? -8 : 8, y: 4, z: -8 });
+      this.add(speaker);
+    });
+
+    player.move({ x: 1.25, y: 10, z: 10 });
     this.helicopter.voxelize(voxelizer)
       .then(() => {
         this.hooks = [-0.625, 0.625].map((x) => {
@@ -171,12 +257,13 @@ class Ropes extends Gameplay {
   }
 
   onAnimationTick({ animation, camera, isXR }) {
-    const { hasLoaded, helicopter } = this;
+    const { hasLoaded, helicopter, mainDude } = this;
     if (!hasLoaded) {
       return;
     }
     super.onAnimationTick({ animation, camera, isXR });
-    if (this.view === Ropes.views.thirdPerson) {
+    mainDude.animate(animation);
+    if (this.view === Party.views.thirdPerson) {
       helicopter.instruments.position.copy(helicopter.aux.pivot.set(0, -1, 0.5).unproject(camera));
       camera.getWorldQuaternion(helicopter.instruments.quaternion);
       helicopter.instruments.updateMatrix();
@@ -266,7 +353,7 @@ class Ropes extends Gameplay {
       this.unhookDudes();
     }
     if (player.desktop.buttons.viewDown) {
-      const { views } = Ropes;
+      const { views } = Party;
       this.updateView(
         this.view === views.firstPerson ? views.thirdPerson : views.firstPerson
       );
@@ -274,12 +361,7 @@ class Ropes extends Gameplay {
   }
 
   hookDude(dude, hook) {
-    const { helicopter: { instruments }, physics, topBuildingY } = this;
-    if (dude.position.y >= topBuildingY) {
-      instruments.setValue('awaiting', instruments.getValue('awaiting') + 1);
-      instruments.setValue('rescued', instruments.getValue('rescued') - 1);
-    }
-    instruments.setValue('hook', 'engaged');
+    const { physics } = this;
     delete dude.path;
     dude.searchEnabled = false;
     dude.position.copy(hook.position).add({ x: 0, y: -0.3 - dude.physics[0].height, z: 0 });
@@ -299,7 +381,7 @@ class Ropes extends Gameplay {
   }
 
   unhookDudes() {
-    const { helicopter: { instruments }, hooks, physics } = this;
+    const { hooks, physics } = this;
     hooks.forEach((hook) => {
       if (!hook.hookedDude) {
         return;
@@ -311,7 +393,6 @@ class Ropes extends Gameplay {
       dude.isFalling = true;
       physics.getBody(dude).flags.isTrigger = true;
     });
-    instruments.setValue('hook', 'ready');
   }
 
   resetDude(dude, contact) {
@@ -330,19 +411,26 @@ class Ropes extends Gameplay {
     );
     dude.lighting.light = light >> 8;
     dude.lighting.sunlight = light & 0xFF;
-    dude.setAction(dude.actions.idle);
     physics.removeMesh(dude);
-    physics.addMesh(dude, { isKinematic: true, isTrigger: true });
     if (dude.position.y >= topBuildingY) {
+      delete dude.onContact;
+      dude.minSearchTime = 10;
+      dude.maxSearchTime = 20;
+      dude.setIdleAction(dude.actions.dance);
       instruments.setValue('awaiting', instruments.getValue('awaiting') - 1);
-      instruments.setValue('rescued', instruments.getValue('rescued') + 1);
+      instruments.setValue('dropped', instruments.getValue('dropped') + 1);
     }
+    dude.setAction(dude.idleAction);
+    physics.addMesh(dude, { isKinematic: true, isTrigger: !!dude.onContact });
   }
 
   resumeAudio() {
-    const { helicopter } = this;
+    const { helicopter, music } = this;
     super.resumeAudio();
     helicopter.resumeAudio();
+    if (music) {
+      music.resume();
+    }
   }
 
   updateLight(intensity) {
@@ -357,7 +445,7 @@ class Ropes extends Gameplay {
 
   updateView(view) {
     const { helicopter, player } = this;
-    const { views } = Ropes;
+    const { views } = Party;
     if (view === this.view) {
       return;
     }
@@ -380,9 +468,9 @@ class Ropes extends Gameplay {
   }
 }
 
-Ropes.views = {
+Party.views = {
   firstPerson: 0,
   thirdPerson: 1,
 };
 
-export default Ropes;
+export default Party;

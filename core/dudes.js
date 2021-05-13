@@ -78,6 +78,8 @@ class Dudes extends Group {
         .multiplyScalar(world.scale);
       dude.searchEnabled = true;
       dude.searchTimer = Math.random();
+      dude.minSearchTime = 2;
+      dude.maxSearchTime = 4;
       dude.updateMatrixWorld();
       this.add(dude);
       this.add(dude.marker);
@@ -108,7 +110,9 @@ class Dudes extends Group {
           dude.searchTimer = Math.max(dude.searchTimer - animation.delta, 0);
           return;
         }
-        dude.searchTimer = 2 + Math.random();
+        dude.searchTimer = (
+          dude.minSearchTime + (dude.maxSearchTime - dude.minSearchTime) * Math.random()
+        );
         const obstacles = this.computeObstacles(dude);
         const origin = dude.position.clone().divideScalar(world.scale).floor();
         const target = world.findTarget({
