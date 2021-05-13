@@ -373,6 +373,7 @@ class Party extends Gameplay {
   hookDude(dude, hook) {
     const { physics } = this;
     delete dude.path;
+    delete dude.revaluate;
     dude.searchEnabled = false;
     dude.position.copy(hook.position).add({ x: 0, y: -0.3 - dude.physics[0].height, z: 0 });
     dude.skeleton.bones[dude.constructor.bones.head].rotation.set(0, 0, 0);

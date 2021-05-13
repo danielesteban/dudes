@@ -659,6 +659,7 @@ class Dude extends SkinnedMesh {
     }
     if (path) {
       delete this.path;
+      delete this.revaluate;
       marker.visible = false;
     }
     this.hitTimer = 1.5;
@@ -708,6 +709,7 @@ class Dude extends SkinnedMesh {
       });
     }
     this.path = path;
+    delete this.revaluate;
     this.step = 0;
     this.interpolation = 0;
     marker.position.copy(path[path.length - 1].position);
