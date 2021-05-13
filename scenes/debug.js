@@ -65,17 +65,16 @@ class Debug extends Gameplay {
       .divideScalar(world.scale)
       .floor()
       .add({ x: 0, y: 0, z: -31 });
-    this.billboard = new Billboard({
+    const billboard = new Billboard({
       x: billboardPos.x * world.scale,
       y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale,
       z: billboardPos.z * world.scale,
     });
-    this.add(this.billboard);
+    this.add(billboard);
   }
 
   onAnimationTick({ animation, camera, isXR }) {
     const {
-      billboard,
       dudes,
       hasLoaded,
       physics,
@@ -87,7 +86,6 @@ class Debug extends Gameplay {
       return;
     }
     super.onAnimationTick({ animation, camera, isXR });
-    billboard.animate(animation);
     if (!isXR) {
       const { buttons, raycaster } = player.desktop;
       if (dudes.selected && buttons.primaryDown) {

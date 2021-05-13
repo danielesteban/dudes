@@ -118,12 +118,12 @@ class Party extends Gameplay {
       .divideScalar(world.scale)
       .floor()
       .add({ x: 0, y: 0, z: -17 });
-    this.billboard = new Billboard({
+    const billboard = new Billboard({
       x: billboardPos.x * world.scale,
       y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale,
       z: billboardPos.z * world.scale,
     });
-    this.add(this.billboard);
+    this.add(billboard);
 
     this.topBuildingY = world.getHeight(
       Math.floor(player.position.x / world.scale),
