@@ -75,11 +75,7 @@ class Scene extends ThreeScene {
       physics,
       scene,
     } = this;
-    player.onAnimationTick({
-      animation,
-      camera,
-      isXR,
-    });
+    player.onAnimationTick({ animation, camera, isXR });
     if (scene && scene.onLocomotionTick) {
       scene.onLocomotionTick({ animation, camera, isXR });
       player.updateMatrixWorld();
