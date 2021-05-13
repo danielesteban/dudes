@@ -28,7 +28,6 @@ class Instruments extends Mesh {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.lineWidth = 3;
-    ctx.font = '700 18px monospace';
     ctx.shadowBlur = 4;
     ctx.shadowOffsetY = 2;
     ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
@@ -62,7 +61,7 @@ class Instruments extends Mesh {
       const rect = new Path2D();
       rect.rect(width * index + 8, 8, width - 8, renderer.height - 16);
       const arc = new Path2D();
-      arc.arc(width * (index + 0.5) + 4, renderer.height * 0.5, renderer.height * 0.4, 0, Math.PI * 2);
+      arc.arc(width * (index + 0.5) + 4, renderer.height * 0.5, renderer.height * 0.375, 0, Math.PI * 2);
       rect.addPath(arc);
       instrument = {
         ...instrument,
@@ -105,7 +104,9 @@ class Instruments extends Mesh {
       ctx.fillStyle = fill;
       ctx.strokeStyle = fill;
       ctx.stroke(path);
+      ctx.font = '700 16px monospace';
       ctx.fillText(id.toUpperCase(), width * (index + 0.5) + 4, renderer.height * 0.4);
+      ctx.font = '700 24px monospace';
       ctx.fillText(`${value}`.toUpperCase(), width * (index + 0.5) + 4, renderer.height * 0.6);
     });
     texture.needsUpdate = true;
