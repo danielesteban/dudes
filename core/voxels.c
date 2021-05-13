@@ -730,9 +730,15 @@ static void generatePartyBuildings(
           for (int y = 0; y < bHeight; y++) {
             for (int x = 0; x < grid; x++) {
               if (
-                y > bHeight - 3
-                && (
-                  (x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
+                (
+                  y > bHeight - 3
+                  && (
+                    (x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
+                  )
+                ) || (
+                  i == center
+                  && y > bHeight - 8
+                  && sqrt(pow((x - (grid / 2) + 0.5f) * 1.5f, 2) + pow((y - bHeight) * 3.0f, 2) + pow((z - (grid / 2) + 0.5f) * 1.5f, 2)) < 22
                 )
               ) {
                 continue;
@@ -767,16 +773,16 @@ static void generatePartyBuildings(
   {
     // Stage
     const int width = 16;
-    const int height = 4;
+    const int height = 6;
     const int depth = 8;
     const int originX = world->width / 2 - width / 2;
-    const int originY = queueA[center] - 2;
+    const int originY = queueA[center] - 5;
     const int originZ = world->depth / 2 - grid / 2 + 4;
     for (int z = 0; z < depth; z++) {
       for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
           if (
-            y > 0
+            y > 2
             && x > 0
             && x < width - 1
             && z > 0

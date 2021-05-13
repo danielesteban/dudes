@@ -186,7 +186,11 @@ class Party extends Gameplay {
           offsetY: spec.hat.offsetY * 0.5,
         },
       });
-      dude.position.copy(player.position).add({ x: 0, y: 0.5, z: -6 });
+      dude.position.copy(player.position).add({ x: 0, y: 0, z: -5.75 });
+      dude.position.y = (world.getHeight(
+        Math.floor(dude.position.x / world.scale),
+        Math.floor(dude.position.z / world.scale)
+      ) + 1) * world.scale;
       dude.updateMatrixWorld();
       dude.setAction(dude.actions.hype);
       const light = world.getLight(
