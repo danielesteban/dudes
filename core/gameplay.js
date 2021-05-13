@@ -93,27 +93,33 @@ class Gameplay extends Group {
       };
     }
 
-    {
+    if (options.lightToggle) {
       const toggle = document.getElementById('light');
+      toggle.classList.add('enabled');
       [...toggle.getElementsByTagName('svg')].forEach((svg, i) => {
         const target = i === 0 ? 1 : 0;
-        svg.addEventListener('click', () => {
+        svg.onclick = () => {
           if (this.light !== this.targetLight) {
             return;
           }
           this.targetLight = target;
-          toggle.className = target >= 0.5 ? 'day' : 'night';
-        }, false);
+          toggle.classList[target >= 0.5 ? 'add' : 'remove']('day');
+          toggle.classList[target < 0.5 ? 'add' : 'remove']('night');
+        };
       });
     }
 
-    {
+    if (options.rainToggle) {
       const toggle = document.getElementById('rain');
-      toggle.addEventListener('click', () => {
+      toggle.classList.add('enabled');
+      if (options.lightToggle) {
+        toggle.classList.add('light');
+      }
+      toggle.onclick = () => {
         if (!this.rain) return;
         this.updateRain(!this.rain.visible);
-        toggle.className = this.rain.visible ? 'enabled' : '';
-      }, false);
+        toggle.classList[this.rain.visible ? 'add' : 'remove']('active');
+      };
     }
 
     Promise.all([

@@ -96,15 +96,16 @@ body.pointerlock #enterVR {
 #light, #rain {
   position: absolute;
   bottom: 1rem;
+  right: 1rem;
   opacity: 0.8;
+  display: none;
+}
+
+#light.enabled, #rain.enabled {
   display: flex;
 }
 
-#light {
-  right: 1rem;
-}
-
-#rain {
+#rain.light {
   right: 8rem;
 }
 
@@ -126,7 +127,7 @@ body.pointerlock #light, body.pointerlock #rain {
   border-radius: 16px;
 }
 
-#rain.enabled > svg {
+#rain.active > svg {
   background: #55a;
 }
 

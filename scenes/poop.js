@@ -30,6 +30,8 @@ class Game extends Gameplay {
           }
         },
       },
+      lightToggle: true,
+      rainToggle: true,
       world: {
         width: 160,
         height: 48,

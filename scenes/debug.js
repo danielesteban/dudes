@@ -22,6 +22,8 @@ class Debug extends Gameplay {
           }
         },
       },
+      lightToggle: true,
+      rainToggle: true,
       world: {
         generation: {
           seed: 970297029704,

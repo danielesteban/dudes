@@ -70,6 +70,7 @@ class Party extends Gameplay {
           },
         },
       },
+      rainToggle: true,
       world: {
         generation: {
           seed: Math.floor(Math.random() * 2147483647),
@@ -95,6 +96,7 @@ class Party extends Gameplay {
     this.player.children[0].rotation.x = Math.PI * -0.1; // HACK!
     this.player.cursor.classList.remove('enabled');
 
+    this.dayDuration = 120;
     this.time = 0;
 
     this.view = Party.views.firstPerson;
@@ -267,13 +269,13 @@ class Party extends Gameplay {
   }
 
   onAnimationTick({ animation, camera, isXR }) {
-    const { hasLoaded, helicopter, mainDude } = this;
+    const { dayDuration, hasLoaded, helicopter, mainDude, view } = this;
     if (!hasLoaded) {
       return;
     }
     super.onAnimationTick({ animation, camera, isXR });
     mainDude.animate(animation);
-    if (this.view === Party.views.thirdPerson) {
+    if (view === Party.views.thirdPerson) {
       helicopter.instruments.position.copy(helicopter.aux.pivot.set(0, -1, 0.5).unproject(camera));
       camera.getWorldQuaternion(helicopter.instruments.quaternion);
       helicopter.instruments.updateMatrix();
@@ -284,6 +286,8 @@ class Party extends Gameplay {
       `${`${Math.floor(this.time / 60)}`.padStart(2, '0')}:${`${Math.floor(this.time % 60)}`.padStart(2, '0')}`
     );
     helicopter.animate(animation);
+    const dayTime = (this.time % dayDuration) / dayDuration;
+    this.targetLight = 1 - ((dayTime > 0.5 ? 1 - dayTime : dayTime) * 2);
   }
 
   onLocomotionTick({ animation, isXR }) {
