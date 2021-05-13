@@ -737,7 +737,7 @@ static void generatePartyBuildings(
                   )
                 ) || (
                   i == center
-                  && y > bHeight - 8
+                  && y > bHeight - 7
                   && sqrt(pow((x - (grid / 2) + 0.5f) * 1.5f, 2) + pow((y - bHeight) * 3.0f, 2) + pow((z - (grid / 2) + 0.5f) * 1.5f, 2)) < 22
                 )
               ) {
