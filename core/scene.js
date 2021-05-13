@@ -80,13 +80,13 @@ class Scene extends ThreeScene {
       scene.onLocomotionTick({ animation, camera, isXR });
       player.updateMatrixWorld();
     }
+    player.head.updateMatrixWorld();
     if (physics) {
       physics.simulate(animation.delta);
     }
     if (scene && scene.onAnimationTick) {
       scene.onAnimationTick({ animation, camera, isXR });
     }
-    player.head.updateMatrixWorld();
   }
 
   resumeAudio() {
