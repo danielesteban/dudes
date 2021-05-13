@@ -37,7 +37,7 @@ export default {
         historyApiFallback: true,
         port: 8080,
       }),
-      watchExternal({ entries: ['core/voxels.wasm'] }),
+      watchExternal({ entries: ['index.css', 'index.html', 'core/voxels.wasm'] }),
     ] : [
       cname('dudes.gatunes.com'),
       terser(),

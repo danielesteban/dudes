@@ -13,7 +13,7 @@ import Rope from '../renderables/rope.js';
 class Party extends Gameplay {
   constructor(scene) {
     const buildings = (3 * 3) - 1;
-    const dudesPerBuilding = 2;
+    const dudesPerBuilding = 3;
     const dudesAtParty = 6;
     const explosionOrigin = new Vector3();
     const explosionBrush = {
@@ -83,8 +83,8 @@ class Party extends Gameplay {
 
     this.helicopter = new Helicopter({
       instruments: [
-        { id: 'awaiting', color: '#966', value: dudesPerBuilding * buildings },
-        { id: 'dropped', color: '#696', value: 0 },
+        { id: 'chilling', color: '#966', value: dudesPerBuilding * buildings },
+        { id: 'vibing', color: '#696', value: dudesAtParty },
         { id: 'time', color: '#669', value: 0 },
       ],
       sfx: scene.sfx,
@@ -206,7 +206,7 @@ class Party extends Gameplay {
       this.add(speaker);
     });
 
-    player.move({ x: 1.25, y: 0, z: 40 });
+    player.move({ x: -1.25, y: 8, z: 20 });
     this.helicopter.voxelize(voxelizer)
       .then(() => {
         this.hooks = [-0.625, 0.625].map((x) => {
@@ -254,6 +254,12 @@ class Party extends Gameplay {
           rotation: new Quaternion(),
         };
       });
+  }
+
+  onUnload() {
+    const { music } = this;
+    super.onUnload();
+    music.dispose();
   }
 
   onAnimationTick({ animation, camera, isXR }) {
@@ -417,8 +423,8 @@ class Party extends Gameplay {
       dude.minSearchTime = 10;
       dude.maxSearchTime = 20;
       dude.setIdleAction(dude.actions.dance);
-      instruments.setValue('awaiting', instruments.getValue('awaiting') - 1);
-      instruments.setValue('dropped', instruments.getValue('dropped') + 1);
+      instruments.setValue('chilling', instruments.getValue('chilling') - 1);
+      instruments.setValue('vibing', instruments.getValue('vibing') + 1);
     }
     dude.setAction(dude.idleAction);
     physics.addMesh(dude, { isKinematic: true, isTrigger: !!dude.onContact });

@@ -24,6 +24,14 @@ button {
   text-shadow: rgba(0, 0, 0, .4) 1px 2px;
 }
 
+button.primary, a.button.primary {
+  background: #393;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
 canvas {
   vertical-align: middle;
 }
@@ -228,4 +236,46 @@ body.pointerlock #ribbon {
   border-style: dotted;
   border-color: #fff;
   border-color: rgba(255, 255, 255, 0.7);
+}
+
+#welcome {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, .5);
+  z-index: 1;
+}
+
+#welcome.open {
+  display: block;
+}
+
+#welcome > div {
+  position: absolute;
+  box-sizing: border-box;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, .5);
+  border: 1px solid #000;
+  border-radius: 4px;
+  width: 520px;
+  padding: 1rem;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+#welcome > div > h2 {
+  margin: 0;
+}
+
+#welcome .close {
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  color: #999;
+  cursor: pointer;
 }

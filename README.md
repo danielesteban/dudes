@@ -3,7 +3,7 @@
 
 [![screenshot](screenshot.png)](https://dudes.gatunes.com/)
 
-#### Live demo
+#### Live deployment
 
 [https://dudes.gatunes.com/](https://dudes.gatunes.com/)
 

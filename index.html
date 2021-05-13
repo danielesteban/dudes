@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>dudes</title>
+    <title>dudes!</title>
     <link rel="stylesheet" href="/index.css">
     <script type="module" src="/main.js"></script>
     <script type="text/javascript" src="/ammo.wasm.js"></script>
-    <meta property="og:title" content="dudes" />
+    <meta property="og:title" content="dudes!" />
     <meta property="og:image" content="https://dudes.gatunes.com/screenshot.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
@@ -58,9 +58,51 @@
       Enter VR
     </button>
     <div id="info">
-      dudes 0.0.3 - <span id="fps">···</span><br />
+      dudes! 0.0.3 - <span id="fps">···</span><br />
       <a href="https://dani.gatunes.com" rel="noopener noreferrer" target="_blank">dani@gatunes</a> © 2021<br />
       made with <a href="https://threejs.org/" rel="noopener noreferrer" target="_blank">three.js</a>
+    </div>
+    <div id="welcome" class="open">
+      <div>
+        <h2>
+          Welcome, my dudes!
+        </h2>
+        <p>
+          This is a super alpha version of my new game: "Dudes!".<br />
+          The controls/camera are still super clunky but I wanted to test out if the main loop is fun before going forwards.
+        </p>
+        <p>
+          Help my main dude (up there at the booth) vibe the people of this town using the helicopter hooks to move the dudes from the lower terraces up to the party.
+        </p>
+        <p>
+          <strong>Desktop controls</strong><br />
+          W & S: Control pitch/speed<br />
+          A & D: Control yaw/direction<br />
+          Shift: Go down<br />
+          Spacebar: Go up<br />
+          F or Click: Release hooks<br />
+          V: Switch view
+        </p>
+        <p>
+          <strong>VR controls</strong><br />
+          Right thumbstick: Pitch&Yaw<br />
+          A and X: Up&Down<br />
+          Trigger: Release hooks
+        </p>
+        <p>
+          I also plan to release the full source of the engine/game. I just haven't got to cleaning it up and keep adding stuff like there's no tomorrow. But I promise it will eventually happen haha.
+        </p>
+        <p>
+          Much love,<br />
+          Dani
+        </p>
+        <div align="center">
+          <button onclick="document.getElementById('welcome').classList.remove('open')" class="primary">
+            Let's Go!
+          </button>
+        </div>
+        <a class="close" onclick="document.getElementById('welcome').classList.remove('open')">×</a>
+      </div>
     </div>
     <a id="ribbon" href="https://github.com/sponsors/danielesteban" data-ribbon="♥ Become a sponsor" rel="noopener noreferrer" target="_blank">
       ♥ Become a sponsor
