@@ -339,7 +339,7 @@ class Party extends Gameplay {
     helicopter.velocity.z = helicopter.velocity.z * 0.95 + helicopter.acceleration.z;
     forward.y = 0;
     forward.normalize();
-    helicopter.acceleration.y = movement.y * 0.25;
+    helicopter.acceleration.y = movement.y * 0.5;
     helicopter.velocity.y = helicopter.velocity.y * 0.8 + helicopter.acceleration.y;
     if (helicopter.velocity.y !== 0) {
       helicopter.localToWorld(helicopter.collider.position.copy(helicopter.collider.origin));
