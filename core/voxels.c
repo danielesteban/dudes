@@ -733,8 +733,11 @@ static void generatePartyBuildings(
                 (
                   y > bHeight - 3
                   && (
-                    (x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
+                    (x > 1 && x < grid - 2 && z > 1 && z < grid - 2)
                   )
+                ) || (
+                  y % step == step -2
+                  && !(x > 0 && x < grid - 1 && z > 0 && z < grid - 1)
                 ) || (
                   i == center
                   && y > bHeight - 7
@@ -774,10 +777,10 @@ static void generatePartyBuildings(
     // Stage
     const int width = 16;
     const int height = 6;
-    const int depth = 8;
+    const int depth = 10;
     const int originX = world->width / 2 - width / 2;
     const int originY = queueA[center] - 5;
-    const int originZ = world->depth / 2 - grid / 2 + 4;
+    const int originZ = world->depth / 2 - grid / 2 + 2;
     for (int z = 0; z < depth; z++) {
       for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -813,9 +816,9 @@ static void generatePartyBuildings(
     const int width = 8;
     const int height = 9;
     const int depth = 8;
-    const int originX = world->width / 2 + (i < 2 ? -19 : 19 - width);
+    const int originX = world->width / 2 + (i < 2 ? -18 : 18 - width);
     const int originY = queueA[center] - 2 + (i % 2 == 1 ? height : 0);
-    const int originZ = world->depth / 2 - grid / 2 + 1;
+    const int originZ = world->depth / 2 - grid / 2 + 2;
     for (int z = 0; z < depth; z++) {
       for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -862,7 +865,7 @@ static void generatePartyBuildings(
     heightmap,
     voxels,
     bx,
-    heightmap[bz * world->width + bx] + 1,
+    heightmap[bz * world->width + bx] - 1,
     bz,
     rand(),
     12,
