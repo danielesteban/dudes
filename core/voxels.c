@@ -723,22 +723,23 @@ static void generatePartyBuildings(
     queueA[center] = height;
     for (int bz = 0, i = 0; bz < depth; bz += grid) {
       for (int bx = 0; bx < width; bx += grid, i++) {
-        const int street = i == center ? 0 : (1 + (rand() % 2)) * 4;
+        const int streetX = i == center ? 0 : (1 + (rand() % 2)) * 4;
+        const int streetZ = i == center ? 0 : (1 + (rand() % 2)) * 4;
         const int bHeight = queueA[i];
         const unsigned int color = getColorFromNoise(rand() % 255);
         if (i == center) mainBuildingColor = color;
-        for (int z = street; z < grid - street; z++) {
+        for (int z = streetZ; z < grid - streetZ; z++) {
           for (int y = 0; y < bHeight; y++) {
-            for (int x = street; x < grid - street; x++) {
+            for (int x = streetX; x < grid - streetX; x++) {
               if (
                 (
                   y > bHeight - 3
                   && (
-                    (x > street + 1 && x < grid - street - 2 && z > street + 1 && z < grid - street - 2)
+                    (x > streetX + 1 && x < grid - streetX - 2 && z > streetZ + 1 && z < grid - streetZ - 2)
                   )
                 ) || (
                   y % step == step -2
-                  && !(x > street && x < grid - street - 1 && z > street && z < grid - street - 1)
+                  && !(x > streetX && x < grid - streetX - 1 && z > streetZ && z < grid - streetZ - 1)
                 ) || (
                   i == center
                   && y > bHeight - 7
@@ -751,9 +752,9 @@ static void generatePartyBuildings(
               int type = (
                 y > bHeight - 2
                 || (
-                  !(x > street && x < grid - street - 1 && z > street && z < grid - street - 1)
+                  !(x > streetX && x < grid - streetX - 1 && z > streetZ && z < grid - streetZ - 1)
                   && (y - 1) % step < 4
-                  && ((x - street + 6) % 8 < 4 || (z - street + 6) % 8 < 4)
+                  && ((x - streetX + 6) % 8 < 4 || (z - streetZ + 6) % 8 < 4)
                 )
               ) ? TYPE_LIGHT : TYPE_STONE;
               voxels[voxel] = type;
