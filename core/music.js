@@ -2,19 +2,19 @@ import { PositionalAudio } from '../vendor/three.js';
 
 class Music {
   constructor(listener) {
-    this.isRunning = listener.context.state === 'running';
+    const { context } = listener;
+    this.isRunning = context.state === 'running';
     this.player = document.createElement('audio');
     this.player.crossOrigin = 'anonymous';
+    this.player.preload = 'auto';
     this.player.onerror = this.next.bind(this);
     this.player.onended = this.next.bind(this);
-    const audio = listener.context.createMediaElementSource(this.player);
-    const splitter = listener.context.createChannelSplitter(2);
-    audio.connect(splitter);
-    this.speakers = [...Array(2)].map((v, channel) => {
-      const gain = listener.context.createGain();
-      splitter.connect(gain, channel);
+    const splitter = context.createChannelSplitter(2);
+    context.createMediaElementSource(this.player).connect(splitter);
+    this.speakers = [context.createGain(), context.createGain()].map((node, channel) => {
       const speaker = new PositionalAudio(listener);
-      speaker.setNodeSource(gain);
+      speaker.setNodeSource(node);
+      splitter.connect(node, channel);
       return speaker;
     });
     this.track = -1;
