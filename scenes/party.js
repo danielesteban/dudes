@@ -206,7 +206,7 @@ class Party extends Gameplay {
       this.add(speaker);
     });
 
-    player.move({ x: 1.25, y: 10, z: 10 });
+    player.move({ x: 1.25, y: 0, z: 40 });
     this.helicopter.voxelize(voxelizer)
       .then(() => {
         this.hooks = [-0.625, 0.625].map((x) => {
