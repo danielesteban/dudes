@@ -322,18 +322,16 @@ class Party extends Gameplay {
       unhookDudes = player.desktop.buttons.primaryDown || player.desktop.buttons.tertiaryDown;
     }
     player.getWorldDirection(forward);
+    helicopter.localToWorld(pivot.copy(helicopter.cockpit.position).add({ x: 0, y: 0.5, z: 0.5 }));
     if (
-      (forward.y > -0.3 || movement.z > 0) && (forward.y < 0.3 || movement.z < 0)
-      && (movement.x !== 0 || movement.z !== 0)
+      (movement.z < 0 && forward.y > -0.3)
+      || (movement.z > 0 && forward.y < 0.3)
     ) {
       right.crossVectors(worldUp, forward);
-      helicopter.localToWorld(pivot.copy(helicopter.cockpit.position).add({ x: 0, y: 0.5, z: 0.5 }));
-      if (movement.z !== 0) {
-        player.rotate(right, movement.z * animation.delta * -0.125, pivot);
-      }
-      if (movement.x !== 0) {
-        player.rotate(worldUp, movement.x * animation.delta * -0.3, pivot);
-      }
+      player.rotate(right, movement.z * animation.delta * -0.125, pivot);
+    }
+    if (movement.x !== 0) {
+      player.rotate(worldUp, movement.x * animation.delta * -0.3, pivot);
     }
     helicopter.acceleration.z = -forward.y * 0.5;
     helicopter.velocity.z = helicopter.velocity.z * 0.95 + helicopter.acceleration.z;
