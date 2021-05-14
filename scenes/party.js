@@ -154,11 +154,23 @@ class Party extends Gameplay {
       const torso = 1;
       const waist = 0.5;
       const dude = new Dude({
-        color: (new Color()).setHSL(
-          Math.random(),
-          0.5 + Math.random() * 0.25,
-          0.5 + Math.random() * 0.25
-        ),
+        colors: {
+          primary: (new Color()).setHSL(
+            Math.random(),
+            0.5 + Math.random() * 0.25,
+            0.25 + Math.random() * 0.25
+          ),
+          secondary: (new Color()).setHSL(
+            Math.random(),
+            0.5 + Math.random() * 0.25,
+            0.5 + Math.random() * 0.25
+          ),
+          skin: (new Color()).setHSL(
+            Math.random(),
+            0.5 + Math.random() * 0.25,
+            0.25 + Math.random() * 0.5
+          ),
+        },
         stamina: 1,
         height,
         waist,

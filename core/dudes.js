@@ -25,11 +25,23 @@ class Dudes extends Group {
       const legs = (0.5 + Math.random() * 0.5);
       const torso = (3 - head - legs) * (0.5 + Math.random() * 0.5);
       const dude = new Dude({
-        color: (new Color()).setHSL(
-          Math.random(),
-          0.5 + Math.random() * 0.25,
-          0.5 + Math.random() * 0.25
-        ),
+        colors: {
+          primary: (new Color()).setHSL(
+            Math.random(),
+            0.5 + Math.random() * 0.25,
+            0.25 + Math.random() * 0.25
+          ),
+          secondary: (new Color()).setHSL(
+            Math.random(),
+            0.5 + Math.random() * 0.25,
+            0.5 + Math.random() * 0.25
+          ),
+          skin: (new Color()).setHSL(
+            Math.random(),
+            0.5 + Math.random() * 0.25,
+            0.25 + Math.random() * 0.5
+          ),
+        },
         stamina: 0.75 + Math.random() * 0.5,
         height,
         waist: 0.3 + Math.random() * 0.3,

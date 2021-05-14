@@ -25,7 +25,7 @@ import Marker from './marker.js';
 
 class Dude extends SkinnedMesh {
   static createGeometry({
-    color: diffuse,
+    colors,
     height,
     waist,
     arms,
@@ -46,8 +46,8 @@ class Dude extends SkinnedMesh {
       z,
       r,
       bone,
+      diffuse,
       shape = 'box',
-      light,
     }) => {
       let model;
       if (shape === 'box') {
@@ -77,12 +77,12 @@ class Dude extends SkinnedMesh {
       const color = new BufferAttribute(new Float32Array(count * 3), 3);
       const skinIndex = new BufferAttribute(new Float32Array(count * 4), 4);
       const skinWeight = new BufferAttribute(new Float32Array(count * 4), 4);
-      let c;
+      let light;
       for (let i = 0; i < count; i += 1) {
         if (i % (shape === 'box' ? 6 : 3) === 0) {
-          c = light - Math.random() * 0.15;
+          light = 0.8 - Math.random() * 0.2;
         }
-        color.setXYZ(i, diffuse.r * c, diffuse.g * c, diffuse.b * c);
+        color.setXYZ(i, diffuse.r * light, diffuse.g * light, diffuse.b * light);
         skinIndex.setXYZW(i, bone, 0, 0, 0);
         skinWeight.setXYZW(i, 1, 0, 0, 0);
       }
@@ -101,7 +101,7 @@ class Dude extends SkinnedMesh {
       y: torso.height * height * 0.5,
       z: 0,
       bone: bones.hip,
-      light: 1,
+      diffuse: colors.secondary,
     });
     // HEAD
     pushModel({
@@ -112,8 +112,8 @@ class Dude extends SkinnedMesh {
       y: head.height * height * 0.4,
       z: 0,
       bone: bones.head,
+      diffuse: colors.skin,
       shape: head.shape,
-      light: 0.8,
     });
     if (hat) {
       pushModel({
@@ -125,7 +125,7 @@ class Dude extends SkinnedMesh {
         z: head.depth * waist * hat.offsetZ,
         r: hat.rotation,
         bone: bones.head,
-        light: 0.6,
+        diffuse: colors.primary,
       });
     }
     // L-LEG
@@ -137,7 +137,7 @@ class Dude extends SkinnedMesh {
       y: legs.height * height * -0.6,
       z: 0,
       bone: bones.leftLeg,
-      light: 0.6,
+      diffuse: colors.primary,
     });
     pushModel({
       w: feet.width * waist,
@@ -147,7 +147,7 @@ class Dude extends SkinnedMesh {
       y: legs.height * height * -1.1 + feet.height * height * -0.5,
       z: 0,
       bone: bones.leftLeg,
-      light: 0.6,
+      diffuse: colors.secondary,
     });
     // R-LEG
     pushModel({
@@ -158,7 +158,7 @@ class Dude extends SkinnedMesh {
       y: legs.height * height * -0.6,
       z: 0,
       bone: bones.rightLeg,
-      light: 0.6,
+      diffuse: colors.primary,
     });
     pushModel({
       w: feet.width * waist,
@@ -168,7 +168,7 @@ class Dude extends SkinnedMesh {
       y: legs.height * height * -1.1 + feet.height * height * -0.5,
       z: 0,
       bone: bones.rightLeg,
-      light: 0.6,
+      diffuse: colors.secondary,
     });
     // L-ARM
     pushModel({
@@ -179,7 +179,7 @@ class Dude extends SkinnedMesh {
       y: arms.height * height * -0.4,
       z: 0,
       bone: bones.leftArm,
-      light: 0.6,
+      diffuse: colors.primary,
     });
     pushModel({
       w: hands.width * waist,
@@ -189,7 +189,7 @@ class Dude extends SkinnedMesh {
       y: arms.height * height * -0.9 + hands.height * height * -0.5,
       z: 0,
       bone: bones.leftArm,
-      light: 0.8,
+      diffuse: colors.skin,
     });
     // R-ARM
     pushModel({
@@ -200,7 +200,7 @@ class Dude extends SkinnedMesh {
       y: arms.height * height * -0.4,
       z: 0,
       bone: bones.rightArm,
-      light: 0.6,
+      diffuse: colors.primary,
     });
     pushModel({
       w: hands.width * waist,
@@ -210,7 +210,7 @@ class Dude extends SkinnedMesh {
       y: arms.height * height * -0.9 + hands.height * height * -0.5,
       z: 0,
       bone: bones.rightArm,
-      light: 0.8,
+      diffuse: colors.skin,
     });
     const geometry = BufferGeometryUtils.mergeVertices(
       BufferGeometryUtils.mergeBufferGeometries(geometries)
@@ -544,7 +544,7 @@ class Dude extends SkinnedMesh {
       light: 0,
       sunlight: 0xFF,
     };
-    this.marker = new Marker(spec.color);
+    this.marker = new Marker(spec.colors.primary);
     this.physics = this.geometry.physics;
     this.speed = 4 * spec.stamina;
 
@@ -731,6 +731,12 @@ Dude.bones = {
 };
 
 Dude.defaultSpec = {
+  colors: {
+    primary: new Color(),
+    secondary: new Color(),
+    skin: new Color(),
+  },
+  stamina: 1,
   height: 2,
   waist: 0.5,
   arms: {
@@ -772,8 +778,6 @@ Dude.defaultSpec = {
     height: 0.375,
     depth: 0.6,
   },
-  color: new Color(),
-  stamina: 1,
 };
 
 export default Dude;
