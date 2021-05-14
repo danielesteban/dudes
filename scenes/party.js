@@ -92,13 +92,13 @@ class Party extends Gameplay {
       sound: '/sounds/engine.ogg',
     });
     this.player.add(this.helicopter);
-    this.player.children[0].position.y = 1.25; // HACK!
-    this.player.children[0].rotation.x = Math.PI * -0.1; // HACK!
-    this.player.cursor.classList.remove('enabled');
 
     this.dayDuration = 120;
     this.time = 0;
 
+    this.player.cursor.classList.remove('enabled');
+    this.player.children[0].position.y = 1.25; // HACK!
+    this.player.children[0].rotation.x = Math.PI * -0.1; // HACK!
     this.view = Party.views.firstPerson;
     if (!navigator.userAgent.includes('Quest')) {
       this.updateView(Party.views.thirdPerson);
@@ -115,7 +115,10 @@ class Party extends Gameplay {
     const { physics, player, voxelizer, world } = this;
     super.onLoad();
 
-    const billboardPos = player.position
+    this.partyOrigin = player.position.clone();
+    player.move({ x: 0, y: 8, z: 24 });
+
+    const billboardPos = this.partyOrigin
       .clone()
       .divideScalar(world.scale)
       .floor()
@@ -127,13 +130,8 @@ class Party extends Gameplay {
     });
     this.add(billboard);
 
-    this.topBuildingY = world.getHeight(
-      Math.floor(player.position.x / world.scale),
-      Math.floor(player.position.z / world.scale)
-    ) * world.scale;
-
     this.dudes.dudes.forEach((dude) => {
-      if (dude.position.y >= this.topBuildingY) {
+      if (dude.position.y >= this.partyOrigin.y - 1) {
         dude.rotation.y += Math.PI * (0.5 + Math.random());
         dude.minSearchTime = 10;
         dude.maxSearchTime = 20;
@@ -148,7 +146,7 @@ class Party extends Gameplay {
 
     {
       const spec = Dude.defaultSpec;
-      const height = 2;
+      const height = 2.5;
       const head = 1;
       const legs = 1;
       const torso = 1;
@@ -200,7 +198,7 @@ class Party extends Gameplay {
           offsetY: spec.hat.offsetY * 0.5,
         },
       });
-      dude.position.copy(player.position).add({ x: 0, y: 0, z: -5.75 });
+      dude.position.copy(this.partyOrigin).add({ x: 0, y: 0, z: -5.75 });
       dude.position.y = (world.getHeight(
         Math.floor(dude.position.x / world.scale),
         Math.floor(dude.position.z / world.scale)
@@ -220,13 +218,12 @@ class Party extends Gameplay {
 
     this.music = new Music(player.head);
     this.music.speakers.forEach((speaker, channel) => {
-      speaker.position.copy(player.position).add({ x: channel === 0 ? -8 : 8, y: 4, z: -8 });
+      speaker.position.copy(this.partyOrigin).add({ x: channel === 0 ? -8 : 8, y: 4, z: -8 });
       this.add(speaker);
     });
 
     document.getElementById('welcome').classList.add('open');
 
-    player.move({ x: 0, y: 8, z: 24 });
     this.helicopter.voxelize(voxelizer)
       .then(() => {
         this.hooks = [-0.625, 0.625].map((x) => {
@@ -316,11 +313,12 @@ class Party extends Gameplay {
       },
       physics,
       player,
+      view,
     } = this;
     if (!hasLoaded || !helicopter.cockpit) {
       return;
     }
-    // THIS CODE IS CRAP AND NEEDS TO BE REWRITTEN!!
+
     const { pivot, movement } = helicopter.aux;
     let unhookDudes;
     if (isXR) {
@@ -339,50 +337,61 @@ class Party extends Gameplay {
       movement.copy(player.desktop.keyboard);
       unhookDudes = player.desktop.buttons.primaryDown || player.desktop.buttons.tertiaryDown;
     }
-    player.getWorldDirection(forward);
-    helicopter.localToWorld(pivot.copy(helicopter.cockpit.position).add({ x: 0, y: 0.5, z: 0.5 }));
-    if (
-      (movement.z < 0 && forward.y > -0.3)
-      || (movement.z > 0 && forward.y < 0.3)
-    ) {
-      right.crossVectors(worldUp, forward);
-      player.rotate(right, movement.z * animation.delta * -0.125, pivot);
+
+    if (view !== Party.views.party) {
+      player.getWorldDirection(forward);
+      helicopter.localToWorld(pivot.copy(helicopter.cockpit.position).add({ x: 0, y: 0.5, z: 0.5 }));
+      if (
+        (movement.z < 0 && forward.y > -0.3)
+        || (movement.z > 0 && forward.y < 0.3)
+      ) {
+        right.crossVectors(worldUp, forward);
+        player.rotate(right, movement.z * animation.delta * -0.125, pivot);
+      }
+      if (movement.x !== 0) {
+        player.rotate(worldUp, movement.x * animation.delta * -0.3, pivot);
+      }
+      helicopter.acceleration.z = -forward.y * 0.5;
+      helicopter.velocity.z = helicopter.velocity.z * 0.95 + helicopter.acceleration.z;
+      forward.y = 0;
+      forward.normalize();
+      helicopter.acceleration.y = movement.y * 0.5;
+      helicopter.velocity.y = helicopter.velocity.y * 0.8 + helicopter.acceleration.y;
+      if (helicopter.velocity.y !== 0) {
+        helicopter.localToWorld(helicopter.collider.position.copy(helicopter.collider.origin));
+        helicopter.getWorldQuaternion(helicopter.collider.rotation);
+        player.move(
+          direction.copy(worldUp).multiplyScalar(animation.delta * helicopter.velocity.y),
+          physics,
+          helicopter.collider
+        );
+      }
+      if (helicopter.velocity.z !== 0) {
+        helicopter.localToWorld(helicopter.collider.position.copy(helicopter.collider.origin));
+        helicopter.getWorldQuaternion(helicopter.collider.rotation);
+        player.move(
+          direction.copy(forward).multiplyScalar(animation.delta * helicopter.velocity.z),
+          physics,
+          helicopter.collider
+        );
+      }
     }
-    if (movement.x !== 0) {
-      player.rotate(worldUp, movement.x * animation.delta * -0.3, pivot);
-    }
-    helicopter.acceleration.z = -forward.y * 0.5;
-    helicopter.velocity.z = helicopter.velocity.z * 0.95 + helicopter.acceleration.z;
-    forward.y = 0;
-    forward.normalize();
-    helicopter.acceleration.y = movement.y * 0.5;
-    helicopter.velocity.y = helicopter.velocity.y * 0.8 + helicopter.acceleration.y;
-    if (helicopter.velocity.y !== 0) {
-      helicopter.localToWorld(helicopter.collider.position.copy(helicopter.collider.origin));
-      helicopter.getWorldQuaternion(helicopter.collider.rotation);
-      player.move(
-        direction.copy(worldUp).multiplyScalar(animation.delta * helicopter.velocity.y),
-        physics,
-        helicopter.collider
-      );
-    }
-    if (helicopter.velocity.z !== 0) {
-      helicopter.localToWorld(helicopter.collider.position.copy(helicopter.collider.origin));
-      helicopter.getWorldQuaternion(helicopter.collider.rotation);
-      player.move(
-        direction.copy(forward).multiplyScalar(animation.delta * helicopter.velocity.z),
-        physics,
-        helicopter.collider
-      );
-    }
+
     if (unhookDudes) {
       this.unhookDudes();
     }
+
+    const { views } = Party;
     if (player.desktop.buttons.viewDown) {
-      const { views } = Party;
-      this.updateView(
-        this.view === views.firstPerson ? views.thirdPerson : views.firstPerson
-      );
+      let next;
+      if (view === views.firstPerson) {
+        next = views.thirdPerson;
+      } else if (view === views.thirdPerson) {
+        next = views.party;
+      } else {
+        next = views.firstPerson;
+      }
+      this.updateView(next);
     }
   }
 
@@ -423,7 +432,7 @@ class Party extends Gameplay {
   }
 
   resetDude(dude, contact) {
-    const { helicopter: { instruments }, physics, topBuildingY, world } = this;
+    const { helicopter: { instruments }, partyOrigin, physics, world } = this;
     dude.isFalling = false;
     dude.searchEnabled = true;
     dude.searchTimer = Math.random();
@@ -439,7 +448,7 @@ class Party extends Gameplay {
     dude.lighting.light = light >> 8;
     dude.lighting.sunlight = light & 0xFF;
     physics.removeMesh(dude);
-    if (dude.position.y >= topBuildingY) {
+    if (dude.position.y >= partyOrigin.y - 1) {
       delete dude.onContact;
       dude.minSearchTime = 10;
       dude.maxSearchTime = 20;
@@ -471,15 +480,14 @@ class Party extends Gameplay {
   }
 
   updateView(view) {
-    const { helicopter, player } = this;
+    const { helicopter, partyOrigin, player } = this;
     const { views } = Party;
     if (view === this.view) {
       return;
     }
-    const { aux: { pivot: offset }, instruments } = helicopter;
-    offset.set(1.25, 1.5, 5);
+    const { instruments } = helicopter;
+    player.children[0].position.y = view === views.firstPerson ? 1.25 : 1.6; // HACK!
     if (view === views.thirdPerson) {
-      offset.negate();
       instruments.scale.setScalar(0.25);
       this.add(instruments);
     } else {
@@ -489,6 +497,40 @@ class Party extends Gameplay {
       helicopter.add(instruments);
     }
     instruments.updateMatrix();
+    if (this.view === views.party) {
+      // HACK!
+      player.move({
+        x: helicopter.position.x - player.position.x,
+        y: helicopter.position.y - player.position.y,
+        z: helicopter.position.z - player.position.z,
+      });
+      player.updateMatrixWorld();
+      player.worldToLocal(helicopter.position);
+      player.quaternion.copy(helicopter.quaternion);
+      player.add(helicopter);
+      helicopter.rotation.set(0, 0, 0);
+      this.view = views.firstPerson;
+      return;
+    }
+    if (view === views.party) {
+      // HACK Again!
+      helicopter.getWorldPosition(helicopter.position);
+      helicopter.getWorldQuaternion(helicopter.quaternion);
+      this.add(helicopter);
+      player.move({
+        x: partyOrigin.x - player.position.x,
+        y: partyOrigin.y + 0.5 - player.position.y,
+        z: partyOrigin.z + 4.5 - player.position.z,
+      });
+      player.rotation.set(0, 0, 0);
+      this.view = views.party;
+      return;
+    }
+    const { aux: { pivot: offset } } = helicopter;
+    offset.set(1.25, 1.5, 5);
+    if (view === views.thirdPerson) {
+      offset.negate();
+    }
     helicopter.position.add(offset);
     player.move(offset.applyQuaternion(player.quaternion).negate());
     this.view = view;
@@ -498,6 +540,7 @@ class Party extends Gameplay {
 Party.views = {
   firstPerson: 0,
   thirdPerson: 1,
+  party: 2,
 };
 
 export default Party;
