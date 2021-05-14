@@ -273,21 +273,21 @@ class Party extends Gameplay {
     if (!hasLoaded) {
       return;
     }
-    super.onAnimationTick({ animation, camera, isXR });
-    mainDude.animate(animation);
-    if (view === Party.views.thirdPerson) {
-      helicopter.instruments.position.copy(helicopter.aux.pivot.set(0, -1, 0.5).unproject(camera));
-      camera.getWorldQuaternion(helicopter.instruments.quaternion);
-      helicopter.instruments.updateMatrix();
-    }
     this.time += animation.delta;
+    const dayTime = (this.time % dayDuration) / dayDuration;
+    this.targetLight = 1 - ((dayTime > 0.5 ? 1 - dayTime : dayTime) * 2);
+    super.onAnimationTick({ animation, camera, isXR });
     helicopter.instruments.setValue(
       'time',
       `${`${Math.floor(this.time / 60)}`.padStart(2, '0')}:${`${Math.floor(this.time % 60)}`.padStart(2, '0')}`
     );
     helicopter.animate(animation);
-    const dayTime = (this.time % dayDuration) / dayDuration;
-    this.targetLight = 1 - ((dayTime > 0.5 ? 1 - dayTime : dayTime) * 2);
+    if (view === Party.views.thirdPerson) {
+      helicopter.instruments.position.copy(helicopter.aux.pivot.set(0, -1, 0.5).unproject(camera));
+      camera.getWorldQuaternion(helicopter.instruments.quaternion);
+      helicopter.instruments.updateMatrix();
+    }
+    mainDude.animate(animation);
   }
 
   onLocomotionTick({ animation, isXR }) {
