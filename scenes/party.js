@@ -97,12 +97,9 @@ class Party extends Gameplay {
     this.time = 0;
 
     this.player.cursor.classList.remove('enabled');
-    this.player.children[0].position.y = 1.25; // HACK!
     this.player.children[0].rotation.x = Math.PI * -0.1; // HACK!
     this.view = Party.views.firstPerson;
-    if (!navigator.userAgent.includes('Quest')) {
-      this.updateView(Party.views.thirdPerson);
-    }
+    this.updateView(Party.views.thirdPerson);
 
     this.voxelizer = new Voxelizer({
       maxWidth: 32,
@@ -320,6 +317,7 @@ class Party extends Gameplay {
     }
 
     const { pivot, movement } = helicopter.aux;
+    let switchView;
     let unhookDudes;
     if (isXR) {
       const controllerL = player.controllers.find(({ hand }) => hand && hand.handedness === 'left');
@@ -329,12 +327,14 @@ class Party extends Gameplay {
       }
       movement.set(
         controllerR.joystick.x,
-        controllerL.buttons.primary ? 1 : (controllerR.buttons.primary ? -1 : 0),
+        controllerL.joystick.y,
         -controllerR.joystick.y
       );
+      switchView = controllerL.buttons.primaryDown || controllerR.buttons.primaryDown;
       unhookDudes = controllerL.buttons.triggerDown || controllerR.buttons.triggerDown;
     } else {
       movement.copy(player.desktop.keyboard);
+      switchView = player.desktop.buttons.viewDown;
       unhookDudes = player.desktop.buttons.primaryDown || player.desktop.buttons.tertiaryDown;
     }
 
@@ -382,10 +382,10 @@ class Party extends Gameplay {
     }
 
     const { views } = Party;
-    if (player.desktop.buttons.viewDown) {
+    if (switchView) {
       let next;
       if (view === views.firstPerson) {
-        next = views.thirdPerson;
+        next = isXR ? views.party : views.thirdPerson;
       } else if (view === views.thirdPerson) {
         next = views.party;
       } else {
@@ -393,6 +393,10 @@ class Party extends Gameplay {
       }
       this.updateView(next);
     }
+  }
+
+  onXR() {
+    this.updateView(Party.views.firstPerson);
   }
 
   hookDude(dude, hook) {

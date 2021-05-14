@@ -89,6 +89,14 @@ class Scene extends ThreeScene {
     }
   }
 
+  onXR() {
+    const { scene } = this;
+    this.resumeAudio();
+    if (scene.onXR) {
+      scene.onXR();
+    }
+  }
+
   resumeAudio() {
     const { player: { head: { context } }, scene } = this;
     if (context.state === 'suspended') {

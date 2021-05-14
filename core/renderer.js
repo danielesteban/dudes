@@ -60,7 +60,7 @@ class Renderer {
                 .then((session) => {
                   xr.setSession(session);
                   dom.enterVR.style.display = 'none';
-                  this.scene.resumeAudio();
+                  this.scene.onXR();
                   session.addEventListener('end', () => {
                     xr.setSession(null);
                     dom.enterVR.style.display = '';
