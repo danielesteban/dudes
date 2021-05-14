@@ -62,7 +62,7 @@
       <a href="https://dani.gatunes.com" rel="noopener noreferrer" target="_blank">dani@gatunes</a> © 2021<br />
       made with <a href="https://threejs.org/" rel="noopener noreferrer" target="_blank">three.js</a>
     </div>
-    <div id="welcome" class="open">
+    <div id="welcome" onclick="classList.remove('open')">
       <div>
         <h2>
           Welcome, my dudes!
@@ -97,11 +97,11 @@
           Dani
         </p>
         <div align="center">
-          <button onclick="document.getElementById('welcome').classList.remove('open')" class="primary">
+          <button class="primary">
             Let's Go!
           </button>
         </div>
-        <a class="close" onclick="document.getElementById('welcome').classList.remove('open')">×</a>
+        <a class="close">×</a>
       </div>
     </div>
     <a id="ribbon" href="https://github.com/sponsors/danielesteban" data-ribbon="♥ Become a sponsor" rel="noopener noreferrer" target="_blank">

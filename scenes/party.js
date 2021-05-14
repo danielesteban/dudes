@@ -224,6 +224,8 @@ class Party extends Gameplay {
       this.add(speaker);
     });
 
+    document.getElementById('welcome').classList.add('open');
+
     player.move({ x: 0, y: 8, z: 24 });
     this.helicopter.voxelize(voxelizer)
       .then(() => {
