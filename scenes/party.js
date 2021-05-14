@@ -225,7 +225,7 @@ class Party extends Gameplay {
       .then(() => {
         this.hooks = [-0.625, 0.625].map((x) => {
           const anchor = new Box(0.25, 0.5, 0.25);
-          anchor.position.set(x, 0.75, 0.75);
+          anchor.position.set(x, 0.625, 1);
           anchor.visible = false;
           const ball = new Ball();
           ball.isHook = true;

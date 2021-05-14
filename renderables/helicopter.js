@@ -107,7 +107,8 @@ class Helicopter extends Group {
             )
             // Side cut
             || (
-              (y < 5 || z > 22) && (x < 12 || x > 19)
+              (x < 12 || x > 19)
+              && ((y < 5 && z > 17) || (z > 22 && (y > 8 || (z !== 23 && z !== 24))))
             )
             // Cockpit
             || (
