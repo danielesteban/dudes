@@ -400,16 +400,22 @@ class Player extends Group {
     if (repeat) return;
     switch (keyCode) {
       case 16:
+        if (keyboard.y < 0) keyboard.y = 0;
+        break;
       case 32:
-        keyboard.y = 0;
+        if (keyboard.y > 0) keyboard.y = 0;
         break;
       case 87:
+        if (keyboard.z > 0) keyboard.z = 0;
+        break;
       case 83:
-        keyboard.z = 0;
+        if (keyboard.z < 0) keyboard.z = 0;
         break;
       case 65:
+        if (keyboard.x < 0) keyboard.x = 0;
+        break;
       case 68:
-        keyboard.x = 0;
+        if (keyboard.x > 0) keyboard.x = 0;
         break;
       case 70:
         buttonState.tertiary = false;
