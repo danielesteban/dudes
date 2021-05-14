@@ -7,6 +7,10 @@ class Physics {
     this.dynamic = [];
     this.kinematic = [];
     this.ropes = [];
+    this.tick = {
+      accumulator: 0,
+      max: 1 / 70,
+    };
     window.Ammo()
       .then((Ammo) => {
         const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
@@ -518,8 +522,18 @@ class Physics {
       dynamic,
       kinematic,
       ropes,
+      tick,
       world,
     } = this;
+
+    // Cap framerate (for XR)
+    tick.accumulator += delta;
+    if (tick.accumulator < tick.max) {
+      return;
+    }
+    delta = tick.accumulator;
+    tick.accumulator = 0;
+
     kinematic.forEach((mesh) => {
       if (mesh.isInstancedMesh) {
         // Not yet implemented
