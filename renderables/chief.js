@@ -4,11 +4,6 @@ import Dude from './dude.js';
 class Chief extends Dude {
   constructor() {
     const spec = Dude.defaultSpec;
-    const height = 2.5;
-    const head = 1;
-    const legs = 1;
-    const torso = 1;
-    const waist = 0.5;
     super({
       colors: {
         primary: (new Color()).setHSL(
@@ -28,22 +23,18 @@ class Chief extends Dude {
         ),
       },
       stamina: 1,
-      height,
-      waist,
+      height: 2.5,
+      waist: 0.5,
       torso: {
-        width: spec.torso.width,
-        height: spec.torso.height * torso,
+        ...spec.torso,
         depth: spec.torso.depth * 1.5,
       },
       head: {
+        ...spec.head,
         shape: 'box',
-        width: spec.head.width,
-        height: spec.head.height * head,
-        depth: spec.head.depth,
       },
       legs: {
         ...spec.legs,
-        height: spec.legs.height * legs,
         depth: spec.legs.depth * 1.5,
       },
       arms: {
