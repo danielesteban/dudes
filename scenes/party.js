@@ -6,7 +6,7 @@ import VoxelWorld from '../core/voxels.js';
 import Billboard from '../renderables/billboard.js';
 import Ball from '../renderables/ball.js';
 import Box from '../renderables/box.js';
-import Dude from '../renderables/dude.js';
+import Chief from '../renderables/chief.js';
 import Helicopter from '../renderables/helicopter.js';
 import Rope from '../renderables/rope.js';
 
@@ -127,6 +127,24 @@ class Party extends Gameplay {
     });
     this.add(billboard);
 
+    {
+      const chief = new Chief();
+      chief.position.copy(this.partyOrigin).add({ x: 0, y: 0, z: -5.75 });
+      chief.position.y = (world.getHeight(
+        Math.floor(chief.position.x / world.scale),
+        Math.floor(chief.position.z / world.scale)
+      ) + 1) * world.scale;
+      const light = world.getLight(
+        Math.floor(chief.position.x / world.scale),
+        Math.floor(chief.position.y / world.scale) + 1,
+        Math.floor(chief.position.z / world.scale)
+      );
+      chief.lighting.light = light >> 8;
+      chief.lighting.sunlight = light & 0xFF;
+      this.chief = chief;
+    }
+    this.add(this.chief);
+
     this.dudes.dudes.forEach((dude) => {
       if (dude.position.y >= this.partyOrigin.y - 1) {
         dude.rotation.y += Math.PI * (0.5 + Math.random());
@@ -140,78 +158,6 @@ class Party extends Gameplay {
         physics.getBody(dude).flags.isTrigger = false;
       }
     });
-
-    {
-      const spec = Dude.defaultSpec;
-      const height = 2.5;
-      const head = 1;
-      const legs = 1;
-      const torso = 1;
-      const waist = 0.5;
-      const dude = new Dude({
-        colors: {
-          primary: (new Color()).setHSL(
-            Math.random(),
-            0.5 + Math.random() * 0.25,
-            0.25 + Math.random() * 0.25
-          ),
-          secondary: (new Color()).setHSL(
-            Math.random(),
-            0.5 + Math.random() * 0.25,
-            0.5 + Math.random() * 0.25
-          ),
-          skin: (new Color()).setHSL(
-            Math.random(),
-            0.5 + Math.random() * 0.25,
-            0.25 + Math.random() * 0.5
-          ),
-        },
-        stamina: 1,
-        height,
-        waist,
-        torso: {
-          width: spec.torso.width,
-          height: spec.torso.height * torso,
-          depth: spec.torso.depth * 1.5,
-        },
-        head: {
-          shape: 'box',
-          width: spec.head.width,
-          height: spec.head.height * head,
-          depth: spec.head.depth,
-        },
-        legs: {
-          ...spec.legs,
-          height: spec.legs.height * legs,
-        },
-        arms: {
-          ...spec.arms,
-          height: spec.arms.height,
-        },
-        hat: {
-          ...spec.hat,
-          width: spec.hat.width * 3,
-          height: spec.hat.height * 4,
-          offsetY: spec.hat.offsetY * 0.5,
-        },
-      });
-      dude.position.copy(this.partyOrigin).add({ x: 0, y: 0, z: -5.75 });
-      dude.position.y = (world.getHeight(
-        Math.floor(dude.position.x / world.scale),
-        Math.floor(dude.position.z / world.scale)
-      ) + 1) * world.scale;
-      dude.updateMatrixWorld();
-      dude.setAction(dude.actions.hype);
-      const light = world.getLight(
-        Math.floor(dude.position.x / world.scale),
-        Math.floor(dude.position.y / world.scale) + 1,
-        Math.floor(dude.position.z / world.scale)
-      );
-      dude.lighting.light = light >> 8;
-      dude.lighting.sunlight = light & 0xFF;
-      this.mainDude = dude;
-      this.add(this.mainDude);
-    }
 
     this.music = new Music(player.head);
     this.music.speakers.forEach((speaker, channel) => {
@@ -277,10 +223,11 @@ class Party extends Gameplay {
   }
 
   onAnimationTick({ animation, camera, isXR }) {
-    const { dayDuration, hasLoaded, helicopter, mainDude, view } = this;
+    const { chief, dayDuration, hasLoaded, helicopter, view } = this;
     if (!hasLoaded) {
       return;
     }
+    chief.animate(animation);
     this.time += animation.delta;
     const dayTime = (this.time % dayDuration) / dayDuration;
     this.targetLight = 1 - ((dayTime > 0.5 ? 1 - dayTime : dayTime) * 2);
@@ -295,7 +242,6 @@ class Party extends Gameplay {
       camera.getWorldQuaternion(helicopter.instruments.quaternion);
       helicopter.instruments.updateMatrix();
     }
-    mainDude.animate(animation);
   }
 
   onLocomotionTick({ animation, camera, isXR }) {
