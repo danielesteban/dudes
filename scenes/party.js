@@ -215,7 +215,7 @@ class Party extends Gameplay {
 
     this.music = new Music(player.head);
     this.music.speakers.forEach((speaker, channel) => {
-      speaker.position.copy(this.partyOrigin).add({ x: channel === 0 ? -8 : 8, y: 4, z: -8 });
+      speaker.position.copy(this.partyOrigin).add({ x: channel === 0 ? -7 : 7, y: 6, z: -7 });
       this.add(speaker);
     });
 
@@ -342,9 +342,7 @@ class Party extends Gameplay {
       super.onLocomotionTick({ animation, camera, isXR });
     } else {
       player.getWorldDirection(forward);
-      helicopter.localToWorld(
-        pivot.copy(helicopter.cockpit.position).add({ x: 0, y: 0.5, z: 0.5 })
-      );
+      helicopter.localToWorld(pivot.set(0, 2.5, 1.25));
       if (
         (movement.z < 0 && forward.y > -0.3)
         || (movement.z > 0 && forward.y < 0.3)
@@ -527,8 +525,8 @@ class Party extends Gameplay {
       this.add(helicopter);
       player.move({
         x: partyOrigin.x - player.position.x,
-        y: partyOrigin.y + 0.5 - player.position.y,
-        z: partyOrigin.z + 4.5 - player.position.z,
+        y: partyOrigin.y + 2 - player.position.y,
+        z: partyOrigin.z + 8.5 - player.position.z,
       });
       player.rotation.set(0, 0, 0);
       this.view = views.party;
