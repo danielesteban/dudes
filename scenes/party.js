@@ -225,7 +225,7 @@ class Party extends Gameplay {
       .then(() => {
         this.hooks = [-0.625, 0.625].map((x) => {
           const anchor = new Box(0.25, 0.5, 0.25);
-          anchor.position.set(x, 0.625, 1);
+          anchor.position.set(x, 0.625, 1.125);
           anchor.visible = false;
           const ball = new Ball();
           ball.isHook = true;
@@ -298,7 +298,7 @@ class Party extends Gameplay {
     mainDude.animate(animation);
   }
 
-  onLocomotionTick({ animation, isXR }) {
+  onLocomotionTick({ animation, camera, isXR }) {
     const {
       hasLoaded,
       helicopter,
@@ -338,9 +338,13 @@ class Party extends Gameplay {
       unhookDudes = player.desktop.buttons.primaryDown || player.desktop.buttons.tertiaryDown;
     }
 
-    if (view !== Party.views.party) {
+    if (view === Party.views.party) {
+      super.onLocomotionTick({ animation, camera, isXR });
+    } else {
       player.getWorldDirection(forward);
-      helicopter.localToWorld(pivot.copy(helicopter.cockpit.position).add({ x: 0, y: 0.5, z: 0.5 }));
+      helicopter.localToWorld(
+        pivot.copy(helicopter.cockpit.position).add({ x: 0, y: 0.5, z: 0.5 })
+      );
       if (
         (movement.z < 0 && forward.y > -0.3)
         || (movement.z > 0 && forward.y < 0.3)

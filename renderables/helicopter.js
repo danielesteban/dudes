@@ -63,7 +63,7 @@ class Helicopter extends Group {
             y === 0
             || y > 20
             || (
-              x < 8 || x > 23 || z < 8 || z > 30
+              x < 8 || x > 23 || z < 8 || z > 29
             )
           ) {
             return false;
@@ -108,7 +108,7 @@ class Helicopter extends Group {
             // Side cut
             || (
               (x < 12 || x > 19)
-              && ((y < 5 && z > 17) || (z > 22 && (y > 8 || (z !== 23 && z !== 24))))
+              && ((y < 5 && z > 17) || (z > 21 && (y > 8 || (z !== 24 && z !== 25))))
             )
             // Cockpit
             || (
