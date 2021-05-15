@@ -26,7 +26,7 @@ class Gameplay extends Group {
     this.ambient = new Ambient({
       anchor: this.player.head,
       isRunning: this.player.head.context.state === 'running',
-      range: { from: 0, to: options.world.height },
+      range: { from: 0, to: options.world.height * 0.8 },
       sounds: [
         {
           url: '/sounds/sea.ogg',
