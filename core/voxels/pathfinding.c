@@ -1,4 +1,3 @@
-#include "../../vendor/AStar/AStar.h"
 #include "../../vendor/AStar/AStar.c"
 
 typedef struct {
