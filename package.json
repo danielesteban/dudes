@@ -4,7 +4,7 @@
   "license": "MIT",
   "private": true,
   "watch": {
-    "make": {
+    "compile": {
       "extensions": "c",
       "patterns": ["core"],
       "runOnChangeOnly": false
@@ -12,10 +12,10 @@
   },
   "scripts": {
     "build": "rollup -c rollup.config.js",
-    "make": "sh core/voxels/make.sh",
-    "make:watch": "npm-watch make",
+    "compile": "sh core/voxels/compile.sh",
+    "compile:watch": "npm-watch compile",
     "serve": "npm run build -- -w",
-    "start": "run-p serve make:watch"
+    "start": "run-p serve compile:watch"
   },
   "dependencies": {
     "three": "^0.128.0"
