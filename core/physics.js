@@ -234,6 +234,7 @@ class Physics {
       },
       bodies,
       ropes,
+      runtime: Ammo,
       world,
     } = this;
     from.setValue(origin.x, origin.y, origin.z);
@@ -246,6 +247,7 @@ class Physics {
       0
     );
     body.setTotalMass(length * 0.5, false);
+    Ammo.castObject(body, Ammo.btCollisionObject).getCollisionShape().setMargin(0.15);
     const DISABLE_DEACTIVATION = 4;
     body.setActivationState(DISABLE_DEACTIVATION);
     if (anchorA) {
@@ -268,7 +270,7 @@ class Physics {
       collider.setActivationState(DISABLE_DEACTIVATION);
       collider.mesh = mesh;
       world.addRigidBody(collider, 8, -1 & ~8);
-      body.appendAnchor(i, collider, true, 0.5);
+      body.appendAnchor(i, collider, true, 1);
       colliders.push(collider);
     }
     body.colliders = colliders;
@@ -372,28 +374,36 @@ class Physics {
       return compound;
     }
 
+    let shape;
     switch (physics.shape) {
       case 'box': {
         const { width, height, depth } = physics;
         vector.setValue(width / 2, height / 2, depth / 2);
-        return new Ammo.btBoxShape(vector);
+        shape = new Ammo.btBoxShape(vector);
+        break;
       }
       case 'capsule': {
         const { height, radius } = physics;
-        return new Ammo.btCapsuleShape(radius, height);
+        shape = new Ammo.btCapsuleShape(radius, height);
+        break;
       }
       case 'plane': {
         const { constant, normal } = physics;
         vector.setValue(normal.x, normal.y, normal.z);
-        return new Ammo.btStaticPlaneShape(vector, constant || 0);
+        shape = new Ammo.btStaticPlaneShape(vector, constant || 0);
+        break;
       }
       case 'sphere': {
         const { radius } = physics;
-        return new Ammo.btSphereShape(radius);
+        shape = new Ammo.btSphereShape(radius);
+        break;
       }
       default:
         return false;
     }
+
+    shape.setMargin(0.05);
+    return shape;
   }
 
   getBody(mesh, instance) {

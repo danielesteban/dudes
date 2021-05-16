@@ -26,7 +26,7 @@ class Debug extends Gameplay {
       rainToggle: true,
       world: {
         generation: {
-          seed: 970297029704,
+          seed: 987654321,
           type: 1,
         },
         onContact: (contact) => {

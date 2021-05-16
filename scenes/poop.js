@@ -1,8 +1,7 @@
 import { Color, Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
-import Billboard from '../renderables/billboard.js';
 
-class Game extends Gameplay {
+class Poop extends Gameplay {
   constructor(scene) {
     const diffuse = new Color();
     const vertex = new Vector3();
@@ -34,7 +33,7 @@ class Game extends Gameplay {
       rainToggle: true,
       world: {
         width: 256,
-        height: 64,
+        height: 96,
         depth: 256,
       },
     });
@@ -51,22 +50,6 @@ class Game extends Gameplay {
           .convertSRGBToLinear()
       ));
     }
-  }
-
-  onLoad() {
-    const { player, world } = this;
-    super.onLoad();
-    const billboardPos = player.position
-      .clone()
-      .divideScalar(world.scale)
-      .floor()
-      .add({ x: 0, y: 0, z: -31 });
-    const billboard = new Billboard({
-      x: billboardPos.x * world.scale,
-      y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale,
-      z: billboardPos.z * world.scale,
-    });
-    this.add(billboard);
   }
 
   onAnimationTick({ animation, camera, isXR }) {
@@ -96,4 +79,4 @@ class Game extends Gameplay {
   }
 }
 
-export default Game;
+export default Poop;
