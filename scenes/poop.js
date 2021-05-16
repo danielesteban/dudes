@@ -29,6 +29,7 @@ class Poop extends Gameplay {
           }
         },
       },
+      projectiles: true,
       lightToggle: true,
       rainToggle: true,
       world: {

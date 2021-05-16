@@ -22,6 +22,7 @@ class Debug extends Gameplay {
           }
         },
       },
+      projectiles: true,
       lightToggle: true,
       rainToggle: true,
       world: {

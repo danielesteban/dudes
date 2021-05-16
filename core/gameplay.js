@@ -65,32 +65,35 @@ class Gameplay extends Group {
       return explosion;
     });
 
-    this.projectile = 0;
-    this.projectiles = new Spheres({
-      count: 50,
-      sfx: scene.sfx,
-      sound: '/sounds/shot.ogg',
-    });
-    {
-      const matrix = new Matrix4();
-      const color = new Color();
-      const vector = new Vector3();
-      for (let i = 0; i < this.projectiles.count; i += 1) {
-        matrix.setPosition(0, 0.2, -1000 - i);
-        this.projectiles.setMatrixAt(i, matrix);
-      }
-      this.projectiles.destroyOnContact = ({ mesh, instance: projectile, position }) => {
-        if (mesh !== this.projectiles) {
-          return false;
+    Bodies.setupMaterial();
+    if (options.projectiles) {
+      this.projectile = 0;
+      this.projectiles = new Spheres({
+        count: 50,
+        sfx: scene.sfx,
+        sound: '/sounds/shot.ogg',
+      });
+      {
+        const matrix = new Matrix4();
+        const color = new Color();
+        const vector = new Vector3();
+        for (let i = 0; i < this.projectiles.count; i += 1) {
+          matrix.setPosition(0, 0.2, -1000 - i);
+          this.projectiles.setMatrixAt(i, matrix);
         }
-        this.spawnExplosion(position, this.projectiles.getColorAt(projectile, color));
-        this.physics.setTransform(
-          this.projectiles,
-          projectile,
-          vector.set(0, 0.2, -1000 - projectile)
-        );
-        return true;
-      };
+        this.projectiles.destroyOnContact = ({ mesh, instance: projectile, position }) => {
+          if (mesh !== this.projectiles) {
+            return false;
+          }
+          this.spawnExplosion(position, this.projectiles.getColorAt(projectile, color));
+          this.physics.setTransform(
+            this.projectiles,
+            projectile,
+            vector.set(0, 0.2, -1000 - projectile)
+          );
+          return true;
+        };
+      }
     }
 
     if (options.lightToggle) {
@@ -183,7 +186,7 @@ class Gameplay extends Group {
 
     this.add(world.chunks);
     this.add(this.dudes);
-    this.add(projectiles);
+    if (projectiles) this.add(projectiles);
     this.add(this.clouds);
     this.add(this.rain);
     this.add(starfield);
@@ -230,7 +233,7 @@ class Gameplay extends Group {
       physics.addMesh(dude, { isKinematic: true, isTrigger: !!dude.onContact });
     });
     delete this.dudes.onContact;
-    physics.addMesh(projectiles, { mass: 1 });
+    if (projectiles) physics.addMesh(projectiles, { mass: 1 });
 
     const loading = document.getElementById('loading');
     if (loading) {
@@ -380,7 +383,7 @@ class Gameplay extends Group {
 
   spawnProjectile(position, impulse) {
     const { physics, projectile, projectiles } = this;
-    if (!this.physics) {
+    if (!physics || !projectiles) {
       return;
     }
     this.projectile = (this.projectile + 1) % projectiles.count;
