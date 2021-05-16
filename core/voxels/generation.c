@@ -1,35 +1,6 @@
 #define FNL_IMPL
 #include "../../vendor/FastNoiseLite.h"
 
-// Warning: This function should only be used at the generation phase and
-//          with non-air types. Since it does not propagate the light
-//          and always updates the heightmap.
-static void setVoxel(
-  const World* world,
-  unsigned char* voxels,
-  int* heightmap,
-  const int x,
-  const int y,
-  const int z,
-  const unsigned char type,
-  const unsigned int color,
-  const unsigned char noise
-) {
-  const int voxel = getVoxel(world, x, y, z);
-  voxels[voxel] = type;
-  voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + (noise ? (rand() % noise) * (type == TYPE_LIGHT ? 2 : -1) : 0), 0), 0xFF);
-  voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + (noise ? (rand() % noise) * (type == TYPE_LIGHT ? 2 : -1) : 0), 0), 0xFF);
-  voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + (noise ? (rand() % noise) * (type == TYPE_LIGHT ? 2 : -1) : 0), 0), 0xFF);
-  if (y <= seaLevel) {
-    voxels[voxel + VOXEL_R] /= 2;
-    voxels[voxel + VOXEL_G] /= 2;
-  }
-  const int heightmapIndex = z * world->width + x;
-  if (heightmap[heightmapIndex] < y) {
-    heightmap[heightmapIndex] = y;
-  }
-}
-
 static const float hue2Rgb(float p, float q, float t) {
 	if (t < 0.0f) t += 1.0f;
 	if (t > 1.0f) t -= 1.0f;
@@ -62,6 +33,10 @@ static const unsigned int hsl2Rgb(float h, float s, float l) {
   );
 }
 
+const float frand() {
+  return (float) rand() / (float) (RAND_MAX);
+}
+
 static const unsigned int getColorFromNoise(unsigned char noise) {
   noise = 255 - noise;
   if (noise < 85) {
@@ -85,6 +60,35 @@ static const unsigned int getColorFromNoise(unsigned char noise) {
     | ((255 - noise * 3) << 8)
     | 0
   );
+}
+
+// Warning: This function should only be used at the generation phase and
+//          with non-air types. Since it does not propagate the light
+//          and always updates the heightmap.
+static void setVoxel(
+  const World* world,
+  unsigned char* voxels,
+  int* heightmap,
+  const int x,
+  const int y,
+  const int z,
+  const unsigned char type,
+  const unsigned int color,
+  const unsigned char noise
+) {
+  const int voxel = getVoxel(world, x, y, z);
+  voxels[voxel] = type;
+  voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + (noise ? (rand() % noise) * (type == TYPE_LIGHT ? 2 : -1) : 0), 0), 0xFF);
+  voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + (noise ? (rand() % noise) * (type == TYPE_LIGHT ? 2 : -1) : 0), 0), 0xFF);
+  voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + (noise ? (rand() % noise) * (type == TYPE_LIGHT ? 2 : -1) : 0), 0), 0xFF);
+  if (y <= seaLevel) {
+    voxels[voxel + VOXEL_R] /= 2;
+    voxels[voxel + VOXEL_G] /= 2;
+  }
+  const int heightmapIndex = z * world->width + x;
+  if (heightmap[heightmapIndex] < y) {
+    heightmap[heightmapIndex] = y;
+  }
 }
 
 static void generateBillboard(
@@ -357,7 +361,7 @@ static void generatePartyBuildings(
         const int streetX = i == center ? 0 : (1 + (rand() % 2)) * 4;
         const int streetZ = i == center ? 0 : (1 + (rand() % 2)) * 4;
         const int bHeight = queueA[i];
-        const unsigned int color = hsl2Rgb((float) rand() / (float) (RAND_MAX), 0.75f, 0.25f + ((float) rand() / (float) (RAND_MAX)) * 0.2f);
+        const unsigned int color = hsl2Rgb(frand(), 0.75f, 0.25f + frand() * 0.2f);
         if (i == center) mainBuildingColor = color;
         for (int z = streetZ; z < grid - streetZ; z++) {
           for (int y = 0; y < bHeight; y++) {
@@ -437,7 +441,7 @@ static void generatePartyBuildings(
       }
     }
   }
-  const unsigned int speakersColor = hsl2Rgb((float) rand() / (float) (RAND_MAX), 0.75f, 0.25f + ((float) rand() / (float) (RAND_MAX)) * 0.2f);
+  const unsigned int speakersColor = hsl2Rgb(frand(), 0.75f, 0.25f + frand()* 0.2f);
   for (int i = 0; i < 4; i += 1) {
     // Speakers
     const int width = 8;
@@ -491,7 +495,7 @@ static void generatePartyBuildings(
     bx,
     heightmap[bz * world->width + bx] - 1,
     bz,
-    hsl2Rgb((float) rand() / (float) (RAND_MAX), 0.75f, 0.25f + ((float) rand() / (float) (RAND_MAX)) * 0.2f),
+    hsl2Rgb(frand(), 0.75f, 0.25f + frand() * 0.2f),
     12,
     14,
     3
