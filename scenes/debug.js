@@ -27,7 +27,7 @@ class Debug extends Gameplay {
       world: {
         generation: {
           seed: 970297029704,
-          type: 0,
+          type: 1,
         },
         onContact: (contact) => {
           if (this.projectiles.destroyOnContact(contact)) {

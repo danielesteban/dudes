@@ -74,7 +74,7 @@ class Party extends Gameplay {
       world: {
         generation: {
           seed: Math.floor(Math.random() * 2147483647),
-          type: 1,
+          type: 2,
         },
         width: 192,
         height: 128,

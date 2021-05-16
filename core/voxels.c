@@ -888,7 +888,7 @@ void generate(
   const int centerX = world->width * 0.5f;
   const int centerZ = world->depth * 0.5f;
   const int radius = sqrt(centerX * centerX + centerZ * centerZ) * 0.65f;
-  const int maxTerrainHeight = world->height / (type == 1 ? 3.0f : 2.5f);
+  const int maxTerrainHeight = world->height / (type == 2 ? 3.0f : 2.5f);
   for (int z = 0; z < world->depth; z++) {
     for (int y = 0; y < maxTerrainHeight; y++) {
       for (int x = 0; x < world->width; x++) {
@@ -921,14 +921,6 @@ void generate(
 
   srand(seed);
   if (type == 1) {
-    // Party gameplay buildings
-    generatePartyBuildings(
-      world,
-      voxels,
-      heightmap,
-      queueA
-    );
-  } else {
     // Default city with inner plaza
     const int grid = 80;
     const int plaza = grid * 2;
@@ -992,6 +984,14 @@ void generate(
         );
       }
     }
+  } else if (type == 2) {
+    // Party gameplay buildings
+    generatePartyBuildings(
+      world,
+      voxels,
+      heightmap,
+      queueA
+    );
   }
 
   {
