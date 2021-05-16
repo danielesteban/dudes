@@ -22,9 +22,8 @@ class Renderer {
     this.camera = new PerspectiveCamera(70, 1, 0.1, 1000);
     this.camera.position.y = 1.6;
 
-    const postprocessing = !(navigator.userAgent.includes('Mobile') || navigator.userAgent.includes('Quest'));
     this.renderer = new WebGLRenderer({
-      antialias: !postprocessing,
+      antialias: true,
       stencil: false,
       powerPreference: 'high-performance',
     });
@@ -37,7 +36,7 @@ class Renderer {
     window.addEventListener('resize', this.onResize.bind(this), false);
     this.onResize();
 
-    if (postprocessing) {
+    if (!(navigator.userAgent.includes('Mobile') || navigator.userAgent.includes('Quest'))) {
       this.composer = SetupComposer(this.renderer);
     }
 
