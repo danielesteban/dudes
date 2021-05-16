@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import resolve from '@rollup/plugin-node-resolve';
 import copy from 'rollup-plugin-copy';
+import livereload from 'rollup-plugin-livereload';
+import resolve from '@rollup/plugin-node-resolve';
 import serve from 'rollup-plugin-serve';
 import { terser } from 'rollup-plugin-terser';
 import { watchExternal } from 'rollup-plugin-watch-external';
@@ -25,11 +26,17 @@ export default {
     copy({
       targets: [
         { src: 'node_modules/three/examples/js/libs/ammo.wasm.*', dest: 'dist' },
-        { src: 'index.*', dest: 'dist' },
         { src: 'screenshot.png', dest: 'dist' },
         { src: 'sounds/*.ogg', dest: 'dist/sounds' },
+      ],
+      copyOnce: true,
+    }),
+    copy({
+      targets: [
+        { src: 'index.*', dest: 'dist' },
         { src: 'core/voxels.wasm', dest: 'dist' },
       ],
+      copyOnce: !process.env.ROLLUP_WATCH,
     }),
     ...(process.env.ROLLUP_WATCH ? [
       serve({
@@ -37,6 +44,7 @@ export default {
         historyApiFallback: true,
         port: 8080,
       }),
+      livereload(outputPath),
       watchExternal({ entries: ['index.css', 'index.html', 'core/voxels.wasm'] }),
     ] : [
       cname('dudes.gatunes.com'),
