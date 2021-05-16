@@ -30,31 +30,6 @@ static void setVoxel(
   }
 }
 
-static const unsigned int getColorFromNoise(unsigned char noise) {
-  noise = 255 - noise;
-  if (noise < 85) {
-    return (
-      ((255 - noise * 3) << 16)
-      | (0 << 8)
-      | (noise * 3)
-    );
-  }
-  if (noise < 170) {
-    noise -= 85;
-    return (
-      (0 << 16)
-      | ((noise * 3) << 8)
-      | (255 - noise * 3)
-    );
-  }
-  noise -= 170;
-  return (
-    ((noise * 3) << 16)
-    | ((255 - noise * 3) << 8)
-    | 0
-  );
-}
-
 static const float hue2Rgb(float p, float q, float t) {
 	if (t < 0.0f) t += 1.0f;
 	if (t > 1.0f) t -= 1.0f;
@@ -84,6 +59,31 @@ static const unsigned int hsl2Rgb(float h, float s, float l) {
     (((unsigned char) round(r * 0xFF) & 0xFF) << 16)
     | (((unsigned char) round(g * 0xFF) & 0xFF) << 8)
     | ((unsigned char) round(b * 0xFF) & 0xFF)
+  );
+}
+
+static const unsigned int getColorFromNoise(unsigned char noise) {
+  noise = 255 - noise;
+  if (noise < 85) {
+    return (
+      ((255 - noise * 3) << 16)
+      | (0 << 8)
+      | (noise * 3)
+    );
+  }
+  if (noise < 170) {
+    noise -= 85;
+    return (
+      (0 << 16)
+      | ((noise * 3) << 8)
+      | (255 - noise * 3)
+    );
+  }
+  noise -= 170;
+  return (
+    ((noise * 3) << 16)
+    | ((255 - noise * 3) << 8)
+    | 0
   );
 }
 
