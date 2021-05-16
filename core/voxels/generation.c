@@ -27,9 +27,9 @@ static const unsigned int hsl2Rgb(float h, float s, float l) {
   }
 
   return (
-    (((unsigned char) round(r * 0xFF) & 0xFF) << 16)
-    | (((unsigned char) round(g * 0xFF) & 0xFF) << 8)
-    | ((unsigned char) round(b * 0xFF) & 0xFF)
+    ((unsigned char) round(r * 0xFF) << 16)
+    | ((unsigned char) round(g * 0xFF) << 8)
+    | (unsigned char) round(b * 0xFF)
   );
 }
 
