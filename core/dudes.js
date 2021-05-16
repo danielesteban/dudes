@@ -152,18 +152,26 @@ class Dudes extends Group {
 
   computeObstacles(exclude) {
     const { auxVector: voxel, dudes, world } = this;
-    return dudes.reduce((obstacles, dude) => {
-      if (dude !== exclude) {
-        for (let i = 0, l = (dude.path ? 2 : 1); i < l; i += 1) {
-          voxel
-            .copy(i === 0 ? dude.position : dude.path[dude.path.length - 1].position)
-            .divideScalar(world.scale).floor();
-          for (let y = 0; y < 4; y += 1) {
-            obstacles.push({ x: voxel.x, y: voxel.y + y, z: voxel.z });
+    return (obstacles) => dudes.forEach((dude) => {
+      if (dude === exclude) {
+        return;
+      }
+      for (let i = 0, l = (dude.path ? 2 : 1); i < l; i += 1) {
+        voxel
+          .copy(i === 0 ? dude.position : dude.path[dude.path.length - 1].position)
+          .divideScalar(world.scale).floor();
+        for (let y = 0; y < 4; y += 1) {
+          if (
+            voxel.x < 0 || voxel.x >= world.width
+            || voxel.y < 0 || y >= world.height
+            || voxel.z < 0 || voxel.z >= world.depth
+          ) {
+            return;
           }
+          obstacles[voxel.z * world.width * world.height + voxel.y * world.width + voxel.x] = 1;
+          voxel.y += 1;
         }
       }
-      return obstacles;
     }, []);
   }
 

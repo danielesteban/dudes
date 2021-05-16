@@ -119,7 +119,7 @@ class VoxelWorld {
       obstaclesMap,
       queueA,
     } = this;
-    this.setupObstaclesMap(obstacles);
+    obstacles(obstaclesMap.view.fill(0));
     const nodes = this._findPath(
       world.address,
       voxels.address,
@@ -152,7 +152,7 @@ class VoxelWorld {
       obstaclesMap,
       queueA,
     } = this;
-    this.setupObstaclesMap(obstacles);
+    obstacles(obstaclesMap.view.fill(0));
     const found = this._findTarget(
       world.address,
       heightmap.address,
@@ -324,26 +324,6 @@ class VoxelWorld {
       x, y, z,
       r, g, b
     );
-  }
-
-  setupObstaclesMap(obstacles) {
-    const {
-      obstaclesMap,
-      width,
-      height,
-      depth,
-    } = this;
-    obstaclesMap.view.fill(0);
-    obstacles.forEach(({ x, y, z }) => {
-      if (
-        x < 0 || x >= width
-        || y < 0 || y >= height
-        || z < 0 || z >= depth
-      ) {
-        return;
-      }
-      obstaclesMap.view[z * width * height + y * width + x] = 1;
-    });
   }
 
   static getBrush({ shape, size }) {
