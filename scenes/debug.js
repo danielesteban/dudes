@@ -26,10 +26,11 @@ class Debug extends Gameplay {
       lightToggle: true,
       rainToggle: true,
       world: {
-        generation: {
-          seed: 987654321,
-          type: 1,
-        },
+        width: 400,
+        height: 96,
+        depth: 400,
+        generator: 'debugCity',
+        seed: 987654321,
         onContact: (contact) => {
           if (this.projectiles.destroyOnContact(contact)) {
             this.updateVoxel(
@@ -42,9 +43,6 @@ class Debug extends Gameplay {
             );
           }
         },
-        width: 400,
-        height: 96,
-        depth: 400,
       },
     });
 

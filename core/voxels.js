@@ -2,15 +2,13 @@ import { Color, Group } from '../vendor/three.js';
 
 class VoxelWorld {
   constructor({
-    chunkSize = 16,
-    scale = 0.5,
-    generation = {
-      seed: Math.floor(Math.random() * 2147483647),
-      type: 0,
-    },
     width,
     height,
     depth,
+    chunkSize = 16,
+    generator = 'default',
+    scale = 0.5,
+    seed = Math.floor(Math.random() * 2147483647),
     onContact,
     onLoad,
   }) {
@@ -24,7 +22,8 @@ class VoxelWorld {
     this.chunks = new Group();
     this.chunks.matrixAutoUpdate = false;
     this.chunkSize = chunkSize;
-    this.generation = generation;
+    this.generator = VoxelWorld.generators[generator];
+    this.seed = seed;
     this.meshes = [];
     this.onContact = onContact;
     this.scale = scale;
@@ -179,7 +178,8 @@ class VoxelWorld {
       queueA,
       queueB,
       queueC,
-      generation,
+      generator,
+      seed,
     } = this;
     heightmap.view.fill(0);
     voxels.view.fill(0);
@@ -189,8 +189,8 @@ class VoxelWorld {
       voxels.address,
       queueA.address,
       queueB.address,
-      generation.seed,
-      generation.type
+      generator,
+      seed
     );
     this._propagate(
       world.address,
@@ -389,6 +389,12 @@ VoxelWorld.brushes = new Map();
 VoxelWorld.brushShapes = {
   box: 0,
   sphere: 1,
+};
+
+VoxelWorld.generators = {
+  default: 0,
+  debugCity: 1,
+  partyBuildings: 2,
 };
 
 export default VoxelWorld;

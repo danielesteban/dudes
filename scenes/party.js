@@ -72,13 +72,11 @@ class Party extends Gameplay {
       },
       rainToggle: true,
       world: {
-        generation: {
-          seed: Math.floor(Math.random() * 2147483647),
-          type: 2,
-        },
         width: 192,
         height: 128,
         depth: 192,
+        generator: 'partyBuildings',
+        seed: Math.floor(Math.random() * 2147483647),
       },
     });
 

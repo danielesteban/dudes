@@ -361,7 +361,7 @@ static void generatePartyBuildings(
         const int streetX = i == center ? 0 : (1 + (rand() % 2)) * 4;
         const int streetZ = i == center ? 0 : (1 + (rand() % 2)) * 4;
         const int bHeight = queueA[i];
-        const unsigned int color = hsl2Rgb(frand(), 0.75f, 0.25f + frand() * 0.2f);
+        const unsigned int color = hsl2Rgb(frand(), 0.8f, 0.25f + frand() * 0.2f);
         if (i == center) mainBuildingColor = color;
         for (int z = streetZ; z < grid - streetZ; z++) {
           for (int y = 0; y < bHeight; y++) {
@@ -441,7 +441,7 @@ static void generatePartyBuildings(
       }
     }
   }
-  const unsigned int speakersColor = hsl2Rgb(frand(), 0.75f, 0.25f + frand()* 0.2f);
+  const unsigned int speakersColor = hsl2Rgb(frand(), 0.8f, 0.25f + frand()* 0.2f);
   for (int i = 0; i < 4; i += 1) {
     // Speakers
     const int width = 8;
@@ -495,7 +495,7 @@ static void generatePartyBuildings(
     bx,
     heightmap[bz * world->width + bx] - 1,
     bz,
-    hsl2Rgb(frand(), 0.75f, 0.25f + frand() * 0.2f),
+    hsl2Rgb(frand(), 0.8f, 0.25f + frand() * 0.2f),
     12,
     14,
     3
@@ -719,8 +719,8 @@ void generate(
   unsigned char* voxels,
   int* queueA,
   int* queueB,
-  const int seed,
-  const unsigned char type
+  const unsigned char generator,
+  const int seed
 ) {
   srand(seed);
 
@@ -728,11 +728,11 @@ void generate(
     world,
     voxels,
     heightmap,
-    world->height / (type == 2 ? 3.5f : 2.5f),
+    world->height / (generator == 2 ? 3.5f : 2.5f),
     seed
   );
 
-  switch (type) {
+  switch (generator) {
     case 1:
       generateDebugCity(
         world,
