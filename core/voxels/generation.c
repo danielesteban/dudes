@@ -55,6 +55,38 @@ static const unsigned int getColorFromNoise(unsigned char noise) {
   );
 }
 
+static const float hue2Rgb(float p, float q, float t) {
+	if (t < 0.0f) t += 1.0f;
+	if (t > 1.0f) t -= 1.0f;
+	if (t < 1.0f / 6.0f) return p + (q - p) * 6.0f * t;
+	if (t < 1.0f / 2.0f) return q;
+	if (t < 2.0f / 3.0f) return p + (q - p) * 6.0f * (2.0f / 3.0f - t);
+	return p;
+}
+
+static const unsigned int hsl2Rgb(float h, float s, float l) {
+  h = fmod(fmod(h, 1.0f) + 1.0f, 1.0f);
+  s = fmin(fmax(s, 0.0f), 1.0f);
+  l = fmin(fmax(l, 0.0f), 1.0f);
+
+  float r, g, b;
+  if (s == 0) {
+    r = g = b = l;
+  } else {
+    const float q = l < 0.5f ? l * (1.0f + s) : l + s - l * s;
+    const float p = 2.0f * l - q;
+    r = hue2Rgb(p, q, h + 1.0f / 3.0f);
+    g = hue2Rgb(p, q, h);
+    b = hue2Rgb(p, q, h - 1.0f / 3.0f);
+  }
+
+  return (
+    (((unsigned char) round(r * 0xFF) & 0xFF) << 16)
+    | (((unsigned char) round(g * 0xFF) & 0xFF) << 8)
+    | ((unsigned char) round(b * 0xFF) & 0xFF)
+  );
+}
+
 static void generateBillboard(
   const World* world,
   unsigned char* voxels,
@@ -62,12 +94,11 @@ static void generateBillboard(
   const int x,
   const int y,
   const int z,
-  const unsigned int tint,
+  const unsigned int color,
   const int width,
   const int height,
   const int depth
 ) {
-  const unsigned int color = getColorFromNoise(tint);
   const int legs = height / 3;
   for (int bz = 0; bz < depth; bz++) {
     for (int by = 0; by < height; by++) {
@@ -254,7 +285,7 @@ static void generateDebugCity(
       bx,
       heightmap[bz * world->width + bx] - 1,
       bz,
-      tint,
+      getColorFromNoise(tint % 0xFF),
       12,
       14,
       3
@@ -326,7 +357,7 @@ static void generatePartyBuildings(
         const int streetX = i == center ? 0 : (1 + (rand() % 2)) * 4;
         const int streetZ = i == center ? 0 : (1 + (rand() % 2)) * 4;
         const int bHeight = queueA[i];
-        const unsigned int color = getColorFromNoise(rand() % 255);
+        const unsigned int color = hsl2Rgb((float) rand() / (float) (RAND_MAX), 0.75f, 0.25f + ((float) rand() / (float) (RAND_MAX)) * 0.2f);
         if (i == center) mainBuildingColor = color;
         for (int z = streetZ; z < grid - streetZ; z++) {
           for (int y = 0; y < bHeight; y++) {
@@ -364,7 +395,7 @@ static void generatePartyBuildings(
                   )
                 ) ? TYPE_LIGHT : TYPE_STONE,
                 color,
-                0x11
+                0x08
               );
             }
           }
@@ -400,13 +431,13 @@ static void generatePartyBuildings(
             originX + x, originY + y, originZ + z,
             y == height - 2 ? TYPE_LIGHT : TYPE_STONE,
             mainBuildingColor,
-            0x11
+            0x08
           );
         }
       }
     }
   }
-  const unsigned int speakersColor = getColorFromNoise(rand() % 0xFF);
+  const unsigned int speakersColor = hsl2Rgb((float) rand() / (float) (RAND_MAX), 0.75f, 0.25f + ((float) rand() / (float) (RAND_MAX)) * 0.2f);
   for (int i = 0; i < 4; i += 1) {
     // Speakers
     const int width = 8;
@@ -445,7 +476,7 @@ static void generatePartyBuildings(
               )
             ) ? TYPE_LIGHT : TYPE_STONE,
             speakersColor,
-            0x11
+            0x08
           );
         }
       }
@@ -460,7 +491,7 @@ static void generatePartyBuildings(
     bx,
     heightmap[bz * world->width + bx] - 1,
     bz,
-    rand(),
+    hsl2Rgb((float) rand() / (float) (RAND_MAX), 0.75f, 0.25f + ((float) rand() / (float) (RAND_MAX)) * 0.2f),
     12,
     14,
     3
@@ -693,7 +724,7 @@ void generate(
     world,
     voxels,
     heightmap,
-    world->height / (type == 2 ? 3.0f : 2.5f),
+    world->height / (type == 2 ? 3.5f : 2.5f),
     seed
   );
 
