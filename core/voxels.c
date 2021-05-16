@@ -548,161 +548,75 @@ static void generateBuilding(
   }
 }
 
-static void generateLamp(
+static void generateDebugCity(
   const World* world,
   unsigned char* voxels,
-  int* heightmap,
-  const int x,
-  const int y,
-  const int z,
-  const unsigned int color
+  int* heightmap
 ) {
-  for (int i = 0; i < 2; i++) {
-    setVoxel(
-      world, voxels, heightmap,
-      x, y + i, z,
-      i == 1 ? TYPE_LIGHT : TYPE_STONE,
-      color
-    );
-  }
-}
-
-static const int branchOffsets[] = {
-  0, 1, 0,
-  -2, 0, 0,
-  2, 0, 0,
-  0, 0, -2,
-  0, 0, 2
-};
-
-static void growTree(
-  const World* world,
-  unsigned char* voxels,
-  int* heightmap,
-  const unsigned int color,
-  const int trunk,
-  const int branches,
-  const int size,
-  int* queue,
-  const unsigned int queueLength,
-  int* next
-) {
-  unsigned int nextLength = 0;
-  for (unsigned int i = 0; i < queueLength; i += 2) {
-    const int voxel = queue[i];
-    const int distance = queue[i + 1];
-    const int index = voxel / VOXELS_STRIDE,
-          z = floor(index / (world->width * world->height)),
-          y = floor((index % (world->width * world->height)) / world->width),
-          x = floor((index % (world->width * world->height)) % world->width);
-    const unsigned char isTrunk = distance <= trunk;
-    if (isTrunk) {
-      for (int j = -1; j <= 1; j++) {
-        for (int k = -1; k <= 1; k++) {
-          const int n = getVoxel(world, x + j, y, z + k);
-          voxels[n] = TYPE_TREE;
-          voxels[n + VOXEL_R] = fmax((int) ((color >> 16) & 0xFF) / 2 - (rand() % 0x11), 0);
-          voxels[n + VOXEL_G] = fmax((int) ((color >> 8) & 0xFF) / 2 - (rand() % 0x11), 0);
-          voxels[n + VOXEL_B] = fmax((int) (color & 0xFF) / 2 - (rand() % 0x11), 0);
-          const int heightmapIndex = (z + k) * world->width + (x + j);
-          if (heightmap[heightmapIndex] < y) {
-            heightmap[heightmapIndex] = y;
-          }
-        }
-      }
-    } else {
-      const int f = floor(((distance - trunk) / size) * 0x33);
-      voxels[voxel] = TYPE_TREE;
-      if (distance < branches) {
-        voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) / 2 + f - (rand() % 0x11), 0), 0xFF);
-        voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) / 2 + f - (rand() % 0x11), 0), 0xFF);
-        voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) / 2 + f - (rand() % 0x11), 0), 0xFF);
-      } else {
-        voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + f - (rand() % 0x11), 0), 0xFF);
-        voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + f - (rand() % 0x11), 0), 0xFF);
-        voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + f - (rand() % 0x11), 0), 0xFF);
-      }
-      const int heightmapIndex = z * world->width + x;
-      if (heightmap[heightmapIndex] < y) {
-        heightmap[heightmapIndex] = y;
-      }
-    }
-    if (distance == trunk) {
-      for (int j = 0; j < 15; j += 3) {
-        const int n = getVoxel(world, x + branchOffsets[j], y + branchOffsets[j + 1], z + branchOffsets[j + 2]);
-        if (n != -1 && voxels[n] == TYPE_AIR) {
-          next[nextLength++] = n; 
-          next[nextLength++] = distance + 1; 
-        }
-      }
-    } else if (isTrunk) {
-      const int n = getVoxel(world, x, y + 1, z);
-      if (n != -1 && (distance < 2 || voxels[n] == TYPE_AIR)) {
-        next[nextLength++] = n; 
-        next[nextLength++] = distance + 1; 
-      } else if (distance > trunk * 0.25f) {
-        next[nextLength++] = voxel; 
-        next[nextLength++] = trunk; 
-      }
-    } else if (distance < size) {
-      int count = 0;
-      for (int j = 0; j < 6; j++) {
-        const int ni = rand() % 6;
-        const int n = getVoxel(world, x + neighbors[ni * 3], y + neighbors[ni * 3 + 1], z + neighbors[ni * 3 + 2]);
-        if (n != -1 && voxels[n] == TYPE_AIR) {
-          next[nextLength++] = n; 
-          next[nextLength++] = distance + 1;
-          count++;
-          if (count >= 2) {
-            break;
-          }
-        }
-      }
-    }
-  }
-  if (nextLength > 0) {
-    growTree(
+  const int grid = 80;
+  const int plaza = grid * 2;
+  {
+    const int street = 6;
+    const int floorHeight = 12 + (rand() % 4);
+    const int floors = 2;
+    const unsigned int tint = rand();
+    generateBuilding(
       world,
       voxels,
       heightmap,
-      color,
-      trunk,
-      branches,
-      size,
-      next,
-      nextLength,
-      queue
+      world->width / 2 - grid / 2 + street,
+      world->depth / 2 - grid / 2 + street,
+      tint,
+      grid - street * 2,
+      floors * floorHeight + 4,
+      floorHeight,
+      (1 + (rand() % 2)) * 8
+    );
+    const int bx = world->width / 2 - 6;
+    const int bz = world->depth / 2 - grid / 2 + street + 1;
+    generateBillboard(
+      world,
+      voxels,
+      heightmap,
+      bx,
+      heightmap[bz * world->width + bx] - 1,
+      bz,
+      tint,
+      12,
+      14,
+      3
     );
   }
-}
-
-static void generateTree(
-  const World* world,
-  unsigned char* voxels,
-  int* heightmap,
-  const int x,
-  const int y,
-  const int z,
-  const unsigned int color,
-  const int size,
-  const int radius,
-  int* queueA,
-  int* queueB
-) {
-  queueA[0] = getVoxel(world, x, fmax(y - 1, 0), z);
-  queueA[1] = 0;
-  growTree(
-    world,
-    voxels,
-    heightmap,
-    color,
-    size,
-    size + floor(radius * 0.75f),
-    size + radius,
-    queueA,
-    2,
-    queueB
-  );
+  const int centerX = world->width * 0.5f;
+  const int centerZ = world->depth * 0.5f;
+  const int from = fmax(world->width / 2 - grid * 2, 0);
+  const int to = fmin(world->width / 2 + grid * 2, world->width);
+  for (int z = from; z < to; z += grid) {
+    for (int x = from; x < to; x += grid) {
+      const int dx = x + grid / 2 - centerX;
+      const int dz = z + grid / 2 - centerZ;
+      const int distance = sqrt(dx * dx + dz * dz);
+      if (
+        distance < plaza / 2 || distance > plaza
+      ) {
+        continue;
+      }
+      const int street = (rand() % 2) * 8 + 6;
+      const int floorHeight = 12 + (rand() % 4);
+      generateBuilding(
+        world,
+        voxels,
+        heightmap,
+        x + street,
+        z + street,
+        rand(),
+        grid - street * 2,
+        (floor((rand() % (world->height - floorHeight * 3 - 8)) / floorHeight) + 3) * floorHeight + 4,
+        floorHeight,
+        (1 + (rand() % 2)) * 8
+      );
+    }
+  }
 }
 
 static void generatePartyBuildings(
@@ -873,14 +787,150 @@ static void generatePartyBuildings(
   );
 }
 
-void generate(
+static const int branchOffsets[] = {
+  0, 1, 0,
+  -2, 0, 0,
+  2, 0, 0,
+  0, 0, -2,
+  0, 0, 2
+};
+
+static void growTree(
   const World* world,
-  int* heightmap,
   unsigned char* voxels,
+  int* heightmap,
+  const unsigned int color,
+  const int trunk,
+  const int branches,
+  const int size,
+  int* queue,
+  const unsigned int queueLength,
+  int* next
+) {
+  unsigned int nextLength = 0;
+  for (unsigned int i = 0; i < queueLength; i += 2) {
+    const int voxel = queue[i];
+    const int distance = queue[i + 1];
+    const int index = voxel / VOXELS_STRIDE,
+          z = floor(index / (world->width * world->height)),
+          y = floor((index % (world->width * world->height)) / world->width),
+          x = floor((index % (world->width * world->height)) % world->width);
+    const unsigned char isTrunk = distance <= trunk;
+    if (isTrunk) {
+      for (int j = -1; j <= 1; j++) {
+        for (int k = -1; k <= 1; k++) {
+          const int n = getVoxel(world, x + j, y, z + k);
+          voxels[n] = TYPE_TREE;
+          voxels[n + VOXEL_R] = fmax((int) ((color >> 16) & 0xFF) / 2 - (rand() % 0x11), 0);
+          voxels[n + VOXEL_G] = fmax((int) ((color >> 8) & 0xFF) / 2 - (rand() % 0x11), 0);
+          voxels[n + VOXEL_B] = fmax((int) (color & 0xFF) / 2 - (rand() % 0x11), 0);
+          const int heightmapIndex = (z + k) * world->width + (x + j);
+          if (heightmap[heightmapIndex] < y) {
+            heightmap[heightmapIndex] = y;
+          }
+        }
+      }
+    } else {
+      const int f = floor(((distance - trunk) / size) * 0x33);
+      voxels[voxel] = TYPE_TREE;
+      if (distance < branches) {
+        voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) / 2 + f - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) / 2 + f - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) / 2 + f - (rand() % 0x11), 0), 0xFF);
+      } else {
+        voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + f - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + f - (rand() % 0x11), 0), 0xFF);
+        voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + f - (rand() % 0x11), 0), 0xFF);
+      }
+      const int heightmapIndex = z * world->width + x;
+      if (heightmap[heightmapIndex] < y) {
+        heightmap[heightmapIndex] = y;
+      }
+    }
+    if (distance == trunk) {
+      for (int j = 0; j < 15; j += 3) {
+        const int n = getVoxel(world, x + branchOffsets[j], y + branchOffsets[j + 1], z + branchOffsets[j + 2]);
+        if (n != -1 && voxels[n] == TYPE_AIR) {
+          next[nextLength++] = n; 
+          next[nextLength++] = distance + 1; 
+        }
+      }
+    } else if (isTrunk) {
+      const int n = getVoxel(world, x, y + 1, z);
+      if (n != -1 && (distance < 2 || voxels[n] == TYPE_AIR)) {
+        next[nextLength++] = n; 
+        next[nextLength++] = distance + 1; 
+      } else if (distance > trunk * 0.25f) {
+        next[nextLength++] = voxel; 
+        next[nextLength++] = trunk; 
+      }
+    } else if (distance < size) {
+      int count = 0;
+      for (int j = 0; j < 6; j++) {
+        const int ni = rand() % 6;
+        const int n = getVoxel(world, x + neighbors[ni * 3], y + neighbors[ni * 3 + 1], z + neighbors[ni * 3 + 2]);
+        if (n != -1 && voxels[n] == TYPE_AIR) {
+          next[nextLength++] = n; 
+          next[nextLength++] = distance + 1;
+          count++;
+          if (count >= 2) {
+            break;
+          }
+        }
+      }
+    }
+  }
+  if (nextLength > 0) {
+    growTree(
+      world,
+      voxels,
+      heightmap,
+      color,
+      trunk,
+      branches,
+      size,
+      next,
+      nextLength,
+      queue
+    );
+  }
+}
+
+static void generateTree(
+  const World* world,
+  unsigned char* voxels,
+  int* heightmap,
+  const int x,
+  const int y,
+  const int z,
+  const unsigned int color,
+  const int size,
+  const int radius,
   int* queueA,
-  int* queueB,
-  const int seed,
-  const int type
+  int* queueB
+) {
+  queueA[0] = getVoxel(world, x, fmax(y - 1, 0), z);
+  queueA[1] = 0;
+  growTree(
+    world,
+    voxels,
+    heightmap,
+    color,
+    size,
+    size + floor(radius * 0.75f),
+    size + radius,
+    queueA,
+    2,
+    queueB
+  );
+}
+
+static void generateTerrain(
+  const World* world,
+  unsigned char* voxels,
+  int* heightmap,
+  const int maxHeight,
+  const int seed
 ) {
   fnl_state noise = fnlCreateState();
   noise.seed = seed;
@@ -888,9 +938,8 @@ void generate(
   const int centerX = world->width * 0.5f;
   const int centerZ = world->depth * 0.5f;
   const int radius = sqrt(centerX * centerX + centerZ * centerZ) * 0.65f;
-  const int maxTerrainHeight = world->height / (type == 2 ? 3.0f : 2.5f);
   for (int z = 0; z < world->depth; z++) {
-    for (int y = 0; y < maxTerrainHeight; y++) {
+    for (int y = 0; y < maxHeight; y++) {
       for (int x = 0; x < world->width; x++) {
         const int dx = x - centerX;
         const int dz = z - centerZ;
@@ -899,7 +948,7 @@ void generate(
           continue;
         }
         const float n = fabs(fnlGetNoise3D(&noise, (float) x * 0.5f, (float) y, (float) z * 0.5f));
-        if (y == 0 || y < n * maxTerrainHeight) {
+        if (y == 0 || y < n * maxHeight) {
           const int voxel = getVoxel(world, x, y, z);
           voxels[voxel] = TYPE_DIRT;
           const unsigned int color = getColorFromNoise(0xFF * n);
@@ -918,109 +967,85 @@ void generate(
       }
     }
   }
+}
 
-  srand(seed);
-  if (type == 1) {
-    // Default city with inner plaza
-    const int grid = 80;
-    const int plaza = grid * 2;
-    {
-      const int street = 6;
-      const int floorHeight = 12 + (rand() % 4);
-      const int floors = 2;
-      const unsigned int tint = rand();
-      generateBuilding(
-        world,
-        voxels,
-        heightmap,
-        world->width / 2 - grid / 2 + street,
-        world->depth / 2 - grid / 2 + street,
-        tint,
-        grid - street * 2,
-        floors * floorHeight + 4,
-        floorHeight,
-        (1 + (rand() % 2)) * 8
-      );
-      const int bx = world->width / 2 - 6;
-      const int bz = world->depth / 2 - grid / 2 + street + 1;
-      generateBillboard(
-        world,
-        voxels,
-        heightmap,
-        bx,
-        heightmap[bz * world->width + bx] - 1,
-        bz,
-        tint,
-        12,
-        14,
-        3
-      );
-    }
-    const int from = fmax(world->width / 2 - grid * 2, 0);
-    const int to = fmin(world->width / 2 + grid * 2, world->width);
-    for (int z = from; z < to; z += grid) {
-      for (int x = from; x < to; x += grid) {
-        const int dx = x + grid / 2 - centerX;
-        const int dz = z + grid / 2 - centerZ;
-        const int distance = sqrt(dx * dx + dz * dz);
-        if (
-          distance < plaza / 2 || distance > plaza
-        ) {
-          continue;
-        }
-        const int street = (rand() % 2) * 8 + 6;
-        const int floorHeight = 12 + (rand() % 4);
-        generateBuilding(
-          world,
-          voxels,
-          heightmap,
-          x + street,
-          z + street,
-          rand(),
-          grid - street * 2,
-          (floor((rand() % (world->height - floorHeight * 3 - 8)) / floorHeight) + 3) * floorHeight + 4,
-          floorHeight,
-          (1 + (rand() % 2)) * 8
+static void generateTerrainLamps(
+  const World* world,
+  unsigned char* voxels,
+  int* heightmap
+) {
+  const int grid = 32;
+  for (int z = 0; z < world->depth; z += grid) {
+    for (int x = 0; x < world->width; x += grid) {
+      const int lx = x + rand() % grid;
+      const int lz = z + rand() % grid;
+      const int y = heightmap[lz * world->width + lx];
+      const int voxel = getVoxel(world, lx, y, lz);
+      if (
+        y > seaLevel
+        && voxels[voxel] == TYPE_DIRT
+        && rand() % 2 == 0
+      ) {
+        const unsigned int color = (
+          (voxels[voxel + VOXEL_R] << 16)
+          | (voxels[voxel + VOXEL_G] << 8)
+          | voxels[voxel + VOXEL_B]
         );
-      }
-    }
-  } else if (type == 2) {
-    // Party gameplay buildings
-    generatePartyBuildings(
-      world,
-      voxels,
-      heightmap,
-      queueA
-    );
-  }
-
-  {
-    // Terrain lamps
-    const int grid = 32;
-    for (int z = 0; z < world->depth; z += grid) {
-      for (int x = 0; x < world->width; x += grid) {
-        const int lx = x + rand() % grid;
-        const int lz = z + rand() % grid;
-        const int y = heightmap[lz * world->width + lx];
-        const int voxel = getVoxel(world, lx, y, lz);
-        if (
-          y > seaLevel
-          && voxels[voxel] == TYPE_DIRT
-          && rand() % 2 == 0
-        ) {
-          generateLamp(
-            world,
-            voxels,
-            heightmap,
-            lx,
-            y + 1,
-            lz,
-            (voxels[voxel + VOXEL_R] << 16) | (voxels[voxel + VOXEL_G] << 8) | voxels[voxel + VOXEL_B]
+        for (int i = 1; i < 3; i++) {
+          setVoxel(
+            world, voxels, heightmap,
+            lx, y + i, lz,
+            i == 2 ? TYPE_LIGHT : TYPE_STONE,
+            color
           );
         }
       }
     }
   }
+}
+
+void generate(
+  const World* world,
+  int* heightmap,
+  unsigned char* voxels,
+  int* queueA,
+  int* queueB,
+  const int seed,
+  const int type
+) {
+  srand(seed);
+
+  generateTerrain(
+    world,
+    voxels,
+    heightmap,
+    world->height / (type == 2 ? 3.0f : 2.5f),
+    seed
+  );
+
+  switch (type) {
+    case 1:
+      generateDebugCity(
+        world,
+        voxels,
+        heightmap
+      );
+      break;
+    case 2:
+      generatePartyBuildings(
+        world,
+        voxels,
+        heightmap,
+        queueA
+      );
+      break;
+  }
+
+  generateTerrainLamps(
+    world,
+    voxels,
+    heightmap
+  );
 
   {
     // Trees
