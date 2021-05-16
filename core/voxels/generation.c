@@ -1,31 +1,9 @@
 #define FNL_IMPL
 #include "../../vendor/FastNoiseLite.h"
 
-static const unsigned int getColorFromNoise(unsigned char noise) {
-  noise = 255 - noise;
-  if (noise < 85) {
-    return (
-      ((255 - noise * 3) << 16)
-      | (0 << 8)
-      | (noise * 3)
-    );
-  }
-  if (noise < 170) {
-    noise -= 85;
-    return (
-      (0 << 16)
-      | ((noise * 3) << 8)
-      | (255 - noise * 3)
-    );
-  }
-  noise -= 170;
-  return (
-    ((noise * 3) << 16)
-    | ((255 - noise * 3) << 8)
-    | 0
-  );
-}
-
+// Warning: This function should only be used at the generation phase and
+//          with non-air types. Since it does not propagate the light
+//          and always updates the heightmap.
 static void setVoxel(
   const World* world,
   unsigned char* voxels,
@@ -50,6 +28,31 @@ static void setVoxel(
   if (heightmap[heightmapIndex] < y) {
     heightmap[heightmapIndex] = y;
   }
+}
+
+static const unsigned int getColorFromNoise(unsigned char noise) {
+  noise = 255 - noise;
+  if (noise < 85) {
+    return (
+      ((255 - noise * 3) << 16)
+      | (0 << 8)
+      | (noise * 3)
+    );
+  }
+  if (noise < 170) {
+    noise -= 85;
+    return (
+      (0 << 16)
+      | ((noise * 3) << 8)
+      | (255 - noise * 3)
+    );
+  }
+  noise -= 170;
+  return (
+    ((noise * 3) << 16)
+    | ((255 - noise * 3) << 8)
+    | 0
+  );
 }
 
 static void generateBillboard(
@@ -330,14 +333,17 @@ static void generatePartyBuildings(
             for (int x = streetX; x < grid - streetX; x++) {
               if (
                 (
+                  // Rooftop
                   y > bHeight - 3
                   && (
                     (x > streetX + 1 && x < grid - streetX - 2 && z > streetZ + 1 && z < grid - streetZ - 2)
                   )
                 ) || (
+                  // Floors gap
                   y % step == step -2
                   && !(x > streetX && x < grid - streetX - 1 && z > streetZ && z < grid - streetZ - 1)
                 ) || (
+                  // Main building stage pool
                   i == center
                   && y > bHeight - 7
                   && sqrt(pow((x - (grid / 2) + 0.5f) * 1.5f, 2) + pow((y - bHeight) * 3.0f, 2) + pow((z - (grid / 2) + 0.5f) * 1.5f, 2)) < 22
@@ -351,6 +357,7 @@ static void generatePartyBuildings(
                 (
                   y > bHeight - 2
                   || (
+                    // Windows
                     !(x > streetX && x < grid - streetX - 1 && z > streetZ && z < grid - streetZ - 1)
                     && (y - 1) % step < 4
                     && ((x - streetX + 6) % 8 < 4 || (z - streetZ + 6) % 8 < 4)
