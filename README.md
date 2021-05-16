@@ -1,4 +1,4 @@
-[dudes](https://dudes.gatunes.com/)
+[dudes!](https://dudes.gatunes.com/)
 ==
 
 [![screenshot](screenshot.png)](https://dudes.gatunes.com/)
