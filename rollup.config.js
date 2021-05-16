@@ -36,7 +36,6 @@ export default {
         { src: 'core/voxels.wasm', dest: 'dist' },
         { src: 'index.*', dest: 'dist' },
       ],
-      copyOnce: !process.env.ROLLUP_WATCH,
     }),
     ...(process.env.ROLLUP_WATCH ? [
       serve({
