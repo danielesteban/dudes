@@ -273,7 +273,7 @@ class Physics {
       collider.setActivationState(DISABLE_DEACTIVATION);
       collider.mesh = mesh;
       world.addRigidBody(collider, 8, -1 & ~8);
-      body.appendAnchor(i, collider, true, 0.5);
+      body.appendAnchor(i, collider, true, 1);
       colliders.push(collider);
     }
     body.colliders = colliders;
