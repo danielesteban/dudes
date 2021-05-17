@@ -36,7 +36,6 @@ class Party extends Gameplay {
           },
         },
       },
-      rainToggle: true,
       world: {
         width: 192,
         height: 128,
