@@ -23,6 +23,8 @@ class Music {
 
   dispose() {
     const { player } = this;
+    player.onerror = null;
+    player.onended = null;
     if (!player.paused) {
       player.pause();
       player.src = '';
