@@ -6,6 +6,7 @@ class Physics {
     this.constraints = [];
     this.dynamic = [];
     this.kinematic = [];
+    this.meshes = [];
     this.ropes = [];
     this.tick = {
       accumulator: 0,
@@ -50,7 +51,7 @@ class Physics {
   }
 
   addMesh(mesh, flags = {}) {
-    const { bodies, dynamic, kinematic, runtime: Ammo, world } = this;
+    const { bodies, dynamic, kinematic, meshes, runtime: Ammo, world } = this;
     const shape = this.createShape(mesh.physics);
     if (!shape) {
       return;
@@ -90,10 +91,11 @@ class Physics {
     } else if (flags.isKinematic) {
       kinematic.push(mesh);
     }
+    meshes.push(mesh);
   }
 
   removeMesh(mesh, instance) {
-    const { bodies, dynamic, runtime: Ammo, world } = this;
+    const { bodies, dynamic, meshes, runtime: Ammo, world } = this;
     if (mesh.isInstancedMesh) {
       // Not yet implemented
     } else if (mesh.isGroup || mesh.isMesh) {
@@ -107,6 +109,7 @@ class Physics {
         if (isDynamic) {
           dynamic.splice(dynamic.findIndex((m) => m === mesh), 1);
         }
+        meshes.splice(meshes.findIndex((m) => m === mesh), 1);
         if (shape instanceof Ammo.btCompoundShape) {
           for (let i = 0, l = shape.getNumChildShapes(); i < l; i += 1) {
             Ammo.destroy(shape.getChildShape(i));
@@ -514,10 +517,71 @@ class Physics {
   }
 
   reset() {
-    // ToDo?
-    // I didn't find a way to extract the full list of bodies from the btDiscreteDynamicsWorld.
-    // So... This will require to track all the added/removed bodies in JS
-    // Which I don't want to do right now for performance.
+    const {
+      bodies,
+      constraints,
+      dynamic,
+      kinematic,
+      ropes,
+      meshes,
+      runtime: Ammo,
+      world,
+    } = this;
+
+    const destroyShape = (shape) => {
+      if (shape instanceof Ammo.btCompoundShape) {
+        for (let i = 0, l = shape.getNumChildShapes(); i < l; i += 1) {
+          Ammo.destroy(shape.getChildShape(i));
+        }
+      }
+      Ammo.destroy(shape);
+    };
+
+    constraints.forEach((constraint) => {
+      world.removeConstraint(constraint);
+      Ammo.destroy(constraint);
+    });
+
+    meshes.forEach((mesh) => {
+      if (mesh.isInstancedMesh) {
+        const instances = bodies.get(mesh);
+        for (let i = 0; i < mesh.count; i += 1) {
+          const body = instances[i];
+          world.removeRigidBody(body);
+          Ammo.destroy(body.getMotionState());
+          Ammo.destroy(body);
+        }
+        bodies.delete(mesh);
+        destroyShape(instances[0].shape);
+      } else if (mesh.isGroup || mesh.isMesh) {
+        const body = bodies.get(mesh);
+        world.removeRigidBody(body);
+        Ammo.destroy(body.getMotionState());
+        Ammo.destroy(body);
+        bodies.delete(mesh);
+        destroyShape(body.shape);
+      }
+    });
+
+    ropes.forEach((mesh) => {
+      const body = bodies.get(mesh);
+      bodies.delete(mesh);
+      world.removeSoftBody(body);
+      Ammo.destroy(body);
+      for (let i = 0, l = body.colliders.length; i < l; i += 1) {
+        const collider = body.colliders[i];
+        world.removeRigidBody(collider);
+        Ammo.destroy(collider.getMotionState());
+        Ammo.destroy(collider);
+      }
+      destroyShape(body.colliderShape);
+    });
+
+    constraints.length = 0;
+    dynamic.length = 0;
+    kinematic.length = 0;
+    meshes.length = 0;
+    ropes.length = 0;
   }
 
   simulate(delta) {

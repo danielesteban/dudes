@@ -78,6 +78,12 @@ class HeliParty extends Party {
     player.move({ x: 0, y: 8, z: 24 });
     this.helicopter.voxelize(voxelizer)
       .then(() => {
+        this.helicopter.cockpit.children.forEach(({ collider }) => {
+          if (collider) {
+            collider.updateWorldMatrix(true, false);
+            physics.addMesh(collider, { isKinematic: true });
+          }
+        });
         this.hooks = [-0.625, 0.625].map((x) => {
           const anchor = new Box(0.25, 0.5, 0.25);
           anchor.position.set(x, 0.625, 1.125);
@@ -94,13 +100,6 @@ class HeliParty extends Party {
           anchor.getWorldPosition(ball.position).add({ x: 0, y: -options.length, z: 0 });
           options.origin = ball.position;
           const rope = new Rope(options);
-          this.rope = rope;
-          this.helicopter.cockpit.children.forEach(({ collider }) => {
-            if (collider) {
-              collider.updateWorldMatrix(true, false);
-              physics.addMesh(collider, { isKinematic: true });
-            }
-          });
           physics.addMesh(anchor, { isKinematic: true });
           physics.addMesh(ball, { mass: 10, angularFactor: { x: 0, y: 0, z: 0 } });
           physics.addRope(rope, options);
@@ -242,6 +241,12 @@ class HeliParty extends Party {
     }
   }
 
+  onUnload() {
+    const { helicopter, player } = this;
+    super.onUnload();
+    player.remove(helicopter);
+  }
+
   onXR() {
     this.updateView(HeliParty.views.firstPerson);
   }
@@ -323,9 +328,9 @@ class HeliParty extends Party {
   }
 
   updateLight(intensity) {
-    const { rope } = this;
+    const { hooks } = this;
     super.updateLight(intensity);
-    if (!rope) {
+    if (!hooks) {
       return;
     }
     Ball.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
