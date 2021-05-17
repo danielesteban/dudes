@@ -393,8 +393,9 @@ VoxelWorld.brushShapes = {
 
 VoxelWorld.generators = {
   default: 0,
-  debugCity: 1,
-  partyBuildings: 2,
+  menu: 1,
+  debugCity: 2,
+  partyBuildings: 3,
 };
 
 export default VoxelWorld;

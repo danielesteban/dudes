@@ -106,6 +106,7 @@ class Player extends Group {
         tertiary: false,
         view: false,
       },
+      camera,
       keyboard: new Vector3(0, 0, 0),
       pointer: new Vector2(0, 0),
       raycaster: new Raycaster(),

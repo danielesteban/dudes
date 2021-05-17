@@ -66,7 +66,7 @@ class HeliParty extends Party {
     });
 
     this.player.add(this.helicopter);
-    this.player.children[0].rotation.x = Math.PI * -0.1; // HACK!
+    this.player.desktop.camera.rotation.x = Math.PI * -0.1; // HACK!
     this.view = HeliParty.views.firstPerson;
     this.updateView(HeliParty.views.thirdPerson);
   }
@@ -74,7 +74,6 @@ class HeliParty extends Party {
   onLoad() {
     const { physics, player, voxelizer } = this;
     super.onLoad();
-    document.getElementById('welcome').classList.add('open');
     player.move({ x: 0, y: 8, z: 24 });
     this.helicopter.voxelize(voxelizer)
       .then(() => {
@@ -344,7 +343,7 @@ class HeliParty extends Party {
       return;
     }
     const { instruments } = helicopter;
-    player.children[0].position.y = view === views.firstPerson ? 1.25 : 1.6; // HACK!
+    player.desktop.camera.position.y = view === views.firstPerson ? 1.25 : 1.6; // HACK!
     if (view === views.thirdPerson) {
       instruments.scale.setScalar(0.25);
       this.add(instruments);

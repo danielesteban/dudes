@@ -138,9 +138,6 @@ class Debug extends Gameplay {
         return;
       }
       if (isXR && hand && (buttons.primary || buttons.primaryUp)) {
-        if (pointer.visible) {
-          return;
-        }
         const hit = physics.raycast(raycaster.ray.origin, raycaster.ray.direction);
         if (hit) {
           pointer.update({

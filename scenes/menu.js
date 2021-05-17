@@ -1,0 +1,105 @@
+import Gameplay from '../core/gameplay.js';
+import Billboard from '../renderables/billboard.js';
+import UI from '../renderables/ui.js';
+
+class Menu extends Gameplay {
+  constructor(scene) {
+    super(scene, {
+      lightToggle: true,
+      rainToggle: true,
+      world: {
+        width: 256,
+        height: 96,
+        depth: 256,
+        seed: 4321,
+        generator: 'menu',
+      },
+    });
+    this.router = scene.router;
+  }
+
+  onLoad() {
+    const { player, router, world } = this;
+    super.onLoad();
+
+    const billboardPos = player.position
+      .clone()
+      .divideScalar(world.scale)
+      .floor()
+      .add({ x: -10, y: 0, z: -13 });
+    const billboard = new Billboard({
+      x: billboardPos.x * world.scale,
+      y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale,
+      z: billboardPos.z * world.scale,
+    });
+    this.add(billboard);
+
+    billboardPos.x += 20;
+    this.ui = new UI({
+      width: 6,
+      height: 4,
+      textureWidth: 450,
+      textureHeight: 300,
+      buttons: [
+        { route: '/heli', title: 'Helicopter gameplay' },
+        { route: '/party', title: 'Party' },
+        { route: '/poop', title: 'Poop tech' },
+        { route: '/debug', title: 'Engine debug' },
+      ].map(({ route, title }, i) => ({
+        x: 20,
+        y: 20 + 65 * i,
+        width: 410,
+        height: 60,
+        label: title,
+        onPointer: () => router.push(route),
+      })),
+      origin: {
+        x: billboardPos.x * world.scale,
+        y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale - 2,
+        z: billboardPos.z * world.scale + 0.125,
+      },
+    });
+    this.add(this.ui);
+
+    document.getElementById('welcome').classList.add('open');
+  }
+
+  onAnimationTick({ animation, camera, isXR }) {
+    if (!this.hasLoaded) {
+      return;
+    }
+    super.onAnimationTick({ animation, camera, isXR });
+    const {
+      player,
+    } = this;
+    (isXR ? player.controllers : [player.desktop]).forEach(({
+      buttons,
+      hand,
+      pointer,
+      raycaster,
+    }) => {
+      if (isXR && hand) {
+        const hit = raycaster.intersectObject(this.ui)[0] || false;
+        if (hit) {
+          pointer.update({
+            distance: hit.distance,
+            origin: raycaster.ray.origin,
+            target: hit,
+          });
+        }
+      }
+      if (
+        isXR ? (hand && buttons.triggerDown) : (buttons.primaryDown || buttons.tertiaryDown)
+      ) {
+        const hit = isXR ? pointer.target : (
+          raycaster.intersectObject(this.ui)[0]
+        );
+        if (hit) {
+          hit.object.onPointer(hit.point);
+        }
+      }
+    });
+  }
+}
+
+export default Menu;

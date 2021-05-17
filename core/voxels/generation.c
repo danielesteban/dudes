@@ -728,19 +728,37 @@ void generate(
     world,
     voxels,
     heightmap,
-    world->height / (generator == 2 ? 3.5f : 2.5f),
+    world->height / (generator == 3 ? 3.5f : 2.5f),
     seed
   );
 
   switch (generator) {
     case 1:
+      for (int i = 0; i < 2; i += 1) {
+        const int bx = world->width / 2 + (i == 0 ? -16 : 4);
+        const int bz = world->depth / 2 - 15;
+        generateBillboard(
+          world,
+          voxels,
+          heightmap,
+          bx,
+          heightmap[bz * world->width + bx] - 1,
+          bz,
+          hsl2Rgb(frand(), 0.8f, 0.25f + frand() * 0.2f),
+          12,
+          14,
+          3
+        ); 
+      }
+      break;
+    case 2:
       generateDebugCity(
         world,
         voxels,
         heightmap
       );
       break;
-    case 2:
+    case 3:
       generatePartyBuildings(
         world,
         voxels,

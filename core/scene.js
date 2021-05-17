@@ -60,6 +60,8 @@ class Scene extends ThreeScene {
     this.background = null;
     this.fog = null;
     player.cursor.classList.add('enabled');
+    player.desktop.camera.rotation.set(0, 0, 0);
+    player.rotation.set(0, 0, 0);
     player.detachAll();
     if (physics) physics.reset();
     this.scene = new scenes[scene](this, options);

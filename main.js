@@ -21,6 +21,9 @@ router.addEventListener('update', ({ route, params }) => {
   }
   switch (route) {
     case '':
+      renderer.scene.load('Menu');
+      break;
+    case 'heli':
       renderer.scene.load('HeliParty');
       break;
     case 'debug':
