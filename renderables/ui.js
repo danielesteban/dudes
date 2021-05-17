@@ -27,7 +27,7 @@ class UI extends Mesh {
       UI.setupGeometry();
     }
     styles = {
-      background: 'rgba(0, 0, 0, .4)',
+      background: 'rgba(0, 0, 0, .2)',
       color: '#fff',
       font: '700 14px monospace',
       textAlign: 'center',

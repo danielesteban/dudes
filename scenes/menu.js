@@ -26,7 +26,7 @@ class Menu extends Gameplay {
       .clone()
       .divideScalar(world.scale)
       .floor()
-      .add({ x: -10, y: 0, z: -13 });
+      .add({ x: -10, y: 0, z: -14 });
     const billboard = new Billboard({
       x: billboardPos.x * world.scale,
       y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale,
@@ -70,6 +70,7 @@ class Menu extends Gameplay {
       },
     });
     this.add(this.ui);
+    this.ui.draw();
 
     document.getElementById('welcome').classList.add('open');
   }

@@ -736,7 +736,7 @@ void generate(
     case 1:
       for (int i = 0; i < 2; i += 1) {
         const int bx = world->width / 2 + (i == 0 ? -16 : 4);
-        const int bz = world->depth / 2 - 15;
+        const int bz = world->depth / 2 - 16;
         generateBillboard(
           world,
           voxels,
