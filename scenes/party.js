@@ -28,8 +28,8 @@ class Party extends Gameplay {
             }
             let building = Math.floor(i / dudesPerBuilding);
             if (building > 3) building += 1;
-            const x = world.width * 0.5 - 60 + Math.floor(building % 3) * 40 + 10 + Math.floor(Math.random() * 21);
-            const z = world.depth * 0.5 - 60 + Math.floor(building / 3) * 40 + 10 + Math.floor(Math.random() * 21);
+            const x = world.width * 0.5 - 60 + Math.floor(building % 3) * 40 + 10 + Math.floor(Math.random() * 22);
+            const z = world.depth * 0.5 - 60 + Math.floor(building / 3) * 40 + 10 + Math.floor(Math.random() * 22);
             const y = world.getHeight(x, z) + 1;
             return [x, y, z];
           },

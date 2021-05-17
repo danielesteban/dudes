@@ -74,7 +74,20 @@ class Dudes extends Group {
       });
       let spawn;
       if (algorithm) {
-        spawn = algorithm(i);
+        while (!spawn) {
+          spawn = algorithm(i);
+          for (let d = 0, l = this.dudes.length; d < l; d += 1) {
+            const { position } = this.dudes[d];
+            if (
+              Math.floor(position.x / world.scale) === spawn[0]
+              && Math.floor(position.y / world.scale) === spawn[1]
+              && Math.floor(position.z / world.scale) === spawn[2]
+            ) {
+              spawn = false;
+              break;
+            }
+          }
+        }
       } else {
         while (!spawn) {
           spawn = world.findTarget({
