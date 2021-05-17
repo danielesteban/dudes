@@ -19,7 +19,7 @@ class Renderer {
     };
     this.dom = dom;
 
-    this.camera = new PerspectiveCamera(70, 1, 0.1, 1000);
+    this.camera = new PerspectiveCamera(70, 1, 0.1, 2000);
     this.camera.position.y = 1.6;
 
     this.renderer = new WebGLRenderer({
