@@ -31,7 +31,7 @@ class Party extends Gameplay {
         onContact: ({ mesh, triggerMesh: dude, position, normal }) => {
           if (dude.isFalling) {
             if (mesh.isChunk && floorNormal.dot(normal) > 0) {
-              this.spawnExplosion(position, dude.marker.material.color);
+              this.spawnExplosion(position, dude.color);
               this.resetDude(dude, position);
             }
             return;

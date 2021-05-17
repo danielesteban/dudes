@@ -20,7 +20,6 @@ import {
   UniformsUtils,
   Vector3,
 } from '../vendor/three.js';
-import Marker from './marker.js';
 // import Box from './box.js';
 
 class Dude extends SkinnedMesh {
@@ -540,11 +539,11 @@ class Dude extends SkinnedMesh {
     this.action = this.idleAction;
     this.action.enabled = true;
     this.auxVector = new Vector3();
+    this.color = spec.colors.primary;
     this.lighting = {
       light: 0,
       sunlight: 0xFF,
     };
-    this.marker = new Marker(spec.colors.primary);
     this.physics = this.geometry.physics;
     this.speed = 4 * spec.stamina;
 
@@ -564,14 +563,12 @@ class Dude extends SkinnedMesh {
       actions,
       auxVector: vector,
       lighting,
-      marker,
       mixer,
       position,
       path,
       speed,
       step,
     } = this;
-    marker.animate(animation);
     mixer.update(animation.delta);
     if (this.action === actions.hit) {
       this.hitTimer -= animation.delta;
@@ -639,7 +636,10 @@ class Dude extends SkinnedMesh {
       this.step += 1;
       if (this.step >= path.length - 1) {
         delete this.path;
-        marker.visible = false;
+        if (this.marker) {
+          this.marker.visible = false;
+          delete this.marker;
+        }
         this.setAction(this.idleAction);
       }
     }
@@ -660,7 +660,10 @@ class Dude extends SkinnedMesh {
     if (path) {
       delete this.path;
       delete this.revaluate;
-      marker.visible = false;
+      if (marker) {
+        marker.visible = false;
+        delete this.marker;
+      }
     }
     this.hitTimer = 1.5;
     this.setAction(actions.hit);
@@ -680,8 +683,8 @@ class Dude extends SkinnedMesh {
     }
   }
 
-  setPath(results, scale, showMarker) {
-    const { actions, lighting, marker, position } = this;
+  setPath(results, scale, marker) {
+    const { actions, color, lighting, position } = this;
     if (this.action !== this.idleAction && this.action !== actions.walk) {
       return;
     }
@@ -712,9 +715,13 @@ class Dude extends SkinnedMesh {
     delete this.revaluate;
     this.step = 0;
     this.interpolation = 0;
-    marker.position.copy(path[path.length - 1].position);
-    marker.updateMatrix();
-    marker.visible = !!showMarker;
+    if (marker) {
+      marker.material.color.copy(color);
+      marker.position.copy(path[path.length - 1].position);
+      marker.updateMatrix();
+      marker.visible = true;
+      this.marker = marker;
+    }
     if (this.action === this.idleAction) {
       this.setAction(actions.walk);
     }

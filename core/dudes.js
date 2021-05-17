@@ -1,6 +1,7 @@
 import { Color, Group, Vector3 } from '../vendor/three.js';
 import Dude from '../renderables/dude.js';
 import Selected from '../renderables/selected.js';
+import Marker from '../renderables/marker.js';
 
 class Dudes extends Group {
   constructor({
@@ -17,6 +18,8 @@ class Dudes extends Group {
     this.onContact = onContact;
     this.searchRadius = searchRadius;
     this.selectionMarker = new Selected();
+    this.targetMarker = new Marker();
+    this.add(this.targetMarker);
     this.world = world;
     const spec = Dude.defaultSpec;
     for (let i = 0; i < count; i += 1) {
@@ -94,7 +97,6 @@ class Dudes extends Group {
       dude.maxSearchTime = 4;
       dude.updateMatrixWorld();
       this.add(dude);
-      this.add(dude.marker);
       this.dudes.push(dude);
     }
   }
@@ -110,9 +112,11 @@ class Dudes extends Group {
       searchRadius,
       selected,
       selectionMarker,
+      targetMarker,
       world,
     } = this;
     selectionMarker.animate(animation);
+    targetMarker.animate(animation);
     dudes.forEach((dude) => {
       dude.animate(animation, gazeAt);
       if (
@@ -176,7 +180,7 @@ class Dudes extends Group {
   }
 
   revaluatePaths() {
-    const { dudes, selected, world } = this;
+    const { dudes, selected, targetMarker: marker, world } = this;
     dudes.forEach((dude) => {
       if (!dude.path || dude.step >= dude.path.length - 2) {
         return;
@@ -189,7 +193,7 @@ class Dudes extends Group {
           obstacles: this.computeObstacles(dude),
         });
         if (path.length > 4) {
-          dude.setPath(path, world.scale, dude === selected);
+          dude.setPath(path, world.scale, dude === selected ? marker : false);
         } else {
           dude.onHit();
         }
@@ -200,7 +204,7 @@ class Dudes extends Group {
   select(dude) {
     const { selectionMarker: marker } = this;
     this.selected = dude;
-    marker.material.color.copy(dude.marker.material.color);
+    marker.material.color.copy(dude.color);
     marker.position.y = dude.physics[0].height + 0.5;
     marker.updateMatrix();
     marker.visible = true;
@@ -208,7 +212,7 @@ class Dudes extends Group {
   }
 
   setDestination(dude, to) {
-    const { world } = this;
+    const { targetMarker: marker, world } = this;
 
     // This search should prolly be a method in the C implementation
     const test = (x, y, z) => (
@@ -232,7 +236,7 @@ class Dudes extends Group {
         obstacles: this.computeObstacles(dude),
       });
       if (path.length > 4) {
-        dude.setPath(path, world.scale, true);
+        dude.setPath(path, world.scale, marker);
       }
     }
   }

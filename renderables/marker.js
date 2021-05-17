@@ -42,18 +42,16 @@ class Marker extends Mesh {
     });
   }
 
-  constructor(color) {
+  constructor() {
     if (!Marker.geometry) {
       Marker.setupGeometry();
     }
     if (!Marker.material) {
       Marker.setupMaterial();
     }
-    const material = Marker.material.clone();
-    material.color.copy(color);
     super(
       Marker.geometry,
-      material
+      Marker.material
     );
     this.matrixAutoUpdate = false;
     this.visible = false;
