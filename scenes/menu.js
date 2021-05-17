@@ -6,7 +6,6 @@ class Menu extends Gameplay {
   constructor(scene) {
     super(scene, {
       lightToggle: true,
-      rainToggle: true,
       world: {
         width: 256,
         height: 96,
@@ -80,6 +79,8 @@ class Menu extends Gameplay {
       },
     });
     this.add(this.ui);
+
+    this.updateRain(true);
 
     document.getElementById('welcome').classList.add('open');
   }
