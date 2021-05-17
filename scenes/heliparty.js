@@ -101,7 +101,7 @@ class HeliParty extends Party {
           options.origin = ball.position;
           const rope = new Rope(options);
           physics.addMesh(anchor, { isKinematic: true });
-          physics.addMesh(ball, { mass: 10, angularFactor: { x: 0, y: 0, z: 0 } });
+          physics.addMesh(ball, { mass: 10, angularFactor: { x: 0, y: 0, z: 0 }, disableDeactivation: true });
           physics.addRope(rope, options);
           this.add(ball);
           this.add(rope);

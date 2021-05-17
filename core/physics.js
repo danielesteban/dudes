@@ -266,11 +266,14 @@ class Physics {
     });
     const colliders = [];
     for (let i = 1; i < segments - 1; i += 1) {
-      const collider = this.createBody(colliderShape, { angularFactor: { x: 0, y: 0, z: 0 }, mass: (length * 0.5) / segments }, {
+      const collider = this.createBody(colliderShape, {
+        angularFactor: { x: 0, y: 0, z: 0 },
+        disableDeactivation: true,
+        mass: (length * 0.5) / segments,
+      }, {
         position: { x: origin.x, y: origin.y + stride * i, z: origin.z },
         rotation: { x: 0, y: 0, z: 0, w: 1 },
       });
-      collider.setActivationState(DISABLE_DEACTIVATION);
       collider.mesh = mesh;
       world.addRigidBody(collider, 8, -1);
       body.appendAnchor(i, collider, true, 1);
@@ -341,11 +344,14 @@ class Physics {
     }
     if (flags.isKinematic) {
       body.setCollisionFlags((body.getCollisionFlags() & ~CF_STATIC_OBJECT) | CF_KINEMATIC_OBJECT);
-      body.setActivationState(DISABLE_DEACTIVATION);
+      flags.disableDeactivation = true;
     }
     if (flags.angularFactor) {
       aux.vector.setValue(flags.angularFactor.x, flags.angularFactor.y, flags.angularFactor.z);
       body.setAngularFactor(aux.vector);
+    }
+    if (flags.disableDeactivation) {
+      body.setActivationState(DISABLE_DEACTIVATION);
     }
 
     body.flags = flags;
