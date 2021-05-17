@@ -21,10 +21,13 @@ router.addEventListener('update', ({ route, params }) => {
   }
   switch (route) {
     case '':
-      renderer.scene.load('Party');
+      renderer.scene.load('HeliParty');
       break;
     case 'debug':
       renderer.scene.load('Debug');
+      break;
+    case 'party':
+      renderer.scene.load('Party');
       break;
     case 'poop':
       renderer.scene.load('Poop');
