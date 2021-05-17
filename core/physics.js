@@ -272,14 +272,14 @@ class Physics {
       });
       collider.setActivationState(DISABLE_DEACTIVATION);
       collider.mesh = mesh;
-      world.addRigidBody(collider, 8, -1 & ~8);
+      world.addRigidBody(collider, 8, -1);
       body.appendAnchor(i, collider, true, 1);
       colliders.push(collider);
     }
     body.colliders = colliders;
     body.colliderShape = colliderShape;
     body.mesh = mesh;
-    world.addSoftBody(body, 8, -1 & ~8);
+    world.addSoftBody(body, 8, 0);
     bodies.set(mesh, body);
     ropes.push(mesh);
   }
