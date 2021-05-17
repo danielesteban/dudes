@@ -5,7 +5,7 @@ import Chief from '../renderables/chief.js';
 
 class Party extends Gameplay {
   constructor(scene, {
-    dudesAtParty = 16,
+    dudesAtParty = 22,
     dudesPerBuilding = 1,
     onDudesContact,
   }) {
@@ -45,7 +45,7 @@ class Party extends Gameplay {
       },
     });
     this.dayDuration = 180;
-    this.time = this.dayDuration * 0.4;
+    this.time = this.dayDuration * 0.5;
     this.player.cursor.classList.remove('enabled');
   }
 
@@ -87,12 +87,16 @@ class Party extends Gameplay {
 
     this.dudes.dudes.forEach((dude) => {
       if (dude.position.y >= this.partyOrigin.y - 1) {
+        delete dude.onContact;
         dude.rotation.y += Math.PI * (0.5 + Math.random());
         dude.minSearchTime = 5;
         dude.maxSearchTime = 20;
         dude.searchTimer = dude.maxSearchTime * Math.random();
-        delete dude.onContact;
-        dude.setIdleAction(dude.actions.dance);
+        const moves = [dude.actions.danceA, dude.actions.danceB, dude.actions.danceC];
+        dude.onDestination = () => dude.setIdleAction(
+          moves[Math.floor(Math.random() * moves.length)]
+        );
+        dude.onDestination();
         physics.getBody(dude).flags.isTrigger = false;
       }
     });

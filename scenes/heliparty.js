@@ -300,9 +300,14 @@ class HeliParty extends Party {
     physics.removeMesh(dude);
     if (dude.position.y >= partyOrigin.y - 1) {
       delete dude.onContact;
-      dude.minSearchTime = 10;
+      dude.minSearchTime = 5;
       dude.maxSearchTime = 20;
-      dude.setIdleAction(dude.actions.dance);
+      dude.searchTimer = dude.maxSearchTime * Math.random();
+      const moves = [dude.actions.danceA, dude.actions.danceB, dude.actions.danceC];
+      dude.onDestination = () => dude.setIdleAction(
+        moves[Math.floor(Math.random() * moves.length)]
+      );
+      dude.onDestination();
       instruments.setValue('chilling', instruments.getValue('chilling') - 1);
       instruments.setValue('vibing', instruments.getValue('vibing') + 1);
     }

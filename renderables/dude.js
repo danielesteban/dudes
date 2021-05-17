@@ -236,6 +236,7 @@ class Dude extends SkinnedMesh {
       (new Quaternion()).setFromEuler(new Euler(x, y, z, order)).toArray()
     );
     const times = new Float32Array([0, 1]);
+    const timesB = new Float32Array([0, 0.5, 1]);
     const { bones } = Dude;
     Dude.animations = [
       {
@@ -260,13 +261,13 @@ class Dude extends SkinnedMesh {
         duration: 1,
       },
       {
-        clip: new AnimationClip('dance', 1, [
+        clip: new AnimationClip('danceA', 1, [
           new QuaternionKeyframeTrack(
             `.bones[${bones.hip}].quaternion`,
             times,
             new Float32Array([
-              ...eulerToQuat(0, Math.PI * -0.25, 0),
-              ...eulerToQuat(0, Math.PI * 0.25, 0),
+              ...eulerToQuat(0, Math.PI * -0.125, 0),
+              ...eulerToQuat(0, Math.PI * 0.125, 0),
             ])
           ),
           new QuaternionKeyframeTrack(
@@ -291,6 +292,83 @@ class Dude extends SkinnedMesh {
             new Float32Array([
               ...eulerToQuat(Math.PI * 0.5, 0, 0),
               ...eulerToQuat(Math.PI * -0.5, 0, 0),
+            ])
+          ),
+        ]),
+        duration: 1,
+      },
+      {
+        clip: new AnimationClip('danceB', 1, [
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.hip}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(0, Math.PI * 0.25, 0),
+              ...eulerToQuat(0, Math.PI * -0.25, 0),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.head}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(0, 0, Math.PI * -0.25),
+              ...eulerToQuat(0, 0, Math.PI * 0.25),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.leftArm}].quaternion`,
+            timesB,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * -0.5, 0, Math.PI * -0.125),
+              ...eulerToQuat(Math.PI * -0.25, 0, Math.PI * 0.125),
+              ...eulerToQuat(Math.PI * -0.5, 0, Math.PI * -0.125),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.rightArm}].quaternion`,
+            timesB,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * -0.5, 0, Math.PI * 0.125),
+              ...eulerToQuat(Math.PI * -0.25, 0, Math.PI * -0.125),
+              ...eulerToQuat(Math.PI * -0.5, 0, Math.PI * 0.125),
+            ])
+          ),
+        ]),
+        duration: 1,
+      },
+      {
+        clip: new AnimationClip('danceC', 1, [
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.hip}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(0, Math.PI * -0.125, 0),
+              ...eulerToQuat(0, Math.PI * 0.125, 0),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.head}].quaternion`,
+            timesB,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * -0.25, 0, 0),
+              ...eulerToQuat(Math.PI * 0.5, 0, 0),
+              ...eulerToQuat(Math.PI * -0.25, 0, 0),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.leftArm}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * -0.75, 0, Math.PI * -0.125),
+              ...eulerToQuat(Math.PI * -0.5, 0, Math.PI * -0.125),
+            ])
+          ),
+          new QuaternionKeyframeTrack(
+            `.bones[${bones.rightArm}].quaternion`,
+            times,
+            new Float32Array([
+              ...eulerToQuat(Math.PI * -0.75, 0, Math.PI * 0.125),
+              ...eulerToQuat(Math.PI * -0.5, 0, Math.PI * 0.125),
             ])
           ),
         ]),
@@ -639,6 +717,9 @@ class Dude extends SkinnedMesh {
         if (this.marker) {
           this.marker.visible = false;
           delete this.marker;
+        }
+        if (this.onDestination) {
+          this.onDestination();
         }
         this.setAction(this.idleAction);
       }
