@@ -59,11 +59,19 @@ class Menu extends Gameplay {
         x: 20 + (buttonHeight + 5) * 0.5,
         y: 20 + (buttonHeight + 5) * (i + 0.5),
         font: '700 36px monospace',
-        color: '#666',
+        color: '#999',
         text: `${i + 1}`.padStart(2, '0'),
       })),
       styles: {
         font: '700 18px monospace',
+        button: {
+          hover: {
+            textShadow: {
+              blur: 4,
+              color: 'rgba(0, 0, 0, .4)',
+            },
+          },
+        },
       },
       origin: {
         x: billboardPos.x * world.scale,
@@ -77,39 +85,40 @@ class Menu extends Gameplay {
   }
 
   onAnimationTick({ animation, camera, isXR }) {
-    if (!this.hasLoaded) {
+    const { hasLoaded, player, ui } = this;
+    if (!hasLoaded) {
       return;
     }
     super.onAnimationTick({ animation, camera, isXR });
-    const {
-      player,
-    } = this;
     (isXR ? player.controllers : [player.desktop]).forEach(({
       buttons,
       hand,
       pointer,
       raycaster,
     }) => {
-      if (isXR && hand) {
-        const hit = raycaster.intersectObject(this.ui)[0] || false;
-        if (hit) {
-          pointer.update({
-            distance: hit.distance,
-            origin: raycaster.ray.origin,
-            target: hit,
-          });
-        }
+      if (isXR && !hand) {
+        return;
       }
-      if (
-        isXR ? (hand && buttons.triggerDown) : (buttons.primaryDown || buttons.tertiaryDown)
-      ) {
-        const hit = isXR ? pointer.target : (
-          raycaster.intersectObject(this.ui)[0]
-        );
-        if (hit) {
-          hit.object.onPointer(hit.point);
-        }
+      const hit = raycaster.intersectObject(ui)[0] || false;
+      if (!hit) {
+        ui.resetHover();
+        return;
       }
+      if (isXR) {
+        pointer.update({
+          distance: hit.distance,
+          origin: raycaster.ray.origin,
+          target: hit,
+        });
+      }
+      hit.object.onPointer({
+        enabled: isXR ? (
+          hand && buttons.triggerDown
+        ) : (
+          buttons.primaryDown || buttons.tertiaryDown
+        ),
+        point: hit.point,
+      });
     });
   }
 }

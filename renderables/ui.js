@@ -17,7 +17,6 @@ class UI extends Mesh {
     width = 1,
     height = 1,
     buttons = [],
-    graphics = [],
     labels = [],
     styles = {},
     textureWidth = 128,
@@ -44,6 +43,12 @@ class UI extends Mesh {
           color: '#777',
           ...(styles.button && styles.button.disabled ? styles.button.disabled : {}),
         },
+        hover: {
+          background: '#393',
+          border: '#000',
+          color: '#fff',
+          ...(styles.button && styles.button.hover ? styles.button.hover : {}),
+        },
       },
     };
     const renderer = document.createElement('canvas');
@@ -65,7 +70,6 @@ class UI extends Mesh {
     this.matrixAutoUpdate = false;
     this.buttons = buttons;
     this.context = renderer.getContext('2d');
-    this.graphics = graphics;
     this.labels = labels;
     this.pointer = new Vector3();
     this.renderer = renderer;
@@ -84,7 +88,7 @@ class UI extends Mesh {
     const {
       buttons,
       context: ctx,
-      graphics,
+      hover,
       labels,
       renderer,
       styles,
@@ -108,17 +112,23 @@ class UI extends Mesh {
       textOffset,
       isDisabled,
       isVisible,
-    }) => {
+    }, i) => {
       if (isVisible === false) {
         return;
       }
-      const button = isDisabled ? styles.button.disabled : styles.button;
+      let { button } = styles;
+      if (isDisabled) button = styles.button.disabled;
+      else if (hover === i) button = styles.button.hover;
       ctx.save();
       ctx.translate(x, y);
       ctx.beginPath();
       ctx.rect(0, 0, width, height);
       ctx.fillStyle = background || button.background;
       ctx.strokeStyle = border || button.border;
+      if (button.textShadow) {
+        ctx.shadowBlur = button.textShadow.blur;
+        ctx.shadowColor = button.textShadow.color;
+      }
       ctx.fill();
       ctx.stroke();
       if (label) {
@@ -132,11 +142,6 @@ class UI extends Mesh {
           height * 0.5 + (textOffset || 1)
         );
       }
-      ctx.restore();
-    });
-    graphics.forEach((draw) => {
-      ctx.save();
-      draw({ ctx, styles });
       ctx.restore();
     });
     labels.forEach(({
@@ -163,7 +168,7 @@ class UI extends Mesh {
     texture.needsUpdate = true;
   }
 
-  onPointer(point) {
+  onPointer({ enabled, point }) {
     const { buttons, pointer, renderer } = this;
     this.worldToLocal(pointer.copy(point));
     pointer.set(
@@ -189,10 +194,24 @@ class UI extends Mesh {
         && pointer.y >= y
         && pointer.y <= y + height
       ) {
-        onPointer();
-        break;
+        if (enabled) {
+          onPointer();
+        } else if (this.hover !== i) {
+          this.hover = i;
+          this.draw();
+        }
+        return;
       }
     }
+    this.resetHover();
+  }
+
+  resetHover() {
+    if (this.hover === undefined) {
+      return;
+    }
+    delete this.hover;
+    this.draw();
   }
 }
 
