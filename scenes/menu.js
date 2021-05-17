@@ -53,6 +53,16 @@ class Menu extends Gameplay {
         label: title,
         onPointer: () => router.push(route),
       })),
+      labels: [...Array(4)].map((v, i) => ({
+        x: 52.5,
+        y: 52.5 + 65 * i,
+        font: '700 36px monospace',
+        color: '#666',
+        text: `${i + 1}`.padStart(2, '0'),
+      })),
+      styles: {
+        font: '700 18px monospace',
+      },
       origin: {
         x: billboardPos.x * world.scale,
         y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale - 2,

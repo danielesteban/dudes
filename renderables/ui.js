@@ -93,11 +93,6 @@ class UI extends Mesh {
     ctx.clearRect(0, 0, renderer.width, renderer.height);
     ctx.fillStyle = styles.background;
     ctx.fillRect(0, 0, renderer.width, renderer.height);
-    graphics.forEach((draw) => {
-      ctx.save();
-      draw({ ctx, styles });
-      ctx.restore();
-    });
     buttons.forEach(({
       label,
       x,
@@ -137,6 +132,11 @@ class UI extends Mesh {
           height * 0.5 + (textOffset || 1)
         );
       }
+      ctx.restore();
+    });
+    graphics.forEach((draw) => {
+      ctx.save();
+      draw({ ctx, styles });
       ctx.restore();
     });
     labels.forEach(({
