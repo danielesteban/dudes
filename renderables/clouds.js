@@ -11,7 +11,7 @@ import {
 
 class Clouds extends Group {
   static setupGeometry() {
-    const depth = 4;
+    const depth = 8;
     const clouds = [];
     const aux = new Vector2();
     const center = new Vector2();
@@ -120,7 +120,7 @@ class Clouds extends Group {
         geometry.setAttribute('color', new BufferAttribute(new Float32Array(color), 3));
         clouds.push({
           geometry,
-          origin: new Vector3(gx * 20, Math.random() * depth * 15, gy * 20),
+          origin: new Vector3(gx * 20, Math.random() * depth * 20, gy * 20),
         });
       }
     }
