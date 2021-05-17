@@ -158,7 +158,7 @@ class Clouds extends Group {
       this.add(cloud);
     });
     this.position.set(x, 128, z);
-    this.scale.set(16, 1, 16);
+    this.scale.set(20, 1, 20);
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
   }
