@@ -88,7 +88,7 @@ class Party extends Gameplay {
     this.dudes.dudes.forEach((dude) => {
       if (dude.position.y >= this.partyOrigin.y - 1) {
         dude.rotation.y += Math.PI * (0.5 + Math.random());
-        dude.minSearchTime = 10;
+        dude.minSearchTime = 5;
         dude.maxSearchTime = 20;
         dude.searchTimer = dude.maxSearchTime * Math.random();
         delete dude.onContact;
