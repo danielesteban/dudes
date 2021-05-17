@@ -176,6 +176,9 @@ class HeliParty extends Party {
       switchView = controllerL.buttons.primaryDown || controllerR.buttons.primaryDown;
       unhookDudes = controllerL.buttons.triggerDown || controllerR.buttons.triggerDown;
     } else {
+      if (!player.desktop.isLocked) {
+        return;
+      }
       movement.copy(player.desktop.keyboard);
       switchView = player.desktop.buttons.viewDown;
       unhookDudes = player.desktop.buttons.primaryDown || player.desktop.buttons.tertiaryDown;

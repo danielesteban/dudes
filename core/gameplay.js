@@ -330,11 +330,14 @@ class Gameplay extends Group {
         }
       });
     } else {
-      const { desktop: { keyboard, speed } } = player;
+      const { desktop: { keyboard, isLocked, speed } } = player;
       if (
-        keyboard.x !== 0
-        || keyboard.y !== 0
-        || keyboard.z !== 0
+        isLocked
+        && (
+          keyboard.x !== 0
+          || keyboard.y !== 0
+          || keyboard.z !== 0
+        )
       ) {
         camera.getWorldDirection(forward);
         right.crossVectors(worldUp, forward);

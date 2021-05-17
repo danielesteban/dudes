@@ -93,10 +93,11 @@ class Menu extends Gameplay {
     (isXR ? player.controllers : [player.desktop]).forEach(({
       buttons,
       hand,
+      isLocked,
       pointer,
       raycaster,
     }) => {
-      if (isXR && !hand) {
+      if ((isXR && !hand) || (!isXR && !isLocked)) {
         return;
       }
       const hit = raycaster.intersectObject(ui)[0] || false;
