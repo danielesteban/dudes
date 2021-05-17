@@ -1,3 +1,4 @@
+import { Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
 import Music from '../core/music.js';
 import Billboard from '../renderables/billboard.js';
@@ -47,6 +48,13 @@ class Party extends Gameplay {
     this.dayDuration = 180;
     this.time = this.dayDuration * 0.5;
     this.player.cursor.classList.remove('enabled');
+    this.thumbsDown = {
+      enabled: true,
+      fingers: (1 << 1) | (1 << 2),
+      normal: new Vector3(),
+      timer: 0,
+      worldDown: new Vector3(0, -1, 0),
+    };
   }
 
   onLoad() {
@@ -115,15 +123,41 @@ class Party extends Gameplay {
   }
 
   onAnimationTick({ animation, camera, isXR }) {
-    const { chief, dayDuration, hasLoaded } = this;
+    const { chief, dayDuration, hasLoaded, music, player, thumbsDown } = this;
     if (!hasLoaded) {
       return;
     }
-    chief.animate(animation);
     this.time += animation.delta;
     const dayTime = (this.time % dayDuration) / dayDuration;
     this.targetLight = 1 - ((dayTime > 0.5 ? 1 - dayTime : dayTime) * 2);
     super.onAnimationTick({ animation, camera, isXR });
+    chief.animate(animation);
+    if (isXR && thumbsDown.enabled) {
+      const hasThumbsDown = player.controllers.reduce((hasThumbsDown, {
+        hand,
+        worldspace,
+      }) => {
+        if (!hasThumbsDown || !hand) {
+          return false;
+        }
+        if (
+          hand.state !== thumbsDown.fingers
+          || (
+            thumbsDown.normal
+              .set(0, 1, 0)
+              .applyQuaternion(worldspace.quaternion)
+              .dot(thumbsDown.worldDown)
+          ) <= 0.5
+        ) {
+          return false;
+        }
+        return true;
+      }, true);
+      if (hasThumbsDown && thumbsDown.timer <= animation.time) {
+        thumbsDown.timer = animation.time + 5;
+        music.next();
+      }
+    }
   }
 
   resumeAudio() {

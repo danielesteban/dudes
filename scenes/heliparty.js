@@ -46,6 +46,7 @@ class HeliParty extends Party {
         this.hookDude(dude, mesh);
       },
     });
+    this.thumbsDown.enabled = false;
     this.time = 0;
 
     this.helicopter = new Helicopter({
