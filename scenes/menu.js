@@ -35,27 +35,29 @@ class Menu extends Gameplay {
     this.add(billboard);
 
     billboardPos.x += 20;
+    const buttons = [
+      { route: '/heli', title: 'Helicopter gameplay' },
+      { route: '/party', title: 'Party' },
+      { route: '/poop', title: 'Poop tech' },
+      { route: '/debug', title: 'Engine debug' },
+    ];
+    const buttonHeight = (300 - 40) / buttons.length - 5;
     this.ui = new UI({
       width: 6,
       height: 4,
       textureWidth: 450,
       textureHeight: 300,
-      buttons: [
-        { route: '/heli', title: 'Helicopter gameplay' },
-        { route: '/party', title: 'Party' },
-        { route: '/poop', title: 'Poop tech' },
-        { route: '/debug', title: 'Engine debug' },
-      ].map(({ route, title }, i) => ({
+      buttons: buttons.map(({ route, title }, i) => ({
         x: 20,
-        y: 20 + 65 * i,
+        y: 20 + (buttonHeight + 5) * i,
         width: 410,
-        height: 60,
+        height: buttonHeight,
         label: title,
         onPointer: () => router.push(route),
       })),
-      labels: [...Array(4)].map((v, i) => ({
-        x: 52.5,
-        y: 52.5 + 65 * i,
+      labels: buttons.map((v, i) => ({
+        x: 20 + (buttonHeight + 5) * 0.5,
+        y: 20 + (buttonHeight + 5) * (i + 0.5),
         font: '700 36px monospace',
         color: '#666',
         text: `${i + 1}`.padStart(2, '0'),
@@ -70,7 +72,6 @@ class Menu extends Gameplay {
       },
     });
     this.add(this.ui);
-    this.ui.draw();
 
     document.getElementById('welcome').classList.add('open');
   }
