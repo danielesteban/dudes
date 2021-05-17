@@ -264,6 +264,7 @@ body.pointerlock #ribbon {
   background: rgba(0, 0, 0, .5);
   border: 1px solid #000;
   border-radius: 4px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, .5);
   width: 520px;
   padding: 1rem;
   max-height: 100vh;
