@@ -250,6 +250,8 @@ class Gameplay extends Group {
     birds.dispose();
     dudes.dispose();
     rain.dispose();
+    document.getElementById('light').classList.remove('enabled');
+    document.getElementById('rain').classList.remove('enabled');
   }
 
   onAnimationTick({ animation, camera, isXR }) {
