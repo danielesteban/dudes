@@ -90,9 +90,7 @@ class Party extends Gameplay {
         dude.rotation.y += Math.PI * (0.5 + Math.random());
         dude.minSearchTime = 10;
         dude.maxSearchTime = 20;
-        dude.searchTimer = (
-          dude.minSearchTime + (dude.maxSearchTime - dude.minSearchTime) * Math.random()
-        );
+        dude.searchTimer = dude.maxSearchTime * Math.random();
         delete dude.onContact;
         dude.setIdleAction(dude.actions.dance);
         physics.getBody(dude).flags.isTrigger = false;
