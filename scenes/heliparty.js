@@ -11,7 +11,6 @@ class HeliParty extends Party {
   constructor(scene) {
     const dudesAtParty = 6;
     const dudesPerBuilding = 3;
-    const explosionOrigin = new Vector3();
     const explosionBrush = {
       color: new Color(),
       noise: 0,
@@ -19,6 +18,7 @@ class HeliParty extends Party {
       shape: VoxelWorld.brushShapes.sphere,
       size: 3,
     };
+    const explosionOrigin = new Vector3();
     const floorNormal = new Vector3(0, -1, 0);
 
     super(scene, {
@@ -56,20 +56,17 @@ class HeliParty extends Party {
       sfx: scene.sfx,
       sound: '/sounds/engine.ogg',
     });
-    this.player.add(this.helicopter);
-
-    this.dayDuration = 120;
-    this.time = 0;
-
-    this.player.children[0].rotation.x = Math.PI * -0.1; // HACK!
-    this.view = HeliParty.views.firstPerson;
-    this.updateView(HeliParty.views.thirdPerson);
 
     this.voxelizer = new Voxelizer({
       maxWidth: 32,
       maxHeight: 32,
       maxDepth: 32,
     });
+
+    this.player.add(this.helicopter);
+    this.player.children[0].rotation.x = Math.PI * -0.1; // HACK!
+    this.view = HeliParty.views.firstPerson;
+    this.updateView(HeliParty.views.thirdPerson);
   }
 
   onLoad() {

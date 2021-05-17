@@ -5,7 +5,6 @@ import Billboard from '../renderables/billboard.js';
 
 class Debug extends Gameplay {
   constructor(scene) {
-    const explosionOrigin = new Vector3();
     const explosionBrush = {
       color: new Color(),
       noise: 0,
@@ -13,6 +12,7 @@ class Debug extends Gameplay {
       shape: VoxelWorld.brushShapes.sphere,
       size: 3,
     };
+    const explosionOrigin = new Vector3();
 
     super(scene, {
       dudes: {

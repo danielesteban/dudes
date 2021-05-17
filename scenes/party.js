@@ -44,10 +44,8 @@ class Party extends Gameplay {
         seed: Math.floor(Math.random() * 2147483647),
       },
     });
-
     this.dayDuration = 120;
     this.time = 0;
-
     this.player.cursor.classList.remove('enabled');
   }
 
