@@ -46,6 +46,7 @@ class HeliParty extends Party {
         this.hookDude(dude, mesh);
       },
     });
+    this.time = 0;
 
     this.helicopter = new Helicopter({
       instruments: [
