@@ -735,14 +735,14 @@ void generate(
   switch (generator) {
     case 1:
       for (int i = 0; i < 2; i += 1) {
-        const int bx = world->width / 2 + (i == 0 ? -16 : 4);
+        const int bx = world->width / 2 + (i == 0 ? -15 : 3);
         const int bz = world->depth / 2 - 16;
         generateBillboard(
           world,
           voxels,
           heightmap,
           bx,
-          heightmap[bz * world->width + bx] - 1,
+          heightmap[bz * world->width + bx] - i,
           bz,
           hsl2Rgb(frand(), 0.8f, 0.25f + frand() * 0.2f),
           12,

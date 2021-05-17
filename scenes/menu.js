@@ -26,7 +26,7 @@ class Menu extends Gameplay {
       .clone()
       .divideScalar(world.scale)
       .floor()
-      .add({ x: -10, y: 0, z: -14 });
+      .add({ x: -9, y: 0, z: -14 });
     const billboard = new Billboard({
       x: billboardPos.x * world.scale,
       y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale,
@@ -34,7 +34,7 @@ class Menu extends Gameplay {
     });
     this.add(billboard);
 
-    billboardPos.x += 20;
+    billboardPos.x += 18;
     const buttons = [
       { route: '/heli', title: 'Helicopter gameplay' },
       { route: '/party', title: 'Party' },
