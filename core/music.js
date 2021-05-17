@@ -17,7 +17,7 @@ class Music {
       splitter.connect(node, channel);
       return speaker;
     });
-    this.track = -1;
+    this.track = Math.floor(Math.random() * Music.tracks.length);
     this.next();
   }
 
