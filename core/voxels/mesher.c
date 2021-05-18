@@ -230,7 +230,7 @@ const int mesh(
             getLighting(voxels, light, sunlight, bw, bs, getVoxel(world, x - 1, y - 1, z + 1))
           );
         }
-        if (south != -1 && voxels[south] == 0) {
+        if (south != -1 && voxels[south] == TYPE_AIR) {
           const unsigned char light = voxels[south + VOXEL_LIGHT];
           const unsigned char sunlight = voxels[south + VOXEL_SUNLIGHT];
           const int st = getVoxel(world, x, y + 1, z + 1),

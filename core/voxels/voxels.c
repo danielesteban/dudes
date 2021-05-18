@@ -45,7 +45,7 @@ static const int getVoxel(
   const int z
 ) {
   if (
-    x < 0 || y >= world->width
+    x < 0 || x >= world->width
     || y < 0 || y >= world->height
     || z < 0 || z >= world->depth
   ) {
