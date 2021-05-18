@@ -52,7 +52,7 @@ class VoxelWorld {
     ];
     const pages = Math.ceil(layout.reduce((total, { type, size }) => (
       total + size * type.BYTES_PER_ELEMENT
-    ), 0) / 65536) + 6;
+    ), 0) / 65536) + 10;
     const memory = new WebAssembly.Memory({ initial: pages, maximum: pages });
     VoxelWorld.getWASM()
       .then((wasm) => WebAssembly.instantiate(wasm, { env: { memory } }))
