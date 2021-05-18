@@ -52,7 +52,7 @@ class VoxelWorld {
     ];
     const pages = Math.ceil(layout.reduce((total, { type, size }) => (
       total + size * type.BYTES_PER_ELEMENT
-    ), 0) / 65536) + 2;
+    ), 0) / 65536) + 6;
     const memory = new WebAssembly.Memory({ initial: pages, maximum: pages });
     VoxelWorld.getWASM()
       .then((wasm) => WebAssembly.instantiate(wasm, { env: { memory } }))
@@ -66,13 +66,12 @@ class VoxelWorld {
         this._mesh = instance.exports.mesh;
         this._propagate = instance.exports.propagate;
         this._update = instance.exports.update;
-        let address = instance.exports.__heap_base * 1;
         layout.forEach(({ id, type, size }) => {
+          const address = instance.exports.malloc(size * type.BYTES_PER_ELEMENT);
           this[id] = {
             address,
             view: new type(memory.buffer, address, size),
           };
-          address += size * type.BYTES_PER_ELEMENT;
         });
         this.world.view.set([width, height, depth, seaLevel]);
         if (onLoad) {
