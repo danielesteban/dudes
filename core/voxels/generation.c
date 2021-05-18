@@ -81,7 +81,7 @@ static void setVoxel(
   voxels[voxel + VOXEL_R] = fmin(fmax((int) ((color >> 16) & 0xFF) + (noise ? (rand() % noise) * (type == TYPE_LIGHT ? 2 : -1) : 0), 0), 0xFF);
   voxels[voxel + VOXEL_G] = fmin(fmax((int) ((color >> 8) & 0xFF) + (noise ? (rand() % noise) * (type == TYPE_LIGHT ? 2 : -1) : 0), 0), 0xFF);
   voxels[voxel + VOXEL_B] = fmin(fmax((int) (color & 0xFF) + (noise ? (rand() % noise) * (type == TYPE_LIGHT ? 2 : -1) : 0), 0), 0xFF);
-  if (y <= seaLevel) {
+  if (y < world->seaLevel) {
     voxels[voxel + VOXEL_R] /= 2;
     voxels[voxel + VOXEL_G] /= 2;
   }
@@ -502,6 +502,44 @@ static void generatePartyBuildings(
   );
 }
 
+static void generatePit(
+  const World* world,
+  unsigned char* voxels,
+  int* heightmap,
+  const int seed
+) {
+  fnl_state noise = fnlCreateState();
+  noise.seed = seed;
+  noise.fractal_type = FNL_FRACTAL_FBM;
+  const int centerX = world->width * 0.5f;
+  const int centerZ = world->depth * 0.5f;
+  const int radius = fmax(centerX, centerZ) - 1;
+  for (int z = 0; z < world->depth; z++) {
+    for (int y = 0; y < world->height; y++) {
+      for (int x = 0; x < world->width; x++) {
+        const float dx = x + 0.5f - centerX;
+        const float dz = z + 0.5f - centerZ;
+        const int distance = sqrt(dx * dx + dz * dz);
+        const float n = fabs(fnlGetNoise3D(&noise, x * 2.0f, y * 2.0f, z * 2.0f));
+        const int r = fmin(radius - sin(y / 6.0f) * (20.0f + n * 10.0f), radius);
+        if (
+          y == 0
+          || distance >= r
+          || (distance > radius * 0.1f && distance <= radius - 1 - r)
+        ) {
+          setVoxel(
+            world, voxels, heightmap,
+            x, y, z,
+            TYPE_STONE,
+            hsl2Rgb(n, 0.4f + frand() * 0.3f, 0.4f + frand() * 0.2f),
+            0x08
+          );
+        }
+      }
+    }
+  }
+}
+
 static const int branchOffsets[] = {
   0, 1, 0,
   -2, 0, 0,
@@ -539,6 +577,10 @@ static void growTree(
           voxels[n + VOXEL_R] = fmax((int) ((color >> 16) & 0xFF) / 2 - (rand() % 0x11), 0);
           voxels[n + VOXEL_G] = fmax((int) ((color >> 8) & 0xFF) / 2 - (rand() % 0x11), 0);
           voxels[n + VOXEL_B] = fmax((int) (color & 0xFF) / 2 - (rand() % 0x11), 0);
+          if (y < world->seaLevel) {
+            voxels[n + VOXEL_R] /= 2;
+            voxels[n + VOXEL_G] /= 2;
+          }
           const int heightmapIndex = (z + k) * world->width + (x + j);
           if (heightmap[heightmapIndex] < y) {
             heightmap[heightmapIndex] = y;
@@ -656,8 +698,8 @@ static void generateTerrain(
   for (int z = 0; z < world->depth; z++) {
     for (int y = 0; y < maxHeight; y++) {
       for (int x = 0; x < world->width; x++) {
-        const int dx = x - centerX;
-        const int dz = z - centerZ;
+        const float dx = x + 0.5f - centerX;
+        const float dz = z + 0.5f - centerZ;
         const int distance = sqrt(dx * dx + dz * dz);
         if (distance > radius) {
           continue;
@@ -690,7 +732,7 @@ static void generateTerrainLamps(
       const int y = heightmap[lz * world->width + lx];
       const int voxel = getVoxel(world, lx, y, lz);
       if (
-        y > seaLevel
+        y >= world->seaLevel
         && voxels[voxel] == TYPE_DIRT
         && rand() % 2 == 0
       ) {
@@ -724,6 +766,16 @@ void generate(
 ) {
   srand(seed);
 
+  if (generator == 4) {
+    generatePit(
+      world,
+      voxels,
+      heightmap,
+      seed
+    );
+    return;
+  }
+
   generateTerrain(
     world,
     voxels,
@@ -736,13 +788,13 @@ void generate(
     case 1:
       for (int i = 0; i < 2; i += 1) {
         const int bx = world->width / 2 + (i == 0 ? -15 : 3);
-        const int bz = world->depth / 2 - 16;
+        const int bz = world->depth / 2 - 15;
         generateBillboard(
           world,
           voxels,
           heightmap,
           bx,
-          heightmap[bz * world->width + bx] - i,
+          heightmap[bz * world->width + bx],
           bz,
           hsl2Rgb(frand(), 0.8f, 0.25f + frand() * 0.2f),
           12,
@@ -783,7 +835,7 @@ void generate(
         const int tz = z + rand() % grid;
         const int y = heightmap[tz * world->width + tx];
         if (
-          y >= seaLevel / 2
+          y >= world->seaLevel / 2
           && voxels[getVoxel(world, tx, y, tz)] == TYPE_DIRT
           && rand() % 2 == 0
         ) {

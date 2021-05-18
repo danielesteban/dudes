@@ -59,13 +59,15 @@ class Gameplay extends Group {
       worldUp: new Vector3(0, 1, 0),
     };
 
+    Bodies.setupMaterial();
+    Ocean.setupMaterial();
+
     this.explosions = [...Array(50)].map(() => {
       const explosion = new Explosion({ sfx: scene.sfx });
       this.add(explosion);
       return explosion;
     });
 
-    Bodies.setupMaterial();
     if (options.projectiles) {
       this.projectile = 0;
       this.projectiles = new Spheres({
@@ -152,18 +154,20 @@ class Gameplay extends Group {
     world.generate();
 
     const spawn = (new Vector3(world.width * 0.5, 0, world.depth * 0.5)).floor();
-    spawn.y = Math.max(3, world.getHeight(spawn.x, spawn.z) + 1);
+    spawn.y = Math.max(world.seaLevel, world.getHeight(spawn.x, spawn.z) + 1);
     spawn.multiplyScalar(world.scale);
     player.teleport(spawn);
 
     this.birds = new Birds({ anchor: player });
     this.clouds = new Clouds(spawn);
     const dome = new Dome(spawn);
-    const ocean = new Ocean({
-      x: spawn.x,
-      y: 3.2,
-      z: spawn.z,
-    });
+    const ocean = world.seaLevel > 0 ? (
+      new Ocean({
+        x: spawn.x,
+        y: world.seaLevel * world.scale + 0.2,
+        z: spawn.z,
+      })
+    ) : false;
     this.rain = new Rain({ anchor: player, world });
     const starfield = new Starfield(spawn);
 
@@ -188,7 +192,7 @@ class Gameplay extends Group {
     this.add(starfield);
     this.add(dome);
     this.add(this.birds);
-    this.add(ocean);
+    if (ocean) this.add(ocean);
 
     this.chunks = {
       x: world.width / world.chunkSize,
@@ -295,6 +299,7 @@ class Gameplay extends Group {
       },
       physics,
       player,
+      world,
     } = this;
     if (!hasLoaded) {
       return;
@@ -355,8 +360,9 @@ class Gameplay extends Group {
         );
       }
     }
-    if (player.position.y < 3) {
-      player.move({ x: 0, y: 3 - player.position.y, z: 0 });
+    const seaLevel = world.seaLevel * world.scale;
+    if (player.position.y < seaLevel) {
+      player.move({ x: 0, y: seaLevel - player.position.y, z: 0 });
     } else if (player.position.y > 128) {
       player.move({ x: 0, y: 128 - player.position.y, z: 0 });
     }

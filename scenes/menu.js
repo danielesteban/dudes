@@ -10,7 +10,7 @@ class Menu extends Gameplay {
         width: 256,
         height: 96,
         depth: 256,
-        seed: 4321,
+        seed: 123456,
         generator: 'menu',
       },
     });
@@ -25,7 +25,7 @@ class Menu extends Gameplay {
       .clone()
       .divideScalar(world.scale)
       .floor()
-      .add({ x: -9, y: 0, z: -14 });
+      .add({ x: -9, y: 0, z: -13 });
     const billboard = new Billboard({
       x: billboardPos.x * world.scale,
       y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale,
@@ -35,8 +35,9 @@ class Menu extends Gameplay {
 
     billboardPos.x += 18;
     const buttons = [
-      { route: '/heli', title: 'Helicopter gameplay' },
       { route: '/party', title: 'Party' },
+      { route: '/heli', title: 'Helicopter gameplay' },
+      { route: '/pit', title: 'Pit worldgen' },
       { route: '/poop', title: 'Poop tech' },
       { route: '/debug', title: 'Engine debug' },
     ];
@@ -55,7 +56,7 @@ class Menu extends Gameplay {
         onPointer: () => router.push(route),
       })),
       labels: buttons.map((v, i) => ({
-        x: 20 + (buttonHeight + 5) * 0.5,
+        x: 50,
         y: 20 + (buttonHeight + 5) * (i + 0.5),
         font: '700 36px monospace',
         color: '#999',

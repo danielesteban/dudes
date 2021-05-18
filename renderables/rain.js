@@ -123,7 +123,7 @@ class Rain extends Mesh {
       aux.x >= 0 && aux.x < world.width
       && aux.z >= 0 && aux.z < world.depth
     ) {
-      height = Math.max((world.getHeight(aux.x, aux.z) + 1) * world.scale, 3);
+      height = Math.max(world.getHeight(aux.x, aux.z) + 1, world.seaLevel) * world.scale;
     }
     targets[i] = height;
     offsets.setY(i, Math.max(anchor.position.y - radius + Math.random() * radius * 3, height));

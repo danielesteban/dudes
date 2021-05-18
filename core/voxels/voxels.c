@@ -24,6 +24,7 @@ typedef struct {
   const int width;
   const int height;
   const int depth;
+  const int seaLevel;
 } World;
 
 static const unsigned char maxLight = 16;
@@ -36,8 +37,6 @@ static const int neighbors[] = {
   0, 0, -1,
   0, 1, 0
 };
-
-static const unsigned char seaLevel = 5;
 
 static const int getVoxel(
   const World* world,

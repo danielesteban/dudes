@@ -5,9 +5,10 @@ class VoxelWorld {
     width,
     height,
     depth,
+    seaLevel = 6,
+    scale = 0.5,
     chunkSize = 16,
     generator = 'default',
-    scale = 0.5,
     seed = Math.floor(Math.random() * 2147483647),
     onContact,
     onLoad,
@@ -26,6 +27,7 @@ class VoxelWorld {
     this.seed = seed;
     this.meshes = [];
     this.onContact = onContact;
+    this.seaLevel = seaLevel;
     this.scale = scale;
     this.width = width;
     this.height = height;
@@ -45,7 +47,7 @@ class VoxelWorld {
       { id: 'queueA', type: Int32Array, size: queueSize },
       { id: 'queueB', type: Int32Array, size: queueSize },
       { id: 'queueC', type: Int32Array, size: queueSize },
-      { id: 'world', type: Int32Array, size: 3 },
+      { id: 'world', type: Int32Array, size: 4 },
       { id: 'bounds', type: Float32Array, size: 4 },
     ];
     const pages = Math.ceil(layout.reduce((total, { type, size }) => (
@@ -72,7 +74,7 @@ class VoxelWorld {
           };
           address += size * type.BYTES_PER_ELEMENT;
         });
-        this.world.view.set([width, height, depth]);
+        this.world.view.set([width, height, depth, seaLevel]);
         if (onLoad) {
           onLoad(this);
         }
@@ -396,6 +398,7 @@ VoxelWorld.generators = {
   menu: 1,
   debugCity: 2,
   partyBuildings: 3,
+  pit: 4,
 };
 
 export default VoxelWorld;

@@ -19,7 +19,7 @@ static const bool canWalk(
   const int y,
   const int z
 ) {
-  if (y <= seaLevel) {
+  if (y < context->world->seaLevel) {
     return false;
   }
   const int voxel = getVoxel(context->world, x, y, z);
@@ -167,9 +167,9 @@ const unsigned char findTarget(
   point[0] = fromX + rand() % (toX - fromX);
   point[2] = fromZ + rand() % (toZ - fromZ);
   const int groundHeight = heightmap[(point[2] * world->width) + point[0]];
-  const int fromY = fmax(originY - radius, seaLevel + 1);
+  const int fromY = fmax(originY - radius, world->seaLevel);
   const int toY = fmin(fmin(originY, groundHeight) + radius, world->height - 5);
-  if (groundHeight <= seaLevel || toY <= fromY) {
+  if (groundHeight < world->seaLevel || toY <= fromY) {
     return 0;
   }
   point[1] = fromY + rand() % (toY - fromY);
@@ -179,7 +179,7 @@ const unsigned char findTarget(
   ) {
     return 0;
   }
-  for (int y = point[1] - 1; y > seaLevel; y--) {
+  for (int y = point[1] - 1; y >= world->seaLevel; y--) {
     const int type = voxels[getVoxel(world, point[0], y, point[2])];
     if (type == TYPE_AIR || type == TYPE_TREE) {
       continue;

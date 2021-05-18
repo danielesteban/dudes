@@ -70,6 +70,9 @@ class Ocean extends InstancedMesh {
   }
 
   static animate({ time }) {
+    if (!Ocean.geometry) {
+      return;
+    }
     const { geometry, light, size } = Ocean;
     const { attributes: { color, position } } = geometry;
     let stride = 0;

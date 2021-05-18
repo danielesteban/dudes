@@ -4,7 +4,7 @@ import VoxelWorld from '../core/voxels.js';
 import Billboard from '../renderables/billboard.js';
 
 class Debug extends Gameplay {
-  constructor(scene) {
+  constructor(scene, options) {
     const explosionBrush = {
       color: new Color(),
       noise: 0,
@@ -21,6 +21,7 @@ class Debug extends Gameplay {
             contact.triggerMesh.onHit();
           }
         },
+        ...(options && options.dudes ? { ...options.dudes } : {}),
       },
       projectiles: true,
       lightToggle: true,
@@ -43,6 +44,7 @@ class Debug extends Gameplay {
             );
           }
         },
+        ...(options && options.world ? { ...options.world } : {}),
       },
     });
 
