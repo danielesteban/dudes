@@ -4,9 +4,9 @@ static const unsigned char getAO(
   const int n2,
   const int n3
 ) {
-  const unsigned char v1 = n1 != -1 && voxels[n1] != TYPE_AIR,
-                      v2 = n2 != -1 && voxels[n2] != TYPE_AIR,
-                      v3 = n3 != -1 && voxels[n3] != TYPE_AIR;
+  const bool v1 = n1 != -1 && voxels[n1] != TYPE_AIR,
+             v2 = n2 != -1 && voxels[n2] != TYPE_AIR,
+             v3 = n3 != -1 && voxels[n3] != TYPE_AIR;
   unsigned char ao = 0;
   if (v1) ao += 20;
   if (v2) ao += 20;
@@ -22,9 +22,9 @@ static const unsigned int getLighting(
   const int n2,
   const int n3
 ) {
-  const unsigned char v1 = n1 != -1 && voxels[n1] == TYPE_AIR,
-                      v2 = n2 != -1 && voxels[n2] == TYPE_AIR,
-                      v3 = n3 != -1 && voxels[n3] == TYPE_AIR;
+  const bool v1 = n1 != -1 && voxels[n1] == TYPE_AIR,
+             v2 = n2 != -1 && voxels[n2] == TYPE_AIR,
+             v3 = n3 != -1 && voxels[n3] == TYPE_AIR;
   unsigned char n = 1;
   float avgLight = light;
   float avgSunlight = sunlight;
