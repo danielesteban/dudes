@@ -44,7 +44,7 @@ class Billboard extends Mesh {
     ctx.fillText('DUDES!', renderer.width * 0.5, renderer.height * 0.5);
     ctx.fillStyle = '#bbb';
     ctx.font = '700 30px monospace';
-    ctx.fillText('v0.1.0 - dani@gatunes © 2021', renderer.width * 0.5, renderer.height * 0.825);
+    ctx.fillText('v0.1.1 - dani@gatunes © 2021', renderer.width * 0.5, renderer.height * 0.825);
     ctx.fillText('made with three.js', renderer.width * 0.5, renderer.height * 0.9);
 
     const texture = new CanvasTexture(renderer);
