@@ -384,7 +384,7 @@ class Player extends Group {
             || buttons.rightwards || buttons.rightwardsUp
           )
         ) {
-          const speed = 6;
+          const speed = 4;
           this.move(
             direction
               .set(

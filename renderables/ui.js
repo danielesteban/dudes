@@ -13,10 +13,12 @@ class UI extends Mesh {
   }
 
   constructor({
-    origin,
+    position,
+    rotation,
     width = 1,
     height = 1,
     buttons = [],
+    graphics = [],
     labels = [],
     styles = {},
     textureWidth = 128,
@@ -64,12 +66,18 @@ class UI extends Mesh {
         transparent: true,
       })
     );
-    this.position.set(origin.x, origin.y, origin.z);
+    if (position) {
+      this.position.copy(position);
+    }
+    if (rotation) {
+      this.rotation.copy(rotation);
+    }
     this.scale.set(width, height, 1);
     this.updateMatrixWorld();
     this.matrixAutoUpdate = false;
     this.buttons = buttons;
     this.context = renderer.getContext('2d');
+    this.graphics = graphics;
     this.labels = labels;
     this.pointer = new Vector3();
     this.renderer = renderer;
@@ -88,6 +96,7 @@ class UI extends Mesh {
     const {
       buttons,
       context: ctx,
+      graphics,
       hover,
       labels,
       renderer,
@@ -142,6 +151,11 @@ class UI extends Mesh {
           height * 0.5 + (textOffset || 1)
         );
       }
+      ctx.restore();
+    });
+    graphics.forEach((draw) => {
+      ctx.save();
+      draw({ ctx, styles });
       ctx.restore();
     });
     labels.forEach(({

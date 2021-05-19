@@ -43,6 +43,11 @@ class Menu extends Gameplay {
     ];
     const buttonHeight = (300 - 40) / buttons.length - 5;
     this.ui = new UI({
+      position: {
+        x: billboardPos.x * world.scale,
+        y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale - 2,
+        z: billboardPos.z * world.scale + 0.125,
+      },
       width: 6,
       height: 4,
       textureWidth: 450,
@@ -72,11 +77,6 @@ class Menu extends Gameplay {
             },
           },
         },
-      },
-      origin: {
-        x: billboardPos.x * world.scale,
-        y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale - 2,
-        z: billboardPos.z * world.scale + 0.125,
       },
     });
     this.add(this.ui);
@@ -111,7 +111,6 @@ class Menu extends Gameplay {
         pointer.update({
           distance: hit.distance,
           origin: raycaster.ray.origin,
-          target: hit,
         });
       }
       hit.object.onPointer({

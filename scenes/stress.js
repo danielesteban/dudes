@@ -1,74 +1,28 @@
-import { Color, FogExp2, Group, Vector3 } from '../vendor/three.js';
+import { Vector3 } from '../vendor/three.js';
 import VoxelWorld from '../core/voxels.js';
-import VoxelChunk from '../renderables/chunk.js';
+import Model from './model.js';
 
-class Stress extends Group {
+class Stress extends Model {
   constructor(scene) {
-    super();
-    this.matrixAutoUpdate = false;
+    super(scene);
 
-    this.background = scene.background = new Color(0);
-    this.fog = scene.fog = new FogExp2(0, 0.005);
-    this.player = scene.player;
-
-    this.brush = {
-      color: new Color(),
-      noise: 0.25,
-      type: 1,
-      shape: VoxelWorld.brushShapes.sphere,
-      size: 3,
-    };
     this.cursors = [...Array(4)].map(() => ({
       position: new Vector3(),
       direction: new Vector3(),
     }));
-    this.light = 0;
-    this.targetLight = 1;
     this.voxel = new Vector3();
     this.timer = 0;
 
-    this.world = new VoxelWorld({
-      width: 64,
-      height: 64,
-      depth: 64,
-      chunkSize: 64,
-      onLoad: this.onLoad.bind(this),
-    });
-
-    scene.player.teleport({ x: -32, y: 32, z: 32 });
+    scene.player.teleport({ x: -64, y: 64, z: 64 });
     scene.player.desktop.camera.rotation.set(Math.PI * -0.15, Math.PI * -0.25, 0, 'YXZ');
   }
 
-  onLoad() {
-    const { world } = this;
-
-    this.mesh = new VoxelChunk({
-      x: world.width * -0.5,
-      y: 0,
-      z: world.depth * -0.5,
-      geometry: world.mesh(0, 0, 0),
-      scale: this.world.scale,
-    });
-    this.add(this.mesh);
-
-    const loading = document.getElementById('loading');
-    if (loading) {
-      loading.parentNode.removeChild(loading);
-    }
-
-    this.hasLoaded = true;
-  }
-
-  onAnimationTick({ animation }) {
-    const { brush, cursors, mesh, hasLoaded, voxel, world, light, targetLight } = this;
+  onAnimationTick({ animation, camera, isXR }) {
+    const { brush, cursors, mesh, hasLoaded, voxel, world } = this;
     if (!hasLoaded) {
       return;
     }
-    if (light !== targetLight) {
-      this.updateLight(
-        light + Math.min(Math.max(targetLight - light, -animation.delta), animation.delta)
-      );
-    }
+    super.onAnimationTick({ animation, camera, isXR });
 
     this.timer -= animation.delta;
     if (this.timer <= 0) {
@@ -81,7 +35,7 @@ class Stress extends Group {
           && z !== 0
           && z !== world.width - 1
         ) ? {
-          type: 1,
+          type: 3,
           r: 0xFF - Math.random() * 0xAA,
           g: 0xFF - Math.random() * 0xAA,
           b: 0xFF - Math.random() * 0xAA,
@@ -131,25 +85,6 @@ class Stress extends Group {
     });
 
     mesh.update(world.mesh(0, 0, 0));
-  }
-
-  onLocomotionTick({ animation, camera, isXR }) {
-    const { hasLoaded, player } = this;
-    if (!hasLoaded) {
-      return;
-    }
-    player.onLocomotionTick({ animation, camera, isXR });
-  }
-
-  updateLight(intensity) {
-    const { background, fog } = this;
-    const { material: { uniforms: voxels } } = VoxelChunk;
-    this.light = intensity;
-    background.setHex(0x226699).multiplyScalar(Math.max(intensity, 0.05));
-    fog.color.copy(background);
-    voxels.ambientIntensity.value = Math.max(Math.min(intensity, 0.7) / 0.7, 0.5) * 0.1;
-    voxels.lightIntensity.value = Math.min(1.0 - Math.min(intensity, 0.5) * 2, 0.7);
-    voxels.sunlightIntensity.value = Math.min(intensity, 0.7);
   }
 }
 
