@@ -11,13 +11,6 @@ class Stress extends Group {
     this.fog = scene.fog = new FogExp2(0, 0.005);
     this.player = scene.player;
 
-    this.locomotion = {
-      direction: new Vector3(),
-      forward: new Vector3(),
-      right: new Vector3(),
-      worldUp: new Vector3(0, 1, 0),
-    };
-
     this.brush = {
       color: new Color(),
       noise: 0.25,
@@ -29,6 +22,8 @@ class Stress extends Group {
       position: new Vector3(),
       direction: new Vector3(),
     }));
+    this.light = 0;
+    this.targetLight = 1;
     this.voxel = new Vector3();
     this.timer = 0;
 
@@ -41,7 +36,7 @@ class Stress extends Group {
     });
 
     scene.player.teleport({ x: -32, y: 32, z: 32 });
-    scene.player.desktop.camera.rotation.set(Math.PI * -0.125, Math.PI * -0.25, 0, 'YXZ');
+    scene.player.desktop.camera.rotation.set(Math.PI * -0.15, Math.PI * -0.25, 0, 'YXZ');
   }
 
   onLoad() {
@@ -56,8 +51,6 @@ class Stress extends Group {
     });
     this.add(this.mesh);
 
-    this.updateLight(1);
-
     const loading = document.getElementById('loading');
     if (loading) {
       loading.parentNode.removeChild(loading);
@@ -67,9 +60,14 @@ class Stress extends Group {
   }
 
   onAnimationTick({ animation }) {
-    const { brush, cursors, mesh, hasLoaded, voxel, world } = this;
+    const { brush, cursors, mesh, hasLoaded, voxel, world, light, targetLight } = this;
     if (!hasLoaded) {
       return;
+    }
+    if (light !== targetLight) {
+      this.updateLight(
+        light + Math.min(Math.max(targetLight - light, -animation.delta), animation.delta)
+      );
     }
 
     this.timer -= animation.delta;
@@ -136,73 +134,11 @@ class Stress extends Group {
   }
 
   onLocomotionTick({ animation, camera, isXR }) {
-    const {
-      hasLoaded,
-      locomotion: {
-        direction,
-        forward,
-        right,
-        worldUp,
-      },
-      player,
-    } = this;
+    const { hasLoaded, player } = this;
     if (!hasLoaded) {
       return;
     }
-    if (isXR) {
-      player.controllers.forEach(({ buttons, hand, worldspace }) => {
-        if (
-          hand && hand.handedness === 'left'
-          && (buttons.leftwardsDown || buttons.rightwardsDown)
-        ) {
-          player.rotate(worldUp, Math.PI * 0.25 * (buttons.leftwardsDown ? 1 : -1));
-        }
-        if (
-          hand && hand.handedness === 'right'
-          && (
-            buttons.backwards || buttons.backwardsUp
-            || buttons.forwards || buttons.forwardsUp
-            || buttons.leftwards || buttons.leftwardsUp
-            || buttons.rightwards || buttons.rightwardsUp
-          )
-        ) {
-          const speed = 6;
-          player.move(
-            direction
-              .set(
-                (buttons.leftwards || buttons.leftwardsUp) ? -1 : ((buttons.rightwards || buttons.rightwardsUp) ? 1 : 0),
-                0,
-                (buttons.backwards || buttons.backwardsUp) ? 1 : ((buttons.forwards || buttons.forwardsUp) ? -1 : 0),
-              )
-              .normalize()
-              .applyQuaternion(worldspace.quaternion)
-              .multiplyScalar(animation.delta * speed)
-          );
-        }
-      });
-    } else {
-      const { desktop: { keyboard, isLocked, speed } } = player;
-      if (
-        isLocked
-        && (
-          keyboard.x !== 0
-          || keyboard.y !== 0
-          || keyboard.z !== 0
-        )
-      ) {
-        camera.getWorldDirection(forward);
-        right.crossVectors(worldUp, forward);
-        player.move(
-          direction
-            .set(0, 0, 0)
-            .addScaledVector(right, -keyboard.x)
-            .addScaledVector(worldUp, keyboard.y)
-            .addScaledVector(forward, keyboard.z)
-            .normalize()
-            .multiplyScalar(animation.delta * speed)
-        );
-      }
-    }
+    player.onLocomotionTick({ animation, camera, isXR });
   }
 
   updateLight(intensity) {

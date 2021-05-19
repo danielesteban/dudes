@@ -52,12 +52,6 @@ class Gameplay extends Group {
     this.dudesOptions = options.dudes;
     this.light = 0;
     this.targetLight = 1;
-    this.locomotion = {
-      direction: new Vector3(),
-      forward: new Vector3(),
-      right: new Vector3(),
-      worldUp: new Vector3(0, 1, 0),
-    };
 
     Bodies.setupMaterial();
     Ocean.setupMaterial();
@@ -291,12 +285,6 @@ class Gameplay extends Group {
   onLocomotionTick({ animation, camera, isXR }) {
     const {
       hasLoaded,
-      locomotion: {
-        direction,
-        forward,
-        right,
-        worldUp,
-      },
       physics,
       player,
       world,
@@ -304,62 +292,7 @@ class Gameplay extends Group {
     if (!hasLoaded) {
       return;
     }
-    if (isXR) {
-      player.controllers.forEach(({ buttons, hand, worldspace }) => {
-        if (
-          hand && hand.handedness === 'left'
-          && (buttons.leftwardsDown || buttons.rightwardsDown)
-        ) {
-          player.rotate(worldUp, Math.PI * 0.25 * (buttons.leftwardsDown ? 1 : -1));
-        }
-        if (
-          hand && hand.handedness === 'right'
-          && (
-            buttons.backwards || buttons.backwardsUp
-            || buttons.forwards || buttons.forwardsUp
-            || buttons.leftwards || buttons.leftwardsUp
-            || buttons.rightwards || buttons.rightwardsUp
-          )
-        ) {
-          const speed = 6;
-          player.move(
-            direction
-              .set(
-                (buttons.leftwards || buttons.leftwardsUp) ? -1 : ((buttons.rightwards || buttons.rightwardsUp) ? 1 : 0),
-                0,
-                (buttons.backwards || buttons.backwardsUp) ? 1 : ((buttons.forwards || buttons.forwardsUp) ? -1 : 0),
-              )
-              .normalize()
-              .applyQuaternion(worldspace.quaternion)
-              .multiplyScalar(animation.delta * speed),
-            physics
-          );
-        }
-      });
-    } else {
-      const { desktop: { keyboard, isLocked, speed } } = player;
-      if (
-        isLocked
-        && (
-          keyboard.x !== 0
-          || keyboard.y !== 0
-          || keyboard.z !== 0
-        )
-      ) {
-        camera.getWorldDirection(forward);
-        right.crossVectors(worldUp, forward);
-        player.move(
-          direction
-            .set(0, 0, 0)
-            .addScaledVector(right, -keyboard.x)
-            .addScaledVector(worldUp, keyboard.y)
-            .addScaledVector(forward, keyboard.z)
-            .normalize()
-            .multiplyScalar(animation.delta * speed),
-          physics
-        );
-      }
-    }
+    player.onLocomotionTick({ animation, camera, isXR, physics });
     const seaLevel = world.seaLevel * world.scale;
     if (player.position.y < seaLevel) {
       player.move({ x: 0, y: seaLevel - player.position.y, z: 0 });

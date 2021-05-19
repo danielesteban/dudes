@@ -145,12 +145,6 @@ class HeliParty extends Party {
     const {
       hasLoaded,
       helicopter,
-      locomotion: {
-        direction,
-        forward,
-        right,
-        worldUp,
-      },
       physics,
       player,
       view,
@@ -158,8 +152,13 @@ class HeliParty extends Party {
     if (!hasLoaded || !helicopter.cockpit) {
       return;
     }
-
     const { pivot, movement } = helicopter.aux;
+    const {
+      vectorA: direction,
+      vectorB: right,
+      vectorC: forward,
+      worldUp,
+    } = player.aux;
     let switchView;
     let unhookDudes;
     if (isXR) {

@@ -27,6 +27,8 @@ class Player extends Group {
       matrixB: new Matrix4(),
       vectorA: new Vector3(),
       vectorB: new Vector3(),
+      vectorC: new Vector3(),
+      worldUp: new Vector3(0, 1, 0),
     };
     this.cursor = dom.cursor;
     this.head = new AudioListener();
@@ -352,6 +354,75 @@ class Player extends Group {
       raycaster.setFromCamera(center, camera);
     }
     camera.matrixWorld.decompose(head.position, head.quaternion, vector);
+  }
+
+  onLocomotionTick({ animation, camera, isXR, physics }) {
+    const {
+      aux: {
+        vectorA: direction,
+        vectorB: forward,
+        vectorC: right,
+        worldUp,
+      },
+      controllers,
+    } = this;
+
+    if (isXR) {
+      controllers.forEach(({ buttons, hand, worldspace }) => {
+        if (
+          hand && hand.handedness === 'left'
+          && (buttons.leftwardsDown || buttons.rightwardsDown)
+        ) {
+          this.rotate(worldUp, Math.PI * 0.25 * (buttons.leftwardsDown ? 1 : -1));
+        }
+        if (
+          hand && hand.handedness === 'right'
+          && (
+            buttons.backwards || buttons.backwardsUp
+            || buttons.forwards || buttons.forwardsUp
+            || buttons.leftwards || buttons.leftwardsUp
+            || buttons.rightwards || buttons.rightwardsUp
+          )
+        ) {
+          const speed = 6;
+          this.move(
+            direction
+              .set(
+                (buttons.leftwards || buttons.leftwardsUp) ? -1 : ((buttons.rightwards || buttons.rightwardsUp) ? 1 : 0),
+                0,
+                (buttons.backwards || buttons.backwardsUp) ? 1 : ((buttons.forwards || buttons.forwardsUp) ? -1 : 0),
+              )
+              .normalize()
+              .applyQuaternion(worldspace.quaternion)
+              .multiplyScalar(animation.delta * speed),
+            physics
+          );
+        }
+      });
+    } else {
+      const { desktop: { keyboard, isLocked, speed } } = this;
+      if (
+        isLocked
+        && (
+          keyboard.x !== 0
+          || keyboard.y !== 0
+          || keyboard.z !== 0
+        )
+      ) {
+        camera.getWorldDirection(forward);
+        right.crossVectors(worldUp, forward);
+        this.move(
+          direction
+            .set(0, 0, 0)
+            .addScaledVector(right, -keyboard.x)
+            .addScaledVector(worldUp, keyboard.y)
+            .addScaledVector(forward, keyboard.z)
+            .normalize()
+            .multiplyScalar(animation.delta * speed),
+          physics
+        );
+      }
+    }
   }
 
   onBlur() {
