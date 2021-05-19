@@ -53,7 +53,7 @@ class VoxelChunk extends Mesh {
       VoxelChunk.setupMaterial();
     }
     super(new BufferGeometry(), VoxelChunk.material);
-    if (geometry.indices.length > 0) {
+    if (geometry && geometry.indices.length > 0) {
       this.update(geometry);
     }
     this.position.set(x, y, z).multiplyScalar(scale);

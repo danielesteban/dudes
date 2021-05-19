@@ -38,6 +38,9 @@ router.addEventListener('update', ({ route, params }) => {
     case 'poop':
       renderer.scene.load('Poop');
       break;
+    case 'stress':
+      renderer.scene.load('Stress');
+      break;
     default:
       router.replace('/');
   }
