@@ -35,6 +35,7 @@ class Menu extends Gameplay {
 
     billboardPos.x += 18;
     const buttons = [
+      { route: '/sculpt', title: 'DudeBrush VR' },
       { route: '/party', title: 'Party' },
       { route: '/heli', title: 'Helicopter gameplay' },
       { route: '/pit', title: 'Pit worldgen' },
