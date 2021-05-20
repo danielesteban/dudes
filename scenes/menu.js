@@ -114,10 +114,10 @@ class Menu extends Gameplay {
         });
       }
       hit.object.onPointer({
-        enabled: isXR ? (
-          hand && buttons.triggerDown
+        isHover: isXR ? (
+          !buttons.triggerDown
         ) : (
-          buttons.primaryDown || buttons.tertiaryDown
+          !buttons.primaryDown && !buttons.tertiaryDown
         ),
         point: hit.point,
       });

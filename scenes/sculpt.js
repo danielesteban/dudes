@@ -155,7 +155,6 @@ class Sculpt extends Gameplay {
           });
           if (buttons.triggerDown) {
             hit.object.onPointer({
-              enabled: true,
               point: hit.point,
             });
           }

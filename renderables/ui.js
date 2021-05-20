@@ -248,7 +248,7 @@ class UI extends Mesh {
     texture.needsUpdate = true;
   }
 
-  onPointer({ enabled, point }) {
+  onPointer({ isHover, point }) {
     const {
       buttons,
       pointer,
@@ -278,7 +278,7 @@ class UI extends Mesh {
         && pointer.y >= y
         && pointer.y <= y + height
       ) {
-        if (enabled) {
+        if (!isHover) {
           onPointer();
         } else if (this.hover !== i) {
           this.hover = i;
@@ -288,7 +288,7 @@ class UI extends Mesh {
       }
     }
     this.resetHover();
-    if (!enabled) {
+    if (isHover) {
       return;
     }
     for (let i = sliders.length - 1; i >= 0; i -= 1) {
