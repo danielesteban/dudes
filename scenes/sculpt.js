@@ -30,6 +30,7 @@ class Sculpt extends Gameplay {
         seaLevel: 0,
       },
     });
+    this.lights.light.target = 1;
 
     this.voxel = new Vector3();
     this.lastVoxels = [new Vector3(), new Vector3()];
