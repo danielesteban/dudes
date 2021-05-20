@@ -166,16 +166,18 @@ class Sculpt extends Gameplay {
         lastVoxels[i].set(-1, -1, -1);
       }
       if (buttons.grip || buttons.trigger) {
-        voxel
-          .copy(raycaster.ray.origin)
-          .divideScalar(world.scale)
-          .floor();
         if (!voxel.equals(lastVoxels[i])) {
           lastVoxels[i].copy(voxel);
-          this.updateVoxel({
-            ...brush,
-            type: buttons.trigger ? brush.type : 0,
-          }, voxel);
+          this.updateVoxel(
+            {
+              ...brush,
+              type: buttons.trigger ? brush.type : 0,
+            },
+            voxel
+              .copy(raycaster.ray.origin)
+              .divideScalar(world.scale)
+              .floor()
+          );
         }
       }
     });
@@ -194,35 +196,11 @@ class Sculpt extends Gameplay {
   }
 
   load(file) {
-    const { chunks, world } = this;
+    const { world } = this;
     const reader = new FileReader();
     reader.onload = () => {
       world.load(new Uint8Array(reader.result))
-        .then(() => {
-          for (let z = 0, i = 0; z < chunks.z; z += 1) {
-            for (let y = 0; y < chunks.y; y += 1) {
-              for (let x = 0; x < chunks.x; x += 1, i += 1) {
-                const mesh = world.meshes[i];
-                if (mesh.collider) {
-                  mesh.collider.physics.length = 0;
-                }
-                const geometry = world.mesh(x, y, z);
-                if (geometry.indices.length > 0) {
-                  mesh.update(geometry);
-                  if (mesh.collider) {
-                    this.updateCollider(mesh.collider, world.colliders(x, y, z));
-                  }
-                  if (!mesh.parent) world.chunks.add(mesh);
-                } else if (mesh.parent) {
-                  world.chunks.remove(mesh);
-                  if (mesh.collider) {
-                    this.updateCollider(mesh.collider, []);
-                  }
-                }
-              }
-            }
-          }
-        })
+        .then(() => this.remesh())
         .catch((e) => console.error(e));
     };
     reader.readAsArrayBuffer(file);

@@ -327,6 +327,33 @@ class Gameplay extends Group {
     }
   }
 
+  remesh() {
+    const { chunks, world } = this;
+    for (let z = 0, i = 0; z < chunks.z; z += 1) {
+      for (let y = 0; y < chunks.y; y += 1) {
+        for (let x = 0; x < chunks.x; x += 1, i += 1) {
+          const mesh = world.meshes[i];
+          if (mesh.collider) {
+            mesh.collider.physics.length = 0;
+          }
+          const geometry = world.mesh(x, y, z);
+          if (geometry.indices.length > 0) {
+            mesh.update(geometry);
+            if (mesh.collider) {
+              this.updateCollider(mesh.collider, world.colliders(x, y, z));
+            }
+            if (!mesh.parent) world.chunks.add(mesh);
+          } else if (mesh.parent) {
+            world.chunks.remove(mesh);
+            if (mesh.collider) {
+              this.updateCollider(mesh.collider, []);
+            }
+          }
+        }
+      }
+    }
+  }
+
   resumeAudio() {
     const { ambient } = this;
     ambient.resume();
