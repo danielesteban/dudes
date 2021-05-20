@@ -1,11 +1,14 @@
-import { Color, Vector3 } from '../vendor/three.js';
+import { Color, FogExp2, Group, Vector3 } from '../vendor/three.js';
 import VoxelWorld from '../core/voxels.js';
 import VoxelChunk from '../renderables/chunk.js';
-import Model from './model.js';
 
-class Stress extends Model {
+class Stress extends Group {
   constructor(scene) {
     super(scene);
+
+    this.background = scene.background = new Color(0);
+    this.fog = scene.fog = new FogExp2(0, 0.005);
+    this.player = scene.player;
 
     this.brush = {
       color: new Color(),
@@ -21,6 +24,15 @@ class Stress extends Model {
     this.voxel = new Vector3();
     this.timer = 0;
 
+    this.world = new VoxelWorld({
+      width: 64,
+      height: 64,
+      depth: 64,
+      chunkSize: 64,
+      scale: 1,
+      onLoad: this.onLoad.bind(this),
+    });
+
     {
       VoxelChunk.setupMaterial();
       const intensity = 1;
@@ -35,10 +47,26 @@ class Stress extends Model {
   }
 
   onLoad() {
-    const { player } = this;
-    super.onLoad();
+    const { player, world } = this;
     player.teleport({ x: -64, y: 64, z: 64 });
     player.desktop.camera.rotation.set(Math.PI * -0.15, Math.PI * -0.25, 0, 'YXZ');
+
+    this.mesh = new VoxelChunk({
+      x: world.width * -0.5,
+      y: 0,
+      z: world.depth * -0.5,
+      geometry: world.mesh(0, 0, 0),
+      scale: this.world.scale,
+    });
+    world.chunks.add(this.mesh);
+    this.add(world.chunks);
+
+    const loading = document.getElementById('loading');
+    if (loading) {
+      loading.parentNode.removeChild(loading);
+    }
+
+    this.hasLoaded = true;
   }
 
   onAnimationTick({ animation, camera, isXR }) {
@@ -46,7 +74,6 @@ class Stress extends Model {
     if (!hasLoaded) {
       return;
     }
-    super.onAnimationTick({ animation, camera, isXR });
 
     this.timer -= animation.delta;
     if (this.timer <= 0) {
@@ -109,6 +136,17 @@ class Stress extends Model {
     });
 
     mesh.update(world.mesh(0, 0, 0));
+  }
+
+  onLocomotionTick({ animation, camera, isXR }) {
+    const { hasLoaded, player } = this;
+    if (!hasLoaded) {
+      return;
+    }
+    player.onLocomotionTick({ animation, camera, isXR });
+    if (player.position.y < 0) {
+      player.move({ x: 0, y: -player.position.y, z: 0 });
+    }
   }
 }
 
