@@ -48,6 +48,14 @@ class Debug extends Gameplay {
       },
     });
 
+    this.brush = {
+      color: new Color(),
+      noise: 0.15,
+      type: 3,
+      shape: VoxelWorld.brushShapes.box,
+      size: 1,
+    };
+
     Promise.all([...Array(5)].map(() => (
       scene.sfx.load('/sounds/plop.ogg')
         .then((sound) => {
@@ -78,6 +86,7 @@ class Debug extends Gameplay {
 
   onAnimationTick({ animation, camera, isXR }) {
     const {
+      brush,
       dudes,
       hasLoaded,
       physics,
@@ -175,11 +184,11 @@ class Debug extends Gameplay {
             sound.play();
           }
         }
-        world.brush.color.setRGB(Math.random(), Math.random(), Math.random());
+        brush.color.setRGB(Math.random(), Math.random(), Math.random());
         this.updateVoxel(
           {
-            ...world.brush,
-            ...(isRemoving ? { type: 0 } : {}),
+            ...brush,
+            type: isRemoving ? 0 : brush.type,
           },
           hit.point
             .divideScalar(world.scale)

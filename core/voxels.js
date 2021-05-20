@@ -1,4 +1,4 @@
-import { Color, Group } from '../vendor/three.js';
+import { Group } from '../vendor/three.js';
 
 class VoxelWorld {
   constructor({
@@ -13,13 +13,6 @@ class VoxelWorld {
     onContact,
     onLoad,
   }) {
-    this.brush = {
-      color: new Color(0xAAAAAA),
-      noise: 0.15,
-      shape: VoxelWorld.brushShapes.box,
-      size: 1,
-      type: 3,
-    };
     this.chunks = new Group();
     this.chunks.matrixAutoUpdate = false;
     this.chunkSize = chunkSize;
