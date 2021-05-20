@@ -29,9 +29,14 @@ class Stress extends Group {
       height: 64,
       depth: 64,
       chunkSize: 64,
-      scale: 1,
+      generator: 'blank',
+      scale: 0.5,
+      seaLevel: 0,
       onLoad: this.onLoad.bind(this),
     });
+
+    this.player.teleport({ x: -32, y: 32, z: 32 });
+    this.player.desktop.camera.rotation.set(Math.PI * -0.15, Math.PI * -0.25, 0, 'YXZ');
 
     {
       VoxelChunk.setupMaterial();
@@ -47,9 +52,7 @@ class Stress extends Group {
   }
 
   onLoad() {
-    const { player, world } = this;
-    player.teleport({ x: -64, y: 64, z: 64 });
-    player.desktop.camera.rotation.set(Math.PI * -0.15, Math.PI * -0.25, 0, 'YXZ');
+    const { world } = this;
 
     this.mesh = new VoxelChunk({
       x: world.width * -0.5,
@@ -78,20 +81,7 @@ class Stress extends Group {
     this.timer -= animation.delta;
     if (this.timer <= 0) {
       this.timer = 20;
-      world.generateModel((x, y, z) => (
-        (
-          y === 0
-          && x !== 0
-          && x !== world.width - 1
-          && z !== 0
-          && z !== world.width - 1
-        ) ? {
-          type: 3,
-          r: 0xFF - Math.random() * 0xAA,
-          g: 0xFF - Math.random() * 0xAA,
-          b: 0xFF - Math.random() * 0xAA,
-        } : false
-      ));
+      world.generate();
       cursors.forEach(({ position, direction }) => {
         position.set(
           brush.size + Math.random() * (world.width - brush.size - 1),

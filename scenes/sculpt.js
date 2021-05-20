@@ -69,30 +69,22 @@ class Sculpt extends Group {
       height: 64,
       depth: 64,
       chunkSize: 64,
+      generator: 'blank',
       scale: 1,
+      seaLevel: 0,
       onLoad: this.onLoad.bind(this),
     });
     this.world.chunks.position.set(0, -0.03125, 0);
     this.world.chunks.scale.multiplyScalar(0.03125);
     this.world.chunks.updateMatrix();
+
+    this.player.teleport({ x: 0, y: 0, z: 0 });
   }
 
   onLoad() {
     const { world } = this;
-    world.generateModel((x, y, z) => (
-      (
-        y === 0
-        && x !== 0
-        && x !== world.width - 1
-        && z !== 0
-        && z !== world.width - 1
-      ) ? {
-        type: 1,
-        r: 0xFF - Math.random() * 0xAA,
-        g: 0xFF - Math.random() * 0xAA,
-        b: 0xFF - Math.random() * 0xAA,
-      } : false
-    ));
+
+    world.generate();
     this.mesh = new VoxelChunk({
       x: world.width * -0.5,
       y: 0,

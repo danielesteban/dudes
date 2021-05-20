@@ -717,6 +717,24 @@ static void generatePartyBuildings(
   );
 }
 
+static void generateBlank(
+  const World* world,
+  unsigned char* voxels,
+  int* heightmap
+) {
+  for (int z = 1; z < world->depth - 1; z++) {
+    for (int x = 1; x < world->width - 1; x++) {
+      setVoxel(
+        world, voxels, heightmap,
+        x, 0, z,
+        TYPE_STONE,
+        0xFFFFFF,
+        0xAA
+      );
+    }
+  }
+}
+
 static void generatePit(
   const World* world,
   unsigned char* voxels,
@@ -756,6 +774,7 @@ static void generatePit(
 }
 
 enum Generators {
+  GENERATOR_BLANK,
   GENERATOR_DEFAULT,
   GENERATOR_MENU,
   GENERATOR_DEBUG_CITY,
@@ -774,13 +793,13 @@ void generate(
 ) {
   srand(seed);
 
+  if (generator == GENERATOR_BLANK) {
+    generateBlank(world, voxels, heightmap);
+    return;
+  }
+
   if (generator == GENERATOR_PIT) {
-    generatePit(
-      world,
-      voxels,
-      heightmap,
-      seed
-    );
+    generatePit(world, voxels, heightmap, seed);
     return;
   }
 
