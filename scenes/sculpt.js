@@ -96,6 +96,37 @@ class Sculpt extends Group {
     world.chunks.add(this.mesh);
     this.add(world.chunks);
 
+    const downloader = document.createElement('a');
+    downloader.style.display = 'none';
+    document.body.appendChild(downloader);
+    this.downloader = downloader;
+
+    const loader = document.createElement('input');
+    loader.type = 'file';
+    loader.accept = '.blocks';
+    loader.onchange = ({ target: { files: [file] } }) => this.load(file);
+    loader.style.display = 'none';
+    document.body.appendChild(loader);
+
+    this.onDragOver = this.onDragOver.bind(this);
+    document.addEventListener('dragover', this.onDragOver, false);
+    this.onDrop = this.onDrop.bind(this);
+    document.addEventListener('drop', this.onDrop, false);
+
+    const tools = document.createElement('div');
+    tools.className = 'tools';
+    [
+      ['Load', () => loader.click()],
+      ['Save', () => this.save()],
+    ].forEach(([label, action]) => {
+      const button = document.createElement('button');
+      button.innerText = label;
+      button.onclick = action;
+      tools.appendChild(button);
+    });
+    document.body.appendChild(tools);
+    this.tools = tools;
+
     const loading = document.getElementById('loading');
     if (loading) {
       loading.parentNode.removeChild(loading);
@@ -105,8 +136,12 @@ class Sculpt extends Group {
   }
 
   onUnload() {
-    const { ambient } = this;
+    const { ambient, downloader, tools } = this;
     ambient.dispose();
+    document.body.removeChild(downloader);
+    document.body.removeChild(tools);
+    document.removeEventListener('dragover', this.onDragOver);
+    document.removeEventListener('drop', this.onDrop);
   }
 
   onAnimationTick({ animation, camera, isXR }) {
@@ -205,6 +240,42 @@ class Sculpt extends Group {
   resumeAudio() {
     const { ambient } = this;
     ambient.resume();
+  }
+
+  onDragOver(e) {
+    e.preventDefault();
+  }
+
+  onDrop(e) {
+    e.preventDefault();
+    const [file] = e.dataTransfer.files;
+    if (file && file.name.lastIndexOf('.blocks') === file.name.length - 7) {
+      this.load(file);
+    }
+  }
+
+  load(file) {
+    const { mesh, world } = this;
+    const reader = new FileReader();
+    reader.onload = () => {
+      world.load(new Uint8Array(reader.result))
+        .then(() => {
+          mesh.update(world.mesh(0, 0, 0));
+        })
+        .catch((e) => console.error(e));
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  save() {
+    const { world, downloader } = this;
+    world.save()
+      .then((buffer) => {
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        downloader.download = `${Date.now()}.blocks`;
+        downloader.href = URL.createObjectURL(blob);
+        downloader.click();
+      });
   }
 }
 

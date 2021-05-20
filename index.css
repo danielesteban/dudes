@@ -93,7 +93,7 @@ body.pointerlock #enterVR {
   display: none;
 }
 
-#light, #rain {
+#light, #rain, .tools {
   position: absolute;
   bottom: 1rem;
   right: 1rem;
@@ -101,7 +101,7 @@ body.pointerlock #enterVR {
   display: none;
 }
 
-#light.enabled, #rain.enabled {
+#light.enabled, #rain.enabled, .tools {
   display: flex;
 }
 
@@ -109,7 +109,7 @@ body.pointerlock #enterVR {
   right: 8rem;
 }
 
-body.pointerlock #light, body.pointerlock #rain {
+body.pointerlock #light, body.pointerlock #rain, body.pointerlock .tools {
   display: none;
 }
 
@@ -149,6 +149,10 @@ body.pointerlock #light, body.pointerlock #rain {
 #light.night > svg:nth-child(2) {
   background: #00a;
   cursor: default;
+}
+
+.tools > button {
+  margin: 0 0.125rem;
 }
 
 #loading {

@@ -18,6 +18,7 @@ clang --target=wasm32-unknown-wasi --sysroot=../../vendor/wasi-libc/sysroot -nos
 -Wl,--export=generate \
 -Wl,--export=getHeight \
 -Wl,--export=getLight \
+-Wl,--export=heightmap \
 -Wl,--export=mesh \
 -Wl,--export=propagate \
 -Wl,--export=update \

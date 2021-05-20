@@ -25,9 +25,11 @@ export default {
     resolve({ browser: true }),
     copy({
       targets: [
+        { src: 'node_modules/fflate/umd/index.js', dest: 'dist', rename: 'fflate.js' },
         { src: 'node_modules/three/examples/js/libs/ammo.wasm.*', dest: 'dist' },
         { src: 'screenshot.png', dest: 'dist' },
         { src: 'sounds/*.ogg', dest: 'dist/sounds' },
+        { src: 'vendor/fflate.worker.js', dest: 'dist' },
       ],
       copyOnce: true,
     }),

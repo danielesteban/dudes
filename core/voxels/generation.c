@@ -885,3 +885,20 @@ void generate(
     }
   }
 }
+
+void heightmap(
+  const World* world,
+  int* heightmap,
+  const unsigned char* voxels
+) {
+  for (int z = 0, index = 0; z < world->depth; z++) {
+    for (int x = 0; x < world->width; x++, index++) {
+      for (int y = world->height - 1; y >= 0; y--) {
+        if (y == 0 || voxels[getVoxel(world, x, y, z)] != TYPE_AIR) {
+          heightmap[index] = y;
+          break;
+        }
+      }
+    }
+  }
+}

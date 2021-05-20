@@ -63,6 +63,7 @@ class VoxelWorld {
         this._generate = instance.exports.generate;
         this._getHeight = instance.exports.getHeight;
         this._getLight = instance.exports.getLight;
+        this._heightmap = instance.exports.heightmap;
         this._mesh = instance.exports.mesh;
         this._propagate = instance.exports.propagate;
         this._update = instance.exports.update;
@@ -327,6 +328,55 @@ class VoxelWorld {
     );
   }
 
+  load(deflated) {
+    if (!VoxelWorld.gzip) VoxelWorld.setupGzipWorker();
+    const { gzip } = VoxelWorld;
+    const {
+      world,
+      heightmap,
+      voxels,
+      width,
+      height,
+      depth,
+    } = this;
+    const version = 1;
+    return gzip.request({ data: deflated, operation: 'unzlib' })
+      .then((buffer) => {
+        const header = new Uint32Array(buffer.buffer, 0, 4);
+        if (
+          header[0] !== version
+          || header[1] !== width
+          || header[2] !== height
+          || header[3] !== depth
+        ) {
+          throw new Error('Bad format, version or dimensions');
+        }
+        voxels.view.set(buffer.subarray(header.byteLength));
+        this._heightmap(
+          world.address,
+          heightmap.address,
+          voxels.address
+        );
+      });
+  }
+
+  save() {
+    if (!VoxelWorld.gzip) VoxelWorld.setupGzipWorker();
+    const { gzip } = VoxelWorld;
+    const {
+      width,
+      height,
+      depth,
+      voxels,
+    } = this;
+    const version = 1;
+    const header = new Uint32Array([version, width, height, depth]);
+    const buffer = new Uint8Array(header.byteLength + voxels.view.byteLength);
+    buffer.set(new Uint8Array(header.buffer));
+    buffer.set(voxels.view, header.byteLength);
+    return gzip.request({ data: buffer, operation: 'zlib' });
+  }
+
   static getBrush({ shape, size }) {
     const { brushShapes, brushes } = VoxelWorld;
     const key = `${shape}:${size}`;
@@ -382,6 +432,25 @@ class VoxelWorld {
         })
         .catch((e) => console.error(e));
     });
+  }
+
+  static setupGzipWorker() {
+    let requestId = 0;
+    const requests = [];
+    this.gzip = new Worker('/fflate.worker.js');
+    this.gzip.addEventListener('message', ({ data: { id, data } }) => {
+      const req = requests.findIndex((p) => p.id === id);
+      if (req !== -1) {
+        requests.splice(req, 1)[0].resolve(data);
+      }
+    });
+    this.gzip.request = ({ data, operation }) => (
+      new Promise((resolve) => {
+        const id = requestId++;
+        requests.push({ id, resolve });
+        this.gzip.postMessage({ id, data, operation }, [data.buffer]);
+      })
+    );
   }
 }
 
