@@ -31,6 +31,7 @@ class Sculpt extends Gameplay {
       },
     });
     this.lights.light.target = 1;
+    this.player.cursor.classList.remove('enabled');
 
     this.voxel = new Vector3();
     this.lastVoxels = [new Vector3(), new Vector3()];
