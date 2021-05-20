@@ -122,13 +122,14 @@ class Party extends Gameplay {
   }
 
   onAnimationTick({ animation, camera, isXR }) {
-    const { chief, dayDuration, hasLoaded, music, player, thumbsDown } = this;
+    const { chief, dayDuration, hasLoaded, lights, music, player, thumbsDown } = this;
     if (!hasLoaded) {
       return;
     }
     this.time += animation.delta;
     const dayTime = (this.time % dayDuration) / dayDuration;
-    this.targetLight = 1 - ((dayTime > 0.5 ? 1 - dayTime : dayTime) * 2);
+    lights.sunlight.target = 1 - ((dayTime > 0.5 ? 1 - dayTime : dayTime) * 2);
+    lights.light.target = 1 - lights.sunlight.target;
     super.onAnimationTick({ animation, camera, isXR });
     chief.animate(animation);
     if (isXR && thumbsDown.enabled) {

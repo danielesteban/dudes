@@ -6,7 +6,6 @@ class ColorPicker extends UI {
     const width = 128;
     const height = 128;
     const color = new Color(Math.random() * 0xFFFFFF);
-    color.avg = (color.r + color.g + color.b) / 3;
     const area = {
       color: color.clone(),
       x: width * 0.05,
@@ -52,7 +51,6 @@ class ColorPicker extends UI {
                   imageData[1] / 0xFF,
                   imageData[2] / 0xFF
                 );
-                color.avg = (color.r + color.g + color.b) / 3;
                 if (i !== 0) {
                   area.color.copy(color);
                   this.draw();

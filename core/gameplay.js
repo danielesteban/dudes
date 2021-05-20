@@ -48,13 +48,23 @@ class Gameplay extends Group {
           enabled: false,
         },
       ],
+      ...(options.ambient ? options.ambient : {}),
     });
     this.dudesOptions = options.dudes;
-    this.light = 0;
-    this.targetLight = 1;
 
     Bodies.setupMaterial();
+    Dude.setupMaterial();
     Ocean.setupMaterial();
+    this.lights = {
+      light: {
+        state: 0,
+        target: 0,
+      },
+      sunlight: {
+        state: 0,
+        target: 1,
+      },
+    };
 
     this.explosions = [...Array(50)].map(() => {
       const explosion = new Explosion({ sfx: scene.sfx });
@@ -98,10 +108,14 @@ class Gameplay extends Group {
       [...toggle.getElementsByTagName('svg')].forEach((svg, i) => {
         const target = i === 0 ? 1 : 0;
         svg.onclick = () => {
-          if (this.light !== this.targetLight) {
+          if (
+            this.lights.light.state !== this.lights.light.target
+            || this.lights.sunlight.state !== this.lights.sunlight.target
+          ) {
             return;
           }
-          this.targetLight = target;
+          this.lights.light.target = 1 - target;
+          this.lights.sunlight.target = target;
           toggle.classList[target >= 0.5 ? 'add' : 'remove']('day');
           toggle.classList[target < 0.5 ? 'add' : 'remove']('night');
         };
@@ -122,7 +136,7 @@ class Gameplay extends Group {
     }
 
     Promise.all([
-      scene.getPhysics(),
+      options.physics !== false ? scene.getPhysics() : Promise.resolve(false),
       new Promise((resolve) => {
         const world = new VoxelWorld({
           ...options.world,
@@ -203,17 +217,21 @@ class Gameplay extends Group {
             geometry: world.mesh(x, y, z),
             scale: world.scale,
           });
-          chunk.collider = new Group();
-          chunk.collider.isChunk = true;
-          chunk.collider.position.copy(chunk.position);
-          chunk.collider.physics = [];
-          if (world.onContact) {
-            chunk.collider.onContact = world.onContact;
+          if (physics) {
+            chunk.collider = new Group();
+            chunk.collider.isChunk = true;
+            chunk.collider.position.copy(chunk.position);
+            chunk.collider.physics = [];
+            if (world.onContact) {
+              chunk.collider.onContact = world.onContact;
+            }
           }
           world.meshes.push(chunk);
           if (chunk.geometry.getIndex() !== null) {
             world.chunks.add(chunk);
-            this.updateCollider(chunk.collider, world.colliders(x, y, z), true);
+            if (physics) {
+              this.updateCollider(chunk.collider, world.colliders(x, y, z), true);
+            }
           }
         }
       }
@@ -224,10 +242,12 @@ class Gameplay extends Group {
       if (this.dudes.onContact) {
         dude.onContact = this.dudes.onContact;
       }
-      physics.addMesh(dude, { isKinematic: true, isTrigger: !!dude.onContact });
+      if (physics) {
+        physics.addMesh(dude, { isKinematic: true, isTrigger: !!dude.onContact });
+      }
     });
     delete this.dudes.onContact;
-    if (projectiles) physics.addMesh(projectiles, { mass: 1 });
+    if (physics && projectiles) physics.addMesh(projectiles, { mass: 1 });
 
     const loading = document.getElementById('loading');
     if (loading) {
@@ -260,10 +280,9 @@ class Gameplay extends Group {
       dudes,
       explosions,
       hasLoaded,
-      light,
+      lights,
       player,
       rain,
-      targetLight,
     } = this;
     if (!hasLoaded) {
       return;
@@ -275,9 +294,14 @@ class Gameplay extends Group {
     explosions.forEach((explosion) => explosion.animate(animation));
     Ocean.animate(animation);
     rain.animate(animation);
-    if (light !== targetLight) {
-      this.updateLight(
-        light + Math.min(Math.max(targetLight - light, -animation.delta), animation.delta)
+    if (
+      lights.light.state !== lights.light.target
+      || lights.sunlight.state !== lights.sunlight.target
+    ) {
+      const { light, sunlight } = lights;
+      this.updateLights(
+        light.state + Math.min(Math.max(light.target - light.state, -animation.delta), animation.delta),
+        sunlight.state + Math.min(Math.max(sunlight.target - sunlight.state, -animation.delta), animation.delta),
       );
     }
   }
@@ -363,22 +387,23 @@ class Gameplay extends Group {
     }
   }
 
-  updateLight(intensity) {
-    const { background, fog } = this;
-    this.light = intensity;
-    background.setHex(0x226699).multiplyScalar(Math.max(intensity, 0.05));
+  updateLights(light, sunlight) {
+    const { background, fog, lights } = this;
+    lights.light.state = light;
+    lights.sunlight.state = sunlight;
+    background.setHex(0x226699).multiplyScalar(Math.max(sunlight, 0.05));
     fog.color.copy(background);
-    Birds.material.uniforms.diffuse.value.setScalar(intensity);
-    Bodies.material.color.setScalar(Math.max(intensity, 0.3));
-    Clouds.material.color.setScalar(intensity);
+    Birds.material.uniforms.diffuse.value.setScalar(sunlight);
+    Bodies.material.color.setScalar(Math.max(sunlight, 0.3));
+    Clouds.material.color.setScalar(sunlight);
     Dome.material.uniforms.background.value.copy(background);
     Ocean.material.color.copy(background);
     Rain.material.uniforms.diffuse.value.copy(background);
-    Starfield.material.opacity = 1.0 - intensity;
+    Starfield.material.opacity = 1.0 - sunlight;
     [Dude.material, VoxelChunk.material].forEach(({ uniforms }) => {
-      uniforms.ambientIntensity.value = Math.max(Math.min(intensity, 0.7) / 0.7, 0.5) * 0.1;
-      uniforms.lightIntensity.value = Math.min(1.0 - Math.min(intensity, 0.5) * 2, 0.7);
-      uniforms.sunlightIntensity.value = Math.min(intensity, 0.7);
+      uniforms.ambientIntensity.value = Math.max(Math.min(sunlight, 0.7) / 0.7, 0.5) * 0.1;
+      uniforms.lightIntensity.value = Math.min(light, 0.7);
+      uniforms.sunlightIntensity.value = Math.min(sunlight, 0.7);
     });
   }
 
@@ -427,7 +452,7 @@ class Gameplay extends Group {
         const geometry = world.mesh(x, y, z);
         if (geometry.indices.length > 0) {
           mesh.update(geometry);
-          if (Math.abs(chunkY - y) <= 1) {
+          if (mesh.collider && Math.abs(chunkY - y) <= 1) {
             this.updateCollider(
               mesh.collider,
               world.colliders(x, y, z),
@@ -437,7 +462,9 @@ class Gameplay extends Group {
           if (!mesh.parent) world.chunks.add(mesh);
         } else if (mesh.parent) {
           world.chunks.remove(mesh);
-          this.updateCollider(mesh.collider, []);
+          if (mesh.collider) {
+            this.updateCollider(mesh.collider, []);
+          }
         }
       }
     });

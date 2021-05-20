@@ -1,31 +1,34 @@
-import { Color, Euler, FogExp2, Group, Vector3 } from '../vendor/three.js';
-import Ambient from '../core/ambient.js';
-import VoxelWorld from '../core/voxels.js';
+import { Euler, Group, Vector3 } from '../vendor/three.js';
+import Gameplay from '../core/gameplay.js';
 import Brush from '../renderables/brush.js';
 import ColorPicker from '../renderables/colorpicker.js';
 import Lighting from '../renderables/lighting.js';
-import VoxelChunk from '../renderables/chunk.js';
 
-class Sculpt extends Group {
+class Sculpt extends Gameplay {
   constructor(scene) {
-    super();
-    this.matrixAutoUpdate = false;
-
-    this.background = scene.background = new Color(0);
-    this.fog = scene.fog = new FogExp2(0, 0.005);
-    this.player = scene.player;
-
-    this.ambient = new Ambient({
-      anchor: this.player.head,
-      isRunning: this.player.head.context.state === 'running',
-      range: { from: 0, to: 128 },
-      sounds: [
-        {
-          url: '/sounds/forest.ogg',
-          from: -0.5,
-          to: 1.5,
-        },
-      ],
+    super(scene, {
+      ambient: {
+        range: { from: 0, to: 128 },
+        sounds: [
+          {
+            url: '/sounds/forest.ogg',
+            from: -0.5,
+            to: 1.5,
+          },
+        ],
+      },
+      dudes: {
+        count: 0,
+      },
+      physics: false,
+      world: {
+        width: 128,
+        height: 64,
+        depth: 128,
+        generator: 'blank',
+        scale: 0.03125,
+        seaLevel: 0,
+      },
     });
 
     this.voxel = new Vector3();
@@ -37,15 +40,12 @@ class Sculpt extends Group {
       width: 0.2,
       height: 0.2,
     });
-    VoxelChunk.setupMaterial();
     this.lighting = new Lighting({
       position: new Vector3(0, -0.02, -0.2 / 3),
       rotation: new Euler(0, Math.PI, 0),
       width: 0.2,
       height: 0.2,
-      fog: this.fog,
-      background: this.background,
-      voxels: VoxelChunk.material.uniforms,
+      lights: this.lights,
     });
     this.picker = new ColorPicker({
       position: new Vector3(0.05, -0.02, 0.02),
@@ -63,38 +63,10 @@ class Sculpt extends Group {
     ui.add(this.picker);
     this.player.attach(ui, 'left');
     this.ui = ui;
-
-    this.world = new VoxelWorld({
-      width: 64,
-      height: 64,
-      depth: 64,
-      chunkSize: 64,
-      generator: 'blank',
-      scale: 1,
-      seaLevel: 0,
-      onLoad: this.onLoad.bind(this),
-    });
-    this.world.chunks.position.set(0, -0.03125, 0);
-    this.world.chunks.scale.multiplyScalar(0.03125);
-    this.world.chunks.updateMatrix();
-
-    this.player.teleport({ x: 0, y: 0, z: 0 });
   }
 
   onLoad() {
-    const { world } = this;
-
-    world.generate();
-    this.mesh = new VoxelChunk({
-      x: world.width * -0.5,
-      y: 0,
-      z: world.depth * -0.5,
-      geometry: world.mesh(0, 0, 0),
-      scale: this.world.scale,
-    });
-    this.mesh.update(world.mesh(0, 0, 0));
-    world.chunks.add(this.mesh);
-    this.add(world.chunks);
+    super.onLoad();
 
     const downloader = document.createElement('a');
     downloader.style.display = 'none';
@@ -126,18 +98,11 @@ class Sculpt extends Group {
     });
     document.body.appendChild(tools);
     this.tools = tools;
-
-    const loading = document.getElementById('loading');
-    if (loading) {
-      loading.parentNode.removeChild(loading);
-    }
-
-    this.hasLoaded = true;
   }
 
   onUnload() {
-    const { ambient, downloader, tools } = this;
-    ambient.dispose();
+    const { downloader, tools } = this;
+    super.onUnload();
     document.body.removeChild(downloader);
     document.body.removeChild(tools);
     document.removeEventListener('dragover', this.onDragOver);
@@ -146,11 +111,9 @@ class Sculpt extends Group {
 
   onAnimationTick({ animation, camera, isXR }) {
     const {
-      ambient,
       brush,
       hasLoaded,
       lastVoxels,
-      mesh,
       player,
       voxel,
       world,
@@ -159,7 +122,7 @@ class Sculpt extends Group {
     if (!hasLoaded) {
       return;
     }
-    ambient.animate(animation);
+    super.onAnimationTick({ animation, camera, isXR });
     if (!isXR) {
       return;
     }
@@ -202,44 +165,19 @@ class Sculpt extends Group {
         lastVoxels[i].set(-1, -1, -1);
       }
       if (buttons.grip || buttons.trigger) {
-        mesh
-          .worldToLocal(voxel.copy(raycaster.ray.origin))
+        voxel
+          .copy(raycaster.ray.origin)
+          .divideScalar(world.scale)
           .floor();
         if (!voxel.equals(lastVoxels[i])) {
           lastVoxels[i].copy(voxel);
-          const type = buttons.trigger ? brush.type : 0;
-          const noise = brush.color.avg * brush.noise;
-          VoxelWorld.getBrush(brush).forEach(({ x, y, z }) => (
-            world.update({
-              x: voxel.x + x,
-              y: voxel.y + y,
-              z: voxel.z + z,
-              type,
-              r: Math.min(Math.max((brush.color.r + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
-              g: Math.min(Math.max((brush.color.g + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
-              b: Math.min(Math.max((brush.color.b + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
-            })
-          ));
-          mesh.update(world.mesh(0, 0, 0));
+          this.updateVoxel({
+            ...brush,
+            type: buttons.trigger ? brush.type : 0,
+          }, voxel);
         }
       }
     });
-  }
-
-  onLocomotionTick({ animation, camera, isXR }) {
-    const { hasLoaded, player } = this;
-    if (!hasLoaded) {
-      return;
-    }
-    player.onLocomotionTick({ animation, camera, isXR });
-    if (player.position.y < 0) {
-      player.move({ x: 0, y: -player.position.y, z: 0 });
-    }
-  }
-
-  resumeAudio() {
-    const { ambient } = this;
-    ambient.resume();
   }
 
   onDragOver(e) {
@@ -255,12 +193,34 @@ class Sculpt extends Group {
   }
 
   load(file) {
-    const { mesh, world } = this;
+    const { chunks, world } = this;
     const reader = new FileReader();
     reader.onload = () => {
       world.load(new Uint8Array(reader.result))
         .then(() => {
-          mesh.update(world.mesh(0, 0, 0));
+          for (let z = 0, i = 0; z < chunks.z; z += 1) {
+            for (let y = 0; y < chunks.y; y += 1) {
+              for (let x = 0; x < chunks.x; x += 1, i += 1) {
+                const mesh = world.meshes[i];
+                if (mesh.collider) {
+                  mesh.collider.physics.length = 0;
+                }
+                const geometry = world.mesh(x, y, z);
+                if (geometry.indices.length > 0) {
+                  mesh.update(geometry);
+                  if (mesh.collider) {
+                    this.updateCollider(mesh.collider, world.colliders(x, y, z));
+                  }
+                  if (!mesh.parent) world.chunks.add(mesh);
+                } else if (mesh.parent) {
+                  world.chunks.remove(mesh);
+                  if (mesh.collider) {
+                    this.updateCollider(mesh.collider, []);
+                  }
+                }
+              }
+            }
+          }
         })
         .catch((e) => console.error(e));
     };

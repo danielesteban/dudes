@@ -106,7 +106,7 @@ class HeliParty extends Party {
           this.add(rope);
           return ball;
         });
-        this.updateLight(this.light);
+        this.updateLights(this.lights.light.state, this.lights.sunlight.state);
         const box = new Box3();
         box.setFromObject(this.helicopter);
         const size = box.getSize(new Vector3());
@@ -328,14 +328,14 @@ class HeliParty extends Party {
     helicopter.resumeAudio();
   }
 
-  updateLight(intensity) {
+  updateLights(light, sunlight) {
     const { hooks } = this;
-    super.updateLight(intensity);
+    super.updateLights(light, sunlight);
     if (!hooks) {
       return;
     }
-    Ball.material.color.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
-    Rope.material.uniforms.diffuse.value.setHex(0x999933).multiplyScalar(Math.max(intensity, 0.1));
+    Ball.material.color.setHex(0x999933).multiplyScalar(Math.max(sunlight, 0.1));
+    Rope.material.uniforms.diffuse.value.setHex(0x999933).multiplyScalar(Math.max(sunlight, 0.1));
   }
 
   updateView(view) {

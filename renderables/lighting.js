@@ -48,8 +48,7 @@ class Lighting extends UI {
           max: 1,
           step: 0.01,
           onPointer: (value) => {
-            this.sunlight = value;
-            this.update();
+            this.lights.sunlight.target = value;
             this.draw();
           },
         },
@@ -63,34 +62,13 @@ class Lighting extends UI {
           max: 1,
           step: 0.01,
           onPointer: (value) => {
-            this.light = value;
-            this.update();
+            this.lights.light.target = value;
             this.draw();
           },
         },
       ],
     });
-    this.background = options.background;
-    this.fog = options.fog;
-    this.voxels = options.voxels;
-    this.light = 1;
-    this.sunlight = 1;
-    this.update();
-  }
-
-  update() {
-    const {
-      background,
-      fog,
-      voxels,
-      light,
-      sunlight,
-    } = this;
-    background.setHex(0x226699).multiplyScalar(Math.max(sunlight, 0.05));
-    fog.color.copy(background);
-    voxels.ambientIntensity.value = Math.max(Math.min(sunlight, 0.7) / 0.7, 0.5) * 0.1;
-    voxels.lightIntensity.value = Math.min(light, 0.7);
-    voxels.sunlightIntensity.value = Math.min(sunlight, 0.7);
+    this.lights = options.lights;
   }
 }
 
