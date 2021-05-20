@@ -65,11 +65,11 @@ class Scene extends ThreeScene {
     player.detachAll();
     if (physics) physics.reset();
     this.scene = new scenes[scene](this, options);
-    if (this.scene.resumeAudio && player.head.context.state === 'running') {
-      this.scene.resumeAudio();
-    }
     if (this.scene.onXR && player.xr.enabled && player.xr.isPresenting) {
       this.scene.onXR();
+    }
+    if (this.scene.resumeAudio && player.head.context.state === 'running') {
+      this.scene.resumeAudio();
     }
     this.add(this.scene);
   }
