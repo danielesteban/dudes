@@ -27,28 +27,30 @@ class Gameplay extends Group {
       anchor: this.player.head,
       isRunning: this.player.head.context.state === 'running',
       range: { from: 0, to: options.world.height * 0.8 },
+      ...(options.ambient ? options.ambient : {}),
       sounds: [
-        {
-          url: '/sounds/sea.ogg',
-          from: -0.5,
-          to: 0.25,
-        },
-        {
-          url: '/sounds/forest.ogg',
-          from: 0,
-          to: 0.75,
-        },
-        {
-          url: '/sounds/wind.ogg',
-          from: 0.5,
-          to: 1.5,
-        },
+        ...(options.ambient && options.ambient.sounds ? options.ambient.sounds : [
+          {
+            url: '/sounds/sea.ogg',
+            from: -0.5,
+            to: 0.25,
+          },
+          {
+            url: '/sounds/forest.ogg',
+            from: 0,
+            to: 0.75,
+          },
+          {
+            url: '/sounds/wind.ogg',
+            from: 0.5,
+            to: 1.5,
+          },
+        ]),
         {
           url: '/sounds/rain.ogg',
           enabled: false,
         },
       ],
-      ...(options.ambient ? options.ambient : {}),
     });
     this.dudesOptions = options.dudes;
 
