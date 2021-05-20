@@ -1,25 +1,54 @@
-import { Euler, Vector3 } from '../vendor/three.js';
+import { Euler, Group, Vector3 } from '../vendor/three.js';
 import VoxelWorld from '../core/voxels.js';
+import Brush from '../renderables/brush.js';
 import ColorPicker from '../renderables/colorpicker.js';
+import Lighting from '../renderables/lighting.js';
 import Model from './model.js';
+import VoxelChunk from '../renderables/chunk.js';
 
 class Sculpt extends Model {
   constructor(scene) {
     super(scene);
 
+    VoxelChunk.setupMaterial();
+
     this.voxel = new Vector3();
     this.lastVoxels = [new Vector3(), new Vector3()];
 
+    this.brush = new Brush({
+      position: new Vector3(-0.05, -0.02, 0.02),
+      rotation: new Euler(0, Math.PI / -3, 0),
+      width: 0.2,
+      height: 0.2,
+    });
+    this.lighting = new Lighting({
+      position: new Vector3(0, -0.02, -0.2 / 3),
+      rotation: new Euler(0, Math.PI, 0),
+      width: 0.2,
+      height: 0.2,
+      fog: this.fog,
+      background: this.background,
+      voxels: VoxelChunk.material.uniforms,
+    });
     this.picker = new ColorPicker({
-      position: new Vector3(-0.02, -0.02, 0),
-      rotation: new Euler(0, Math.PI * -0.5, Math.PI * 0.5),
-      width: 0.3,
-      height: 0.3,
+      position: new Vector3(0.05, -0.02, 0.02),
+      rotation: new Euler(0, Math.PI / 3, 0),
+      width: 0.2,
+      height: 0.2,
     });
     this.brush.color = this.picker.color;
-    this.player.attach(this.picker, 'left');
+    const ui = new Group();
+    ui.rotation.set(Math.PI / -3, 0, 0);
+    ui.updateMatrix();
+    ui.matrixAutoUpdate = false;
+    ui.add(this.brush);
+    ui.add(this.lighting);
+    ui.add(this.picker);
+    this.player.attach(ui, 'left');
+    this.ui = ui;
 
-    this.world.chunks.scale.multiplyScalar(0.05);
+    this.world.chunks.position.set(0, -0.03125, 0);
+    this.world.chunks.scale.multiplyScalar(0.03125);
     this.world.chunks.updateMatrix();
   }
 
@@ -50,9 +79,9 @@ class Sculpt extends Model {
       lastVoxels,
       mesh,
       player,
-      picker,
       voxel,
       world,
+      ui,
     } = this;
     if (!hasLoaded) {
       return;
@@ -70,8 +99,18 @@ class Sculpt extends Model {
       if (!hand) {
         return;
       }
-      if (hand.handedness === 'right') {
-        const hit = raycaster.intersectObject(picker)[0] || false;
+      if (
+        hand.handedness === 'left'
+        && (buttons.forwards || buttons.backwards)
+      ) {
+        ui.rotation.y += animation.delta * 5 * (buttons.forwards ? -1 : 1);
+        ui.updateMatrix();
+      }
+      if (hand.handedness === 'left' && buttons.primaryDown) {
+        ui.visible = !ui.visible;
+      }
+      if (hand.handedness === 'right' && ui.visible) {
+        const hit = raycaster.intersectObjects(ui.children)[0] || false;
         if (hit) {
           pointer.update({
             distance: hit.distance,
@@ -95,14 +134,14 @@ class Sculpt extends Model {
           .floor();
         if (!voxel.equals(lastVoxels[i])) {
           lastVoxels[i].copy(voxel);
-          brush.type = buttons.trigger ? 3 : 0;
+          const type = buttons.trigger ? brush.type : 0;
           const noise = brush.color.avg * brush.noise;
           VoxelWorld.getBrush(brush).forEach(({ x, y, z }) => (
             world.update({
               x: voxel.x + x,
               y: voxel.y + y,
               z: voxel.z + z,
-              type: brush.type,
+              type,
               r: Math.min(Math.max((brush.color.r + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
               g: Math.min(Math.max((brush.color.g + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
               b: Math.min(Math.max((brush.color.b + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),

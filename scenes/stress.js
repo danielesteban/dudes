@@ -1,11 +1,19 @@
-import { Vector3 } from '../vendor/three.js';
+import { Color, Vector3 } from '../vendor/three.js';
 import VoxelWorld from '../core/voxels.js';
+import VoxelChunk from '../renderables/chunk.js';
 import Model from './model.js';
 
 class Stress extends Model {
   constructor(scene) {
     super(scene);
 
+    this.brush = {
+      color: new Color(),
+      noise: 0.25,
+      type: 3,
+      shape: VoxelWorld.brushShapes.sphere,
+      size: 3,
+    };
     this.cursors = [...Array(4)].map(() => ({
       position: new Vector3(),
       direction: new Vector3(),
@@ -13,8 +21,24 @@ class Stress extends Model {
     this.voxel = new Vector3();
     this.timer = 0;
 
-    scene.player.teleport({ x: -64, y: 64, z: 64 });
-    scene.player.desktop.camera.rotation.set(Math.PI * -0.15, Math.PI * -0.25, 0, 'YXZ');
+    {
+      VoxelChunk.setupMaterial();
+      const intensity = 1;
+      const { background, fog } = this;
+      const { material: { uniforms: voxels } } = VoxelChunk;
+      background.setHex(0x226699).multiplyScalar(Math.max(intensity, 0.05));
+      fog.color.copy(background);
+      voxels.ambientIntensity.value = Math.max(Math.min(intensity, 0.7) / 0.7, 0.5) * 0.1;
+      voxels.lightIntensity.value = Math.min(intensity, 0.7);
+      voxels.sunlightIntensity.value = Math.min(intensity, 0.7);
+    }
+  }
+
+  onLoad() {
+    const { player } = this;
+    super.onLoad();
+    player.teleport({ x: -64, y: 64, z: 64 });
+    player.desktop.camera.rotation.set(Math.PI * -0.15, Math.PI * -0.25, 0, 'YXZ');
   }
 
   onAnimationTick({ animation, camera, isXR }) {

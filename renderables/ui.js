@@ -1,5 +1,6 @@
 import {
   CanvasTexture,
+  DoubleSide,
   Mesh,
   MeshBasicMaterial,
   PlaneBufferGeometry,
@@ -20,6 +21,7 @@ class UI extends Mesh {
     buttons = [],
     graphics = [],
     labels = [],
+    sliders = [],
     styles = {},
     textureWidth = 128,
     textureHeight = 128,
@@ -39,6 +41,12 @@ class UI extends Mesh {
         border: '#000',
         color: '#fff',
         ...(styles.button || {}),
+        active: {
+          background: '#393',
+          border: '#000',
+          color: '#fff',
+          ...(styles.button && styles.button.active ? styles.button.active : {}),
+        },
         disabled: {
           background: '#555',
           border: '#000',
@@ -52,6 +60,18 @@ class UI extends Mesh {
           ...(styles.button && styles.button.hover ? styles.button.hover : {}),
         },
       },
+      slider: {
+        background: '#333',
+        border: '#000',
+        color: '#393',
+        ...(styles.slider || {}),
+        disabled: {
+          background: '#555',
+          border: '#000',
+          color: '#777',
+          ...(styles.slider && styles.slider.disabled ? styles.slider.disabled : {}),
+        },
+      },
     };
     const renderer = document.createElement('canvas');
     renderer.width = textureWidth;
@@ -63,6 +83,7 @@ class UI extends Mesh {
       UI.geometry,
       new MeshBasicMaterial({
         map: texture,
+        side: DoubleSide,
         transparent: true,
       })
     );
@@ -81,6 +102,7 @@ class UI extends Mesh {
     this.labels = labels;
     this.pointer = new Vector3();
     this.renderer = renderer;
+    this.sliders = sliders;
     this.styles = styles;
     this.texture = texture;
     this.draw();
@@ -100,6 +122,7 @@ class UI extends Mesh {
       hover,
       labels,
       renderer,
+      sliders,
       styles,
       texture,
     } = this;
@@ -119,6 +142,7 @@ class UI extends Mesh {
       textAlign,
       textBaseline,
       textOffset,
+      isActive,
       isDisabled,
       isVisible,
     }, i) => {
@@ -127,6 +151,7 @@ class UI extends Mesh {
       }
       let { button } = styles;
       if (isDisabled) button = styles.button.disabled;
+      else if (isActive) button = styles.button.active;
       else if (hover === i) button = styles.button.hover;
       ctx.save();
       ctx.translate(x, y);
@@ -179,19 +204,64 @@ class UI extends Mesh {
       ctx.fillText(text, x, y);
       ctx.restore();
     });
+    sliders.forEach(({
+      x,
+      y,
+      width,
+      height,
+      background,
+      border,
+      color,
+      value,
+      isDisabled,
+      isVisible,
+    }) => {
+      if (isVisible === false) {
+        return;
+      }
+      const slider = isDisabled ? styles.slider.disabled : styles.slider;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.beginPath();
+      ctx.rect(0, 4, width, height - 8);
+      ctx.fillStyle = background || slider.background;
+      ctx.strokeStyle = border || slider.border;
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = color || slider.color;
+      const thumb = height * 0.5;
+      const thumbX = Math.min(Math.max(width * value, thumb * 0.5), width - thumb * 0.5);
+      ctx.fillRect(0, 5, thumbX, height - 10);
+      ctx.beginPath();
+      ctx.arc(
+        thumbX,
+        height * 0.5,
+        thumb,
+        0,
+        Math.PI * 2,
+        false
+      );
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    });
     texture.needsUpdate = true;
   }
 
   onPointer({ enabled, point }) {
-    const { buttons, pointer, renderer } = this;
+    const {
+      buttons,
+      pointer,
+      renderer,
+      sliders,
+    } = this;
     this.worldToLocal(pointer.copy(point));
     pointer.set(
       (pointer.x + 0.5) * renderer.width,
       (1 - (pointer.y + 0.5)) * renderer.height,
       0
     );
-    const l = buttons.length - 1;
-    for (let i = l; i >= 0; i -= 1) {
+    for (let i = buttons.length - 1; i >= 0; i -= 1) {
       const {
         isDisabled,
         x,
@@ -218,6 +288,37 @@ class UI extends Mesh {
       }
     }
     this.resetHover();
+    if (!enabled) {
+      return;
+    }
+    for (let i = sliders.length - 1; i >= 0; i -= 1) {
+      const {
+        isDisabled,
+        x,
+        y,
+        width,
+        height,
+        min,
+        max,
+        step = 1,
+        onPointer,
+      } = sliders[i];
+      if (
+        !isDisabled
+        && onPointer
+        && pointer.x >= x
+        && pointer.x <= x + width
+        && pointer.y >= y
+        && pointer.y <= y + height
+      ) {
+        const stride = step / (max - min);
+        const value = (pointer.x - x) / width;
+        const notch = Math.round(value / stride);
+        sliders[i].value = notch * stride;
+        onPointer(min + notch * step);
+        break;
+      }
+    }
   }
 
   resetHover() {

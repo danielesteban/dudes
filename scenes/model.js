@@ -25,17 +25,6 @@ class Model extends Group {
       ],
     });
 
-    this.brush = {
-      color: new Color(),
-      noise: 0.25,
-      type: 3,
-      shape: VoxelWorld.brushShapes.sphere,
-      size: 3,
-    };
-
-    this.light = 0;
-    this.targetLight = 1;
-
     this.world = new VoxelWorld({
       width: 64,
       height: 64,
@@ -75,16 +64,11 @@ class Model extends Group {
   }
 
   onAnimationTick({ animation, camera, isXR }) {
-    const { ambient, hasLoaded, light, targetLight } = this;
+    const { ambient, hasLoaded } = this;
     if (!hasLoaded) {
       return;
     }
     ambient.animate(animation);
-    if (light !== targetLight) {
-      this.updateLight(
-        light + Math.min(Math.max(targetLight - light, -animation.delta), animation.delta)
-      );
-    }
   }
 
   onLocomotionTick({ animation, camera, isXR }) {
@@ -101,17 +85,6 @@ class Model extends Group {
   resumeAudio() {
     const { ambient } = this;
     ambient.resume();
-  }
-
-  updateLight(intensity) {
-    const { background, fog } = this;
-    const { material: { uniforms: voxels } } = VoxelChunk;
-    this.light = intensity;
-    background.setHex(0x226699).multiplyScalar(Math.max(intensity, 0.05));
-    fog.color.copy(background);
-    voxels.ambientIntensity.value = Math.max(Math.min(intensity, 0.7) / 0.7, 0.5) * 0.1;
-    voxels.lightIntensity.value = Math.min(1.0 - Math.min(intensity, 0.5) * 2, 0.7);
-    voxels.sunlightIntensity.value = Math.min(intensity, 0.7);
   }
 }
 
