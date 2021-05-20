@@ -369,7 +369,7 @@ class Player extends Group {
     } = this;
 
     if (isXR) {
-      controllers.forEach(({ buttons, hand, worldspace }) => {
+      controllers.forEach(({ buttons, hand, joystick, worldspace }) => {
         if (
           hand && hand.handedness === 'left'
           && (buttons.leftwardsDown || buttons.rightwardsDown)
@@ -379,21 +379,14 @@ class Player extends Group {
         if (
           hand && hand.handedness === 'right'
           && (
-            buttons.backwards || buttons.backwardsUp
-            || buttons.forwards || buttons.forwardsUp
-            || buttons.leftwards || buttons.leftwardsUp
-            || buttons.rightwards || buttons.rightwardsUp
+            Math.abs(joystick.x) > 0.1
+            || Math.abs(joystick.y) > 0.1
           )
         ) {
-          const speed = 4;
+          const speed = 6;
           this.move(
             direction
-              .set(
-                (buttons.leftwards || buttons.leftwardsUp) ? -1 : ((buttons.rightwards || buttons.rightwardsUp) ? 1 : 0),
-                0,
-                (buttons.backwards || buttons.backwardsUp) ? 1 : ((buttons.forwards || buttons.forwardsUp) ? -1 : 0),
-              )
-              .normalize()
+              .set(joystick.x, 0, joystick.y)
               .applyQuaternion(worldspace.quaternion)
               .multiplyScalar(animation.delta * speed),
             physics

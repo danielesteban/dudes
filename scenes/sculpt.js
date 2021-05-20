@@ -166,6 +166,10 @@ class Sculpt extends Gameplay {
         lastVoxels[i].set(-1, -1, -1);
       }
       if (buttons.grip || buttons.trigger) {
+        voxel
+          .copy(raycaster.ray.origin)
+          .divideScalar(world.scale)
+          .floor();
         if (!voxel.equals(lastVoxels[i])) {
           lastVoxels[i].copy(voxel);
           this.updateVoxel(
@@ -174,9 +178,6 @@ class Sculpt extends Gameplay {
               type: buttons.trigger ? brush.type : 0,
             },
             voxel
-              .copy(raycaster.ray.origin)
-              .divideScalar(world.scale)
-              .floor()
           );
         }
       }
