@@ -365,6 +365,7 @@ class Player extends Group {
         worldUp,
       },
       controllers,
+      xr,
     } = this;
 
     if (isXR) {
@@ -397,6 +398,9 @@ class Player extends Group {
               .multiplyScalar(animation.delta * speed),
             physics
           );
+        }
+        if (hand && buttons.secondaryDown) {
+          xr.getSession().end();
         }
       });
     } else {

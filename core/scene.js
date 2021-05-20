@@ -68,6 +68,9 @@ class Scene extends ThreeScene {
     if (this.scene.resumeAudio && player.head.context.state === 'running') {
       this.scene.resumeAudio();
     }
+    if (this.scene.onXR && player.xr.enabled && player.xr.isPresenting) {
+      this.scene.onXR();
+    }
     this.add(this.scene);
   }
 
