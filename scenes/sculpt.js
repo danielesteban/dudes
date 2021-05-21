@@ -12,13 +12,17 @@ class Sculpt extends Gameplay {
         sounds: [
           {
             url: '/sounds/forest.ogg',
-            from: -0.5,
+            from: -0.25,
             to: 1.5,
+          },
+          {
+            url: '/sounds/sea.ogg',
+            from: -1.5,
+            to: 0.25,
           },
         ],
       },
       dudes: {
-        searchRadius: 32,
         spawn: { count: 0 },
       },
       physics: false,
@@ -65,6 +69,20 @@ class Sculpt extends Gameplay {
     ui.add(this.settings);
     this.player.attach(ui, 'left');
     this.ui = ui;
+
+    Promise.all([...Array(5)].map(() => (
+      scene.sfx.load('/sounds/plop.ogg')
+        .then((sound) => {
+          sound.filter = sound.context.createBiquadFilter();
+          sound.setFilter(sound.filter);
+          sound.setRefDistance(8);
+          this.add(sound);
+          return sound;
+        })
+    ))).then((sfx) => {
+      this.plops = sfx;
+      this.plopTimer = 0;
+    });
   }
 
   onLoad() {
@@ -118,6 +136,7 @@ class Sculpt extends Gameplay {
       hasLoaded,
       lastVoxels,
       player,
+      plops,
       settings,
       voxel,
       world,
@@ -183,6 +202,17 @@ class Sculpt extends Gameplay {
           .floor();
         if (!voxel.equals(lastVoxels[i])) {
           lastVoxels[i].copy(voxel);
+          const isPlacing = buttons.trigger;
+          if (plops && this.plopTimer <= animation.time) {
+            const sound = plops.find(({ isPlaying }) => (!isPlaying));
+            if (sound && sound.context.state === 'running') {
+              sound.filter.type = isPlacing ? 'lowpass' : 'highpass';
+              sound.filter.frequency.value = (Math.random() + 0.5) * 1000;
+              sound.position.copy(raycaster.ray.origin);
+              sound.play();
+              this.plopTimer = animation.time + 0.05;
+            }
+          }
           this.updateVoxel(
             {
               ...brush,
