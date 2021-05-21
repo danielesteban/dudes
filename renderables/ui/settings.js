@@ -1,6 +1,6 @@
 import UI from '../ui.js';
 
-class Lighting extends UI {
+class Settings extends UI {
   constructor(options) {
     const width = 256;
     const height = 256;
@@ -100,4 +100,4 @@ class Lighting extends UI {
   }
 }
 
-export default Lighting;
+export default Settings;

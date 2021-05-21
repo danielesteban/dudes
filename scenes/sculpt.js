@@ -2,7 +2,7 @@ import { Euler, Group, Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
 import Brush from '../renderables/ui/brush.js';
 import ColorPicker from '../renderables/ui/colorpicker.js';
-import Lighting from '../renderables/ui/lighting.js';
+import Settings from '../renderables/ui/settings.js';
 
 class Sculpt extends Gameplay {
   constructor(scene) {
@@ -42,18 +42,18 @@ class Sculpt extends Gameplay {
       width: 0.2,
       height: 0.2,
     });
-    this.lighting = new Lighting({
-      position: new Vector3(0, -0.02, -0.2 / 3),
-      rotation: new Euler(0, Math.PI, 0),
-      width: 0.2,
-      height: 0.2,
-      lights: this.lights,
-    });
     this.picker = new ColorPicker({
       position: new Vector3(0.05, -0.02, 0.02),
       rotation: new Euler(0, Math.PI / 3, 0),
       width: 0.2,
       height: 0.2,
+    });
+    this.settings = new Settings({
+      position: new Vector3(0, -0.02, -0.2 / 3),
+      rotation: new Euler(0, Math.PI, 0),
+      width: 0.2,
+      height: 0.2,
+      lights: this.lights,
     });
     this.brush.color = this.picker.color;
     const ui = new Group();
@@ -61,8 +61,8 @@ class Sculpt extends Gameplay {
     ui.updateMatrix();
     ui.matrixAutoUpdate = false;
     ui.add(this.brush);
-    ui.add(this.lighting);
     ui.add(this.picker);
+    ui.add(this.settings);
     this.player.attach(ui, 'left');
     this.ui = ui;
   }
@@ -118,6 +118,7 @@ class Sculpt extends Gameplay {
       hasLoaded,
       lastVoxels,
       player,
+      settings,
       voxel,
       world,
       ui,
@@ -126,7 +127,7 @@ class Sculpt extends Gameplay {
       return;
     }
     super.onAnimationTick({ animation, camera, isXR });
-    if (this.lighting.spawnDudes) {
+    if (settings.spawnDudes) {
       this.spawn();
     } else if (dudes.dudes.length) {
       dudes.dudes.forEach((dude) => {
@@ -261,11 +262,20 @@ class Sculpt extends Gameplay {
   }
 
   load(file) {
-    const { world } = this;
+    const { dudes, settings, world } = this;
     const reader = new FileReader();
     reader.onload = () => {
       world.load(new Uint8Array(reader.result))
-        .then(() => this.remesh())
+        .then(() => {
+          if (settings.spawnDudes) {
+            dudes.dudes.forEach((dude) => {
+              dudes.remove(dude);
+              dude.dispose();
+            });
+            dudes.dudes.length = 0;
+          }
+          this.remesh();
+        })
         .catch((e) => console.error(e));
     };
     reader.readAsArrayBuffer(file);

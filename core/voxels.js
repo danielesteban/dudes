@@ -322,8 +322,8 @@ class VoxelWorld {
   }
 
   load(deflated) {
-    if (!VoxelWorld.gzip) VoxelWorld.setupGzipWorker();
-    const { gzip } = VoxelWorld;
+    if (!VoxelWorld.zlib) VoxelWorld.setupZlibWorker();
+    const { zlib } = VoxelWorld;
     const {
       world,
       heightmap,
@@ -333,7 +333,7 @@ class VoxelWorld {
       depth,
     } = this;
     const version = 1;
-    return gzip.request({ data: deflated, operation: 'unzlib' })
+    return zlib.request({ data: deflated, operation: 'unzlib' })
       .then((buffer) => {
         const header = new Uint32Array(buffer.buffer, 0, 4);
         if (
@@ -354,8 +354,8 @@ class VoxelWorld {
   }
 
   save() {
-    if (!VoxelWorld.gzip) VoxelWorld.setupGzipWorker();
-    const { gzip } = VoxelWorld;
+    if (!VoxelWorld.zlib) VoxelWorld.setupZlibWorker();
+    const { zlib } = VoxelWorld;
     const {
       width,
       height,
@@ -367,7 +367,7 @@ class VoxelWorld {
     const buffer = new Uint8Array(header.byteLength + voxels.view.byteLength);
     buffer.set(new Uint8Array(header.buffer));
     buffer.set(voxels.view, header.byteLength);
-    return gzip.request({ data: buffer, operation: 'zlib' });
+    return zlib.request({ data: buffer, operation: 'zlib' });
   }
 
   static getBrush({ shape, size }) {
@@ -427,21 +427,21 @@ class VoxelWorld {
     });
   }
 
-  static setupGzipWorker() {
+  static setupZlibWorker() {
     let requestId = 0;
     const requests = [];
-    this.gzip = new Worker('/fflate.worker.js');
-    this.gzip.addEventListener('message', ({ data: { id, data } }) => {
+    this.zlib = new Worker('/fflate.worker.js');
+    this.zlib.addEventListener('message', ({ data: { id, data } }) => {
       const req = requests.findIndex((p) => p.id === id);
       if (req !== -1) {
         requests.splice(req, 1)[0].resolve(data);
       }
     });
-    this.gzip.request = ({ data, operation }) => (
+    this.zlib.request = ({ data, operation }) => (
       new Promise((resolve) => {
         const id = requestId++;
         requests.push({ id, resolve });
-        this.gzip.postMessage({ id, data, operation }, [data.buffer]);
+        this.zlib.postMessage({ id, data, operation }, [data.buffer]);
       })
     );
   }
