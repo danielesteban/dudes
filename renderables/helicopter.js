@@ -1,5 +1,5 @@
 import { Group, Vector3 } from '../vendor/three.js';
-import Instruments from './instruments.js';
+import Instruments from './ui/instruments.js';
 
 class Helicopter extends Group {
   constructor({ instruments, sfx, sound }) {

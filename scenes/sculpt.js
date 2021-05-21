@@ -1,8 +1,8 @@
 import { Euler, Group, Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
-import Brush from '../renderables/brush.js';
-import ColorPicker from '../renderables/colorpicker.js';
-import Lighting from '../renderables/lighting.js';
+import Brush from '../renderables/ui/brush.js';
+import ColorPicker from '../renderables/ui/colorpicker.js';
+import Lighting from '../renderables/ui/lighting.js';
 
 class Sculpt extends Gameplay {
   constructor(scene) {
@@ -18,7 +18,8 @@ class Sculpt extends Gameplay {
         ],
       },
       dudes: {
-        count: 0,
+        searchRadius: 32,
+        spawn: { count: 0 },
       },
       physics: false,
       world: {
@@ -27,7 +28,6 @@ class Sculpt extends Gameplay {
         depth: 128,
         generator: 'blank',
         scale: 0.03125,
-        seaLevel: 0,
       },
     });
     this.lights.light.target = 1;
@@ -114,6 +114,7 @@ class Sculpt extends Gameplay {
   onAnimationTick({ animation, camera, isXR }) {
     const {
       brush,
+      dudes,
       hasLoaded,
       lastVoxels,
       player,
@@ -125,6 +126,15 @@ class Sculpt extends Gameplay {
       return;
     }
     super.onAnimationTick({ animation, camera, isXR });
+    if (this.lighting.spawnDudes) {
+      this.spawn();
+    } else if (dudes.dudes.length) {
+      dudes.dudes.forEach((dude) => {
+        dudes.remove(dude);
+        dude.dispose();
+      });
+      dudes.dudes.length = 0;
+    }
     if (!isXR) {
       return;
     }
@@ -181,6 +191,60 @@ class Sculpt extends Gameplay {
           );
         }
       }
+    });
+  }
+
+  onLocomotionTick({ animation, camera, isXR }) {
+    const { hasLoaded, player } = this;
+    if (!hasLoaded) {
+      return;
+    }
+    player.onLocomotionTick({
+      animation,
+      camera,
+      isXR,
+      movementScale: 1 / 3,
+    });
+    if (player.position.y < 0) {
+      player.move({ x: 0, y: -player.position.y, z: 0 });
+    }
+  }
+
+  spawn() {
+    const { dudes, world } = this;
+    const cap = 32;
+    const distance = 16;
+    const aux = new Vector3();
+    const dude = new Vector3();
+    if (dudes.dudes.length >= cap) {
+      // TODO: Try to despawn some here
+      return;
+    }
+    dudes.spawn({
+      attempts: 1,
+      count: 1,
+      check: (spawn) => {
+        aux.set(spawn[0], spawn[1], spawn[2]);
+        let isValid = true;
+        for (let d = 0, l = dudes.dudes.length; d < l; d += 1) {
+          const { position } = dudes.dudes[d];
+          if (dude.copy(position).divideScalar(world.scale).floor().distanceTo(aux) < distance) {
+            isValid = false;
+            break;
+          }
+        }
+        return isValid;
+      },
+      origin: {
+        x: world.width * 0.5,
+        y: world.height * 0.5,
+        z: world.depth * 0.5,
+      },
+      radius: Math.max(
+        world.width,
+        world.height,
+        world.depth
+      ) * 0.5,
     });
   }
 

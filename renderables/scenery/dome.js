@@ -4,7 +4,7 @@ import {
   Mesh,
   ShaderMaterial,
   SphereGeometry,
-} from '../vendor/three.js';
+} from '../../vendor/three.js';
 
 class Dome extends Mesh {
   static setupGeometry() {

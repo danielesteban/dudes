@@ -7,7 +7,7 @@ import {
   SimplexNoise,
   Vector2,
   Vector3,
-} from '../vendor/three.js';
+} from '../../vendor/three.js';
 
 class Clouds extends Group {
   static setupGeometry() {

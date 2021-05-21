@@ -16,7 +16,7 @@ class Stress extends Gameplay {
         ],
       },
       dudes: {
-        count: 0,
+        spawn: { count: 0 },
       },
       physics: false,
       world: {

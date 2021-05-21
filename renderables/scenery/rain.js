@@ -10,7 +10,7 @@ import {
   ShaderMaterial,
   UniformsUtils,
   Vector3,
-} from '../vendor/three.js';
+} from '../../vendor/three.js';
 
 class Rain extends Mesh {
   static setupGeometry() {

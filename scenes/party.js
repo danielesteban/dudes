@@ -13,7 +13,6 @@ class Party extends Gameplay {
     const buildings = (3 * 3) - 1;
     super(scene, {
       dudes: {
-        count: dudesPerBuilding * buildings + dudesAtParty,
         onContact: onDudesContact,
         searchRadius: 10,
         spawn: {
@@ -34,6 +33,7 @@ class Party extends Gameplay {
             const y = world.getHeight(x, z) + 1;
             return [x, y, z];
           },
+          count: dudesPerBuilding * buildings + dudesAtParty,
         },
       },
       world: {

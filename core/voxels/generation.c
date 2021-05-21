@@ -727,9 +727,9 @@ static void generateBlank(
       setVoxel(
         world, voxels, heightmap,
         x, 0, z,
-        TYPE_STONE,
-        0xFFFFFF,
-        0xAA
+        TYPE_DIRT,
+        0xBBBBBB,
+        0x44
       );
     }
   }

@@ -1,5 +1,5 @@
-import VoxelWorld from '../core/voxels.js';
-import UI from './ui.js';
+import VoxelWorld from '../../core/voxels.js';
+import UI from '../ui.js';
 
 class Brush extends UI {
   constructor(options) {

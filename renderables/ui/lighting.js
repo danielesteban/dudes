@@ -1,13 +1,34 @@
-import UI from './ui.js';
+import UI from '../ui.js';
 
 class Lighting extends UI {
   constructor(options) {
     const width = 256;
     const height = 256;
+    const buttonWidth = ((width - 12) / 2) - 4;
+    const dudeButtons = ['OFF', 'ON'].map((label, i) => {
+      const button = {
+        x: 8 + (buttonWidth + 4) * i,
+        y: 144,
+        width: buttonWidth,
+        height: 32,
+        label,
+        isActive: i === 0,
+        onPointer: () => {
+          dudeButtons.forEach((button) => { button.isActive = false; });
+          button.isActive = true;
+          this.spawnDudes = i === 1;
+          this.draw();
+        },
+      };
+      return button;
+    });
     super({
       ...options,
       textureWidth: width,
       textureHeight: height,
+      buttons: [
+        ...dudeButtons,
+      ],
       labels: [
         {
           x: 8,
@@ -17,8 +38,14 @@ class Lighting extends UI {
         },
         {
           x: 8,
-          y: 86,
+          y: 78,
           text: 'Light',
+          textAlign: 'left',
+        },
+        {
+          x: 8,
+          y: 132,
+          text: 'Dudes',
           textAlign: 'left',
         },
         {
@@ -54,7 +81,7 @@ class Lighting extends UI {
         },
         {
           x: 8,
-          y: 98,
+          y: 90,
           width: width - 16,
           height: 24,
           value: 1,
@@ -69,6 +96,7 @@ class Lighting extends UI {
       ],
     });
     this.lights = options.lights;
+    this.spawnDudes = false;
   }
 }
 

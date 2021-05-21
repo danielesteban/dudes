@@ -9,7 +9,7 @@ import {
   ShaderMaterial,
   UniformsUtils,
   Vector3,
-} from '../vendor/three.js';
+} from '../../vendor/three.js';
 
 class Birds extends InstancedMesh {
   static setupGeometry() {

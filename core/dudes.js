@@ -5,10 +5,9 @@ import Marker from '../renderables/marker.js';
 
 class Dudes extends Group {
   constructor({
-    count,
     onContact,
     searchRadius,
-    spawn: { algorithm, origin, radius },
+    spawn,
     world,
   }) {
     super();
@@ -21,97 +20,7 @@ class Dudes extends Group {
     this.targetMarker = new Marker();
     this.add(this.targetMarker);
     this.world = world;
-    const spec = Dude.defaultSpec;
-    for (let i = 0; i < count; i += 1) {
-      const height = 1.4 + Math.random() * 0.6;
-      const head = (0.75 + Math.random() * 0.25);
-      const legs = (0.5 + Math.random() * 0.5);
-      const torso = (3 - head - legs) * (0.5 + Math.random() * 0.5);
-      const dude = new Dude({
-        colors: {
-          primary: (new Color()).setHSL(
-            Math.random(),
-            0.5 + Math.random() * 0.25,
-            0.25 + Math.random() * 0.25
-          ),
-          secondary: (new Color()).setHSL(
-            Math.random(),
-            0.5 + Math.random() * 0.25,
-            0.5 + Math.random() * 0.25
-          ),
-          skin: (new Color()).setHSL(
-            Math.random(),
-            0.5 + Math.random() * 0.25,
-            0.25 + Math.random() * 0.5
-          ),
-        },
-        stamina: 0.75 + Math.random() * 0.5,
-        height,
-        waist: 0.3 + Math.random() * 0.3,
-        torso: {
-          width: spec.torso.width * (0.75 + Math.random() * 0.25),
-          height: spec.torso.height * torso,
-          depth: spec.torso.depth * (0.75 + Math.random() * 0.25),
-        },
-        head: {
-          shape: Math.random() >= 0.5 ? 'cone' : 'box',
-          width: spec.head.width * (0.75 + Math.random() * 0.25),
-          height: spec.head.height * head,
-          depth: spec.head.depth * (0.75 + Math.random() * 0.25),
-        },
-        legs: {
-          ...spec.legs,
-          height: spec.legs.height * legs,
-        },
-        arms: {
-          ...spec.arms,
-          height: spec.arms.height * (0.75 + Math.random() * 0.5),
-        },
-        hat: Math.random() >= 0.5 ? {
-          ...spec.hat,
-          height: spec.hat.height * (1 + Math.random()),
-        } : false,
-      });
-      let spawn;
-      if (algorithm) {
-        while (!spawn) {
-          spawn = algorithm(i);
-          for (let d = 0, l = this.dudes.length; d < l; d += 1) {
-            const { position } = this.dudes[d];
-            if (
-              Math.floor(position.x / world.scale) === spawn[0]
-              && Math.floor(position.y / world.scale) === spawn[1]
-              && Math.floor(position.z / world.scale) === spawn[2]
-            ) {
-              spawn = false;
-              break;
-            }
-          }
-        }
-      } else {
-        while (!spawn) {
-          spawn = world.findTarget({
-            height: 4,
-            origin,
-            radius,
-            obstacles: this.computeObstacles(),
-          });
-        }
-      }
-      const light = world.getLight(spawn[0], spawn[1] + 1, spawn[2]);
-      dude.lighting.light = light >> 8;
-      dude.lighting.sunlight = light & 0xFF;
-      dude.position
-        .set(spawn[0] + 0.5, spawn[1], spawn[2] + 0.5)
-        .multiplyScalar(world.scale);
-      dude.searchEnabled = true;
-      dude.searchTimer = Math.random();
-      dude.minSearchTime = 2;
-      dude.maxSearchTime = 4;
-      dude.updateMatrixWorld();
-      this.add(dude);
-      this.dudes.push(dude);
-    }
+    this.spawn(spawn);
   }
 
   dispose() {
@@ -196,6 +105,15 @@ class Dudes extends Group {
     const { dudes, selected, targetMarker: marker, world } = this;
     dudes.forEach((dude) => {
       if (!dude.path || dude.step >= dude.path.length - 2) {
+        let update = !dude.path ? dude : dude.path[dude.path.length - 1];
+        const light = world.getLight(
+          Math.floor(update.position.x / world.scale),
+          Math.floor(update.position.y / world.scale) + 1,
+          Math.floor(update.position.z / world.scale)
+        );
+        if (!dude.path) update = update.lighting;
+        update.light = light >> 8;
+        update.sunlight = light & 0xFF;
         return;
       }
       dude.revaluate = () => {
@@ -251,6 +169,124 @@ class Dudes extends Group {
       if (path.length > 4) {
         dude.setPath(path, world.scale, marker);
       }
+    }
+  }
+
+  spawn({
+    algorithm,
+    attempts = Infinity,
+    check,
+    count,
+    origin,
+    radius,
+  }) {
+    const { dudes, world } = this;
+    const spec = Dude.defaultSpec;
+    for (let i = 0; i < count; i += 1) {
+      const height = 1.4 + Math.random() * 0.6;
+      const head = (0.75 + Math.random() * 0.25);
+      const legs = (0.5 + Math.random() * 0.5);
+      const torso = (3 - head - legs) * (0.5 + Math.random() * 0.5);
+      const dude = new Dude({
+        colors: {
+          primary: (new Color()).setHSL(
+            Math.random(),
+            0.5 + Math.random() * 0.25,
+            0.25 + Math.random() * 0.25
+          ),
+          secondary: (new Color()).setHSL(
+            Math.random(),
+            0.5 + Math.random() * 0.25,
+            0.5 + Math.random() * 0.25
+          ),
+          skin: (new Color()).setHSL(
+            Math.random(),
+            0.5 + Math.random() * 0.25,
+            0.25 + Math.random() * 0.5
+          ),
+        },
+        stamina: 0.75 + Math.random() * 0.5,
+        height,
+        waist: 0.3 + Math.random() * 0.3,
+        torso: {
+          width: spec.torso.width * (0.75 + Math.random() * 0.25),
+          height: spec.torso.height * torso,
+          depth: spec.torso.depth * (0.75 + Math.random() * 0.25),
+        },
+        head: {
+          shape: Math.random() >= 0.5 ? 'cone' : 'box',
+          width: spec.head.width * (0.75 + Math.random() * 0.25),
+          height: spec.head.height * head,
+          depth: spec.head.depth * (0.75 + Math.random() * 0.25),
+        },
+        legs: {
+          ...spec.legs,
+          height: spec.legs.height * legs,
+        },
+        arms: {
+          ...spec.arms,
+          height: spec.arms.height * (0.75 + Math.random() * 0.5),
+        },
+        hat: Math.random() >= 0.5 ? {
+          ...spec.hat,
+          height: spec.hat.height * (1 + Math.random()),
+        } : false,
+      });
+      let attempt = 0;
+      let spawn;
+      if (algorithm) {
+        while (!spawn) {
+          if (attempt >= attempts) {
+            return;
+          }
+          spawn = algorithm(i);
+          for (let d = 0, l = dudes.length; d < l; d += 1) {
+            const { position } = dudes[d];
+            if (
+              Math.floor(position.x / world.scale) === spawn[0]
+              && Math.floor(position.y / world.scale) === spawn[1]
+              && Math.floor(position.z / world.scale) === spawn[2]
+            ) {
+              spawn = false;
+              break;
+            }
+          }
+          if (check && !check(spawn)) {
+            spawn = false;
+          }
+          attempt += 1;
+        }
+      } else {
+        while (!spawn) {
+          if (attempt >= attempts) {
+            return;
+          }
+          spawn = world.findTarget({
+            height: 4,
+            origin,
+            radius,
+            obstacles: this.computeObstacles(),
+          });
+          if (check && !check(spawn)) {
+            spawn = false;
+          }
+          attempt += 1;
+        }
+      }
+      const light = world.getLight(spawn[0], spawn[1] + 1, spawn[2]);
+      dude.lighting.light = light >> 8;
+      dude.lighting.sunlight = light & 0xFF;
+      dude.position
+        .set(spawn[0] + 0.5, spawn[1], spawn[2] + 0.5)
+        .multiplyScalar(world.scale);
+      dude.scale.setScalar(world.scale * 2);
+      dude.searchEnabled = true;
+      dude.searchTimer = Math.random();
+      dude.minSearchTime = 2;
+      dude.maxSearchTime = 4;
+      dude.updateMatrixWorld();
+      this.add(dude);
+      dudes.push(dude);
     }
   }
 }

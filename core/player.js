@@ -356,7 +356,13 @@ class Player extends Group {
     camera.matrixWorld.decompose(head.position, head.quaternion, vector);
   }
 
-  onLocomotionTick({ animation, camera, isXR, physics }) {
+  onLocomotionTick({
+    animation,
+    camera,
+    isXR,
+    movementScale = 1,
+    physics,
+  }) {
     const {
       aux: {
         vectorA: direction,
@@ -388,7 +394,7 @@ class Player extends Group {
             direction
               .set(joystick.x, 0, joystick.y)
               .applyQuaternion(worldspace.quaternion)
-              .multiplyScalar(animation.delta * speed),
+              .multiplyScalar(animation.delta * speed * movementScale),
             physics
           );
         }
@@ -415,7 +421,7 @@ class Player extends Group {
             .addScaledVector(worldUp, keyboard.y)
             .addScaledVector(forward, keyboard.z)
             .normalize()
-            .multiplyScalar(animation.delta * speed),
+            .multiplyScalar(animation.delta * speed * movementScale),
           physics
         );
       }

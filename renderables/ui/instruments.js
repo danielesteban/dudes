@@ -4,7 +4,7 @@ import {
   MeshBasicMaterial,
   PlaneGeometry,
   sRGBEncoding,
-} from '../vendor/three.js';
+} from '../../vendor/three.js';
 
 class Instruments extends Mesh {
   static setupGeometry() {

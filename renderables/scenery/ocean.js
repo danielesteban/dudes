@@ -5,7 +5,7 @@ import {
   InstancedMesh,
   Matrix4,
   MeshBasicMaterial,
-} from '../vendor/three.js';
+} from '../../vendor/three.js';
 
 class Ocean extends InstancedMesh {
   static setupGeometry() {

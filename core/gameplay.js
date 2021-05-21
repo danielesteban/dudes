@@ -2,16 +2,16 @@ import { Color, FogExp2, Group, Matrix4, Vector3 } from '../vendor/three.js';
 import Ambient from './ambient.js';
 import Dudes from './dudes.js';
 import VoxelWorld from './voxels.js';
-import Birds from '../renderables/birds.js';
+import Birds from '../renderables/scenery/birds.js';
+import Dome from '../renderables/scenery/dome.js';
+import Clouds from '../renderables/scenery/clouds.js';
+import Ocean from '../renderables/scenery/ocean.js';
+import Rain from '../renderables/scenery/rain.js';
+import Starfield from '../renderables/scenery/starfield.js';
 import Bodies from '../renderables/bodies.js';
-import Dome from '../renderables/dome.js';
-import Clouds from '../renderables/clouds.js';
 import Dude from '../renderables/dude.js';
 import Explosion from '../renderables/explosion.js';
-import Ocean from '../renderables/ocean.js';
-import Rain from '../renderables/rain.js';
 import Spheres from '../renderables/spheres.js';
-import Starfield from '../renderables/starfield.js';
 import VoxelChunk from '../renderables/chunk.js';
 
 class Gameplay extends Group {
@@ -174,7 +174,7 @@ class Gameplay extends Group {
     const ocean = world.seaLevel > 0 ? (
       new Ocean({
         x: spawn.x,
-        y: world.seaLevel * world.scale + 0.2,
+        y: (world.seaLevel + 0.4) * world.scale,
         z: spawn.z,
       })
     ) : false;
@@ -182,10 +182,10 @@ class Gameplay extends Group {
     const starfield = new Starfield(spawn);
 
     this.dudes = new Dudes({
-      count: 32,
       searchRadius: 64,
       ...(this.dudesOptions || {}),
       spawn: {
+        count: 32,
         origin: spawn.clone().divideScalar(world.scale).floor(),
         radius: 64,
         ...(this.dudesOptions ? this.dudesOptions.spawn || {} : {}),
