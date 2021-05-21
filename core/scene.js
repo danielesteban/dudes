@@ -32,6 +32,7 @@ class Scene extends ThreeScene {
 
   getPhysics() {
     if (this.physics) {
+      this.physics.isPaused = false;
       return Promise.resolve(this.physics);
     }
     if (!this.onPhysics) {
@@ -86,7 +87,7 @@ class Scene extends ThreeScene {
       player.updateMatrixWorld();
     }
     player.head.updateMatrixWorld();
-    if (physics) {
+    if (physics && !physics.isPaused) {
       physics.simulate(animation.delta);
     }
     if (scene && scene.onAnimationTick) {

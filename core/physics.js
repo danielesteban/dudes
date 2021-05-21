@@ -44,6 +44,7 @@ class Physics {
         this.runtime = Ammo;
         this.world = world;
         this.hasLoaded = true;
+        this.isPaused = false;
         if (onLoad) {
           onLoad();
         }
@@ -588,6 +589,8 @@ class Physics {
     kinematic.length = 0;
     meshes.length = 0;
     ropes.length = 0;
+
+    this.isPaused = true;
   }
 
   simulate(delta) {
