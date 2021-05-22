@@ -23,6 +23,7 @@ class Sculpt extends Gameplay {
         ],
       },
       dudes: {
+        searchRadius: 32,
         spawn: { count: 0 },
       },
       physics: false,
