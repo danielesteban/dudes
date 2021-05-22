@@ -799,6 +799,7 @@ class Dude extends SkinnedMesh {
     if (marker) {
       marker.material.color.copy(color);
       marker.position.copy(path[path.length - 1].position);
+      marker.scale.copy(this.scale);
       marker.updateMatrix();
       marker.visible = true;
       this.marker = marker;

@@ -178,6 +178,24 @@ class Sculpt extends Gameplay {
       if (hand.handedness === 'left' && buttons.primaryDown) {
         ui.visible = !ui.visible;
       }
+      if (hand.handedness === 'right' && buttons.primaryDown) {
+        const dude = dudes.getAtPoint(raycaster.ray.origin);
+        if (dude) {
+          if (dudes.selected === dude) {
+            dudes.unselect();
+          } else {
+            dudes.select(dude);
+          }
+        } else if (dudes.selected) {
+          dudes.setDestination(
+            dudes.selected,
+            voxel
+              .copy(raycaster.ray.origin)
+              .divideScalar(world.scale)
+              .floor()
+          );
+        }
+      }
       if (hand.handedness === 'right' && ui.visible) {
         const hit = raycaster.intersectObjects(ui.children)[0] || false;
         if (hit) {

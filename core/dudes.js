@@ -1,4 +1,4 @@
-import { Color, Group, Vector3 } from '../vendor/three.js';
+import { Color, Group, Sphere, Vector3 } from '../vendor/three.js';
 import Dude from '../renderables/dude.js';
 import Selected from '../renderables/selected.js';
 import Marker from '../renderables/marker.js';
@@ -12,7 +12,10 @@ class Dudes extends Group {
   }) {
     super();
     this.matrixAutoUpdate = false;
-    this.auxVector = new Vector3();
+    this.aux = {
+      vector: new Vector3(),
+      sphere: new Sphere(),
+    };
     this.dudes = [];
     this.onContact = onContact;
     this.searchRadius = searchRadius;
@@ -77,7 +80,7 @@ class Dudes extends Group {
   }
 
   computeObstacles(exclude) {
-    const { auxVector: voxel, dudes, world } = this;
+    const { aux: { vector: voxel }, dudes, world } = this;
     return (obstacles) => dudes.forEach((dude) => {
       if (dude === exclude) {
         return;
@@ -99,6 +102,22 @@ class Dudes extends Group {
         }
       }
     }, []);
+  }
+
+  getAtPoint(point) {
+    const { aux: { sphere: bounds }, dudes } = this;
+    for (let i = 0, l = dudes.length; i < l; i += 1) {
+      const dude = dudes[i];
+      if (
+        bounds
+          .copy(dude.geometry.boundingSphere)
+          .applyMatrix4(dude.matrixWorld)
+          .containsPoint(point)
+      ) {
+        return dude;
+      }
+    }
+    return false;
   }
 
   revaluatePaths() {
@@ -140,6 +159,14 @@ class Dudes extends Group {
     marker.updateMatrix();
     marker.visible = true;
     dude.add(marker);
+  }
+
+  unselect() {
+    const { selected, selectionMarker: marker } = this;
+    if (selected) {
+      selected.remove(marker);
+      delete this.selected;
+    }
   }
 
   setDestination(dude, to) {

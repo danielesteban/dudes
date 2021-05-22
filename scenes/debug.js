@@ -120,9 +120,7 @@ class Debug extends Gameplay {
           return;
         }
         if (dudes.selected) {
-          // This should prolly be in a "deslect" method in the Dudes class
-          dudes.selected.remove(dudes.selectionMarker);
-          delete dudes.selected;
+          dudes.unselect();
           return;
         }
       }
