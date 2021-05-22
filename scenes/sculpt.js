@@ -28,9 +28,9 @@ class Sculpt extends Gameplay {
       },
       physics: false,
       world: {
-        width: 128,
-        height: 64,
-        depth: 128,
+        width: 256,
+        height: 96,
+        depth: 256,
         generator: 'blank',
         scale: 0.03125,
       },
