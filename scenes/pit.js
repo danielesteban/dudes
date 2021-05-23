@@ -17,4 +17,6 @@ class Pit extends Debug {
   }
 }
 
+Pit.showInMenu = 'Pit worldgen';
+
 export default Pit;

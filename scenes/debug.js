@@ -198,4 +198,6 @@ class Debug extends Gameplay {
   }
 }
 
+Debug.showInMenu = 'Engine debug';
+
 export default Debug;

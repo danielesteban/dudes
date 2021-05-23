@@ -1,8 +1,8 @@
-export { default as Debug } from './debug.js';
-export { default as HeliParty } from './heliparty.js';
-export { default as Menu } from './menu.js';
-export { default as Party } from './party.js';
-export { default as Pit } from './pit.js';
-export { default as Poop } from './poop.js';
-export { default as Sculpt } from './sculpt.js';
-export { default as Stress } from './stress.js';
+export { default as debug } from './debug.js';
+export { default as heli } from './heliparty.js';
+export { default as menu } from './menu.js';
+export { default as party } from './party.js';
+export { default as pit } from './pit.js';
+export { default as poop } from './poop.js';
+export { default as sculpt } from './sculpt.js';
+export { default as stress } from './stress.js';

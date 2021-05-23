@@ -342,4 +342,6 @@ class Sculpt extends Gameplay {
   }
 }
 
+Sculpt.showInMenu = 'DudeBrush VR';
+
 export default Sculpt;

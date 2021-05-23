@@ -80,4 +80,6 @@ class Poop extends Gameplay {
   }
 }
 
+Poop.showInMenu = 'Poop tech';
+
 export default Poop;

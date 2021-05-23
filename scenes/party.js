@@ -169,4 +169,6 @@ class Party extends Gameplay {
   }
 }
 
+Party.showInMenu = 'Party';
+
 export default Party;

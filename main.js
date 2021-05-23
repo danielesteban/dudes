@@ -15,37 +15,13 @@ const renderer = new Renderer({
 });
 
 router.addEventListener('update', ({ route, params }) => {
-  if (params.length > 0) {
+  if (route === '') {
+    route = 'menu';
+  }
+  if (!scenes[route] || params.length > 0) {
     router.replace('/');
     return;
   }
-  switch (route) {
-    case '':
-      renderer.scene.load('Menu');
-      break;
-    case 'heli':
-      renderer.scene.load('HeliParty');
-      break;
-    case 'debug':
-      renderer.scene.load('Debug');
-      break;
-    case 'party':
-      renderer.scene.load('Party');
-      break;
-    case 'pit':
-      renderer.scene.load('Pit');
-      break;
-    case 'poop':
-      renderer.scene.load('Poop');
-      break;
-    case 'sculpt':
-      renderer.scene.load('Sculpt');
-      break;
-    case 'stress':
-      renderer.scene.load('Stress');
-      break;
-    default:
-      router.replace('/');
-  }
+  renderer.scene.load(route);
 });
 router.update();

@@ -402,4 +402,6 @@ HeliParty.views = {
   party: 2,
 };
 
+HeliParty.showInMenu = 'Helicopter gameplay';
+
 export default HeliParty;

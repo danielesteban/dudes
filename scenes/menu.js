@@ -15,10 +15,19 @@ class Menu extends Gameplay {
       },
     });
     this.router = scene.router;
+    this.scenes = Object.keys(scene.scenes)
+      .reduce((scenes, route) => {
+        const title = scene.scenes[route].showInMenu;
+        if (title) {
+          scenes.push({ route, title });
+        }
+        return scenes;
+      }, [])
+      .sort((a, b) => a.title.localeCompare(b.title));
   }
 
   onLoad() {
-    const { player, router, world } = this;
+    const { player, router, scenes, world } = this;
     super.onLoad();
 
     const billboardPos = player.position
@@ -34,15 +43,7 @@ class Menu extends Gameplay {
     this.add(billboard);
 
     billboardPos.x += 18;
-    const buttons = [
-      { route: '/sculpt', title: 'DudeBrush VR' },
-      { route: '/party', title: 'Party' },
-      { route: '/heli', title: 'Helicopter gameplay' },
-      { route: '/pit', title: 'Pit worldgen' },
-      { route: '/poop', title: 'Poop tech' },
-      { route: '/debug', title: 'Engine debug' },
-    ];
-    const buttonHeight = (300 - 40) / buttons.length - 5;
+    const buttonHeight = (300 - 40) / scenes.length - 5;
     this.ui = new UI({
       position: {
         x: billboardPos.x * world.scale,
@@ -53,7 +54,7 @@ class Menu extends Gameplay {
       height: 4,
       textureWidth: 450,
       textureHeight: 300,
-      buttons: buttons.map(({ route, title }, i) => ({
+      buttons: scenes.map(({ route, title }, i) => ({
         x: 20,
         y: 20 + (buttonHeight + 5) * i,
         width: 410,
@@ -61,7 +62,7 @@ class Menu extends Gameplay {
         label: title,
         onPointer: () => router.push(route),
       })),
-      labels: buttons.map((v, i) => ({
+      labels: scenes.map((v, i) => ({
         x: 50,
         y: 20 + (buttonHeight + 5) * (i + 0.5),
         font: '700 36px monospace',
