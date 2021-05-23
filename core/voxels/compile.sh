@@ -13,6 +13,7 @@ clang --target=wasm32-unknown-wasi --sysroot=../../vendor/wasi-libc/sysroot -nos
 -Wl,--import-memory -Wl,--no-entry -Wl,--lto-O3 \
 -Wl,--export=malloc \
 -Wl,--export=colliders \
+-Wl,--export=findGround \
 -Wl,--export=findPath \
 -Wl,--export=findTarget \
 -Wl,--export=generate \

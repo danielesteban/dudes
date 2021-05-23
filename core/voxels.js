@@ -51,6 +51,7 @@ class VoxelWorld {
       .then((wasm) => WebAssembly.instantiate(wasm, { env: { memory } }))
       .then((instance) => {
         this._colliders = instance.exports.colliders;
+        this._findGround = instance.exports.findGround;
         this._findPath = instance.exports.findPath;
         this._findTarget = instance.exports.findTarget;
         this._generate = instance.exports.generate;
@@ -99,6 +100,22 @@ class VoxelWorld {
       throw new Error('Requested chunk is out of bounds');
     }
     return colliderBoxes.view.subarray(0, boxes * 6);
+  }
+
+  findGround(point) {
+    const {
+      world,
+      heightmap,
+      voxels,
+    } = this;
+    return this._findGround(
+      world.address,
+      heightmap.address,
+      voxels.address,
+      point.x,
+      point.y,
+      point.z
+    );
   }
 
   findPath({

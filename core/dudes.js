@@ -172,31 +172,25 @@ class Dudes extends Group {
   setDestination(dude, to) {
     const { targetMarker: marker, world } = this;
 
-    // This search should prolly be a method in the C implementation
-    const test = (x, y, z) => (
-      world.voxels.view[(z * world.width * world.height + y * world.width + x) * 6] !== 0
-    );
-    if (to.y > 0 && !test(to.x, to.y - 1, to.z)) {
-      for (let y = to.y - 1; y >= 0; y -= 1) {
-        if (y === 0 || test(to.x, y - 1, to.z)) {
-          to.y = y;
-          break;
-        }
-      }
+    const ground = world.findGround(to);
+    if (ground === 0) {
+      return;
     }
-
+    to.y = ground + 1;
     const from = dude.position.clone().divideScalar(world.scale).floor();
-    if (!from.equals(to)) {
-      const path = world.findPath({
-        height: 4,
-        from,
-        to,
-        obstacles: this.computeObstacles(dude),
-      });
-      if (path.length > 4) {
-        dude.setPath(path, world.scale, marker);
-      }
+    if (from.equals(to)) {
+      return;
     }
+    const path = world.findPath({
+      height: 4,
+      from,
+      to,
+      obstacles: this.computeObstacles(dude),
+    });
+    if (path.length <= 4) {
+      return;
+    }
+    dude.setPath(path, world.scale, marker);
   }
 
   spawn({

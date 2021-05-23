@@ -97,6 +97,22 @@ static const ASPathNodeSource PathNodeSource = {
   NULL
 };
 
+const int findGround(
+  const World* world,
+  const int* heightmap,
+  const unsigned char* voxels,
+  const int x,
+  int y,
+  const int z
+) {
+  for (; y >= world->seaLevel; y--) {
+    if (voxels[getVoxel(world, x, y, z)] != TYPE_AIR) {
+      return y;
+    }
+  }
+  return 0;
+}
+
 const int findPath(
   const World* world,
   const unsigned char* voxels,
