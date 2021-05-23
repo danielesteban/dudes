@@ -3,7 +3,6 @@ import Gameplay from '../core/gameplay.js';
 import Brush from '../renderables/ui/brush.js';
 import ColorPicker from '../renderables/ui/colorpicker.js';
 import Settings from '../renderables/ui/settings.js';
-import UI from '../renderables/ui.js';
 
 class Sculpt extends Gameplay {
   constructor(scene) {
