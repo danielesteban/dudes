@@ -62,10 +62,7 @@ class VoxelWorld {
           };
         });
         this.world.view.set([width, height, depth, seaLevel]);
-        if (onLoad) {
-          onLoad(this);
-        }
-        this.hasLoaded = true;
+        onLoad();
       })
       .catch((e) => console.error(e));
   }

@@ -43,11 +43,8 @@ class Physics {
         };
         this.runtime = Ammo;
         this.world = world;
-        this.hasLoaded = true;
         this.isPaused = false;
-        if (onLoad) {
-          onLoad();
-        }
+        onLoad();
       });
   }
 
