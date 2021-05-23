@@ -88,6 +88,12 @@ class Menu extends Gameplay {
     document.getElementById('welcome').classList.add('open');
   }
 
+  onUnload() {
+    const { ui } = this;
+    super.onUnload();
+    ui.dispose();
+  }
+
   onAnimationTick({ animation, camera, isXR }) {
     const { hasLoaded, player, ui } = this;
     if (!hasLoaded) {

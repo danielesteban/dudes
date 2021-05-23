@@ -3,6 +3,7 @@ import Gameplay from '../core/gameplay.js';
 import Brush from '../renderables/ui/brush.js';
 import ColorPicker from '../renderables/ui/colorpicker.js';
 import Settings from '../renderables/ui/settings.js';
+import UI from '../renderables/ui.js';
 
 class Sculpt extends Gameplay {
   constructor(scene) {
@@ -87,6 +88,7 @@ class Sculpt extends Gameplay {
   }
 
   onLoad(options) {
+    const { player } = this;
     super.onLoad(options);
 
     const downloader = document.createElement('a');
@@ -122,8 +124,11 @@ class Sculpt extends Gameplay {
   }
 
   onUnload() {
-    const { downloader, tools } = this;
+    const { brush, downloader, picker, settings, tools } = this;
     super.onUnload();
+    brush.dispose();
+    picker.dispose();
+    settings.dispose();
     document.body.removeChild(downloader);
     document.body.removeChild(tools);
     document.removeEventListener('dragover', this.onDragOver);
