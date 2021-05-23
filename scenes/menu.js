@@ -26,9 +26,9 @@ class Menu extends Gameplay {
       .sort((a, b) => a.title.localeCompare(b.title));
   }
 
-  onLoad() {
+  onLoad(options) {
     const { player, router, scenes, world } = this;
-    super.onLoad();
+    super.onLoad(options);
 
     const billboardPos = player.position
       .clone()

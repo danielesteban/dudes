@@ -43,9 +43,9 @@ class Stress extends Gameplay {
     this.timer = 0;
   }
 
-  onLoad() {
+  onLoad(options) {
     const { player } = this;
-    super.onLoad();
+    super.onLoad(options);
     player.teleport({ x: -16, y: 32, z: 48 });
     player.desktop.camera.rotation.set(Math.PI * -0.15, Math.PI * -0.25, 0, 'YXZ');
   }

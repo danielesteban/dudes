@@ -56,9 +56,9 @@ class Party extends Gameplay {
     };
   }
 
-  onLoad() {
+  onLoad(options) {
     const { physics, player, world } = this;
-    super.onLoad();
+    super.onLoad(options);
 
     this.partyOrigin = player.position.clone();
 

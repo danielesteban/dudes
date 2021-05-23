@@ -1,5 +1,3 @@
-import { Group } from '../vendor/three.js';
-
 class VoxelWorld {
   constructor({
     width,
@@ -10,16 +8,11 @@ class VoxelWorld {
     chunkSize = 16,
     generator = 'default',
     seed = Math.floor(Math.random() * 2147483647),
-    onContact,
     onLoad,
   }) {
-    this.chunks = new Group();
-    this.chunks.matrixAutoUpdate = false;
     this.chunkSize = chunkSize;
     this.generator = VoxelWorld.generators[generator];
     this.seed = seed;
-    this.meshes = [];
-    this.onContact = onContact;
     this.seaLevel = seaLevel;
     this.scale = scale;
     this.width = width;

@@ -68,9 +68,9 @@ class Debug extends Gameplay {
     ))).then((sfx) => { this.plops = sfx; });
   }
 
-  onLoad() {
+  onLoad(options) {
     const { player, world } = this;
-    super.onLoad();
+    super.onLoad(options);
     const billboardPos = player.position
       .clone()
       .divideScalar(world.scale)

@@ -71,9 +71,9 @@ class HeliParty extends Party {
     this.updateView(HeliParty.views.thirdPerson);
   }
 
-  onLoad() {
+  onLoad(options) {
     const { physics, player, voxelizer } = this;
-    super.onLoad();
+    super.onLoad(options);
     player.move({ x: 0, y: 8, z: 24 });
     this.helicopter.voxelize(voxelizer)
       .then(() => {

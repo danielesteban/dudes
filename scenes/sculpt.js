@@ -86,8 +86,8 @@ class Sculpt extends Gameplay {
     });
   }
 
-  onLoad() {
-    super.onLoad();
+  onLoad(options) {
+    super.onLoad(options);
 
     const downloader = document.createElement('a');
     downloader.style.display = 'none';

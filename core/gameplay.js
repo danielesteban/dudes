@@ -52,7 +52,6 @@ class Gameplay extends Group {
         },
       ],
     });
-    this.dudesOptions = options.dudes;
 
     Bodies.setupMaterial();
     Dude.setupMaterial();
@@ -149,11 +148,11 @@ class Gameplay extends Group {
       .then(([physics, world]) => {
         this.physics = physics;
         this.world = world;
-        this.onLoad();
+        this.onLoad(options);
       });
   }
 
-  onLoad() {
+  onLoad(options) {
     const {
       physics,
       player,
@@ -162,6 +161,9 @@ class Gameplay extends Group {
     } = this;
 
     world.generate();
+    world.chunks = new Group();
+    world.chunks.matrixAutoUpdate = false;
+    world.meshes = [];
 
     const spawn = (new Vector3(world.width * 0.5, 0, world.depth * 0.5)).floor();
     spawn.y = Math.max(world.seaLevel, world.getHeight(spawn.x, spawn.z) + 1);
@@ -183,16 +185,15 @@ class Gameplay extends Group {
 
     this.dudes = new Dudes({
       searchRadius: 64,
-      ...(this.dudesOptions || {}),
+      ...(options.dudes || {}),
       spawn: {
         count: 32,
         origin: spawn.clone().divideScalar(world.scale).floor(),
         radius: 64,
-        ...(this.dudesOptions ? this.dudesOptions.spawn || {} : {}),
+        ...((options.dudes && options.dudes.spawn) || {}),
       },
       world,
     });
-    delete this.dudesOptions;
 
     this.add(world.chunks);
     this.add(this.dudes);
@@ -224,8 +225,8 @@ class Gameplay extends Group {
             chunk.collider.isChunk = true;
             chunk.collider.position.copy(chunk.position);
             chunk.collider.physics = [];
-            if (world.onContact) {
-              chunk.collider.onContact = world.onContact;
+            if (options.world.onContact) {
+              chunk.collider.onContact = options.world.onContact;
             }
           }
           world.meshes.push(chunk);
@@ -238,17 +239,15 @@ class Gameplay extends Group {
         }
       }
     }
-    delete world.onContact;
 
     this.dudes.dudes.forEach((dude) => {
-      if (this.dudes.onContact) {
-        dude.onContact = this.dudes.onContact;
+      if (options.dudes && options.dudes.onContact) {
+        dude.onContact = options.dudes.onContact;
       }
       if (physics) {
         physics.addMesh(dude, { isKinematic: true, isTrigger: !!dude.onContact });
       }
     });
-    delete this.dudes.onContact;
     if (physics && projectiles) physics.addMesh(projectiles, { mass: 1 });
 
     const loading = document.getElementById('loading');

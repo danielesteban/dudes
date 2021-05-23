@@ -5,7 +5,6 @@ import Marker from '../renderables/marker.js';
 
 class Dudes extends Group {
   constructor({
-    onContact,
     searchRadius,
     spawn,
     world,
@@ -17,7 +16,6 @@ class Dudes extends Group {
       sphere: new Sphere(),
     };
     this.dudes = [];
-    this.onContact = onContact;
     this.searchRadius = searchRadius;
     this.selectionMarker = new Selected();
     this.targetMarker = new Marker();
