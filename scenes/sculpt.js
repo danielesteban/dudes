@@ -216,7 +216,7 @@ class Sculpt extends Gameplay {
           if (server) {
             server.request({
               type: 'TARGET',
-              id: dude.serverId,
+              id: dudes.selected.serverId,
               voxel,
             });
           }
