@@ -62,12 +62,45 @@ class Dudes {
       if (!target) {
         return;
       }
-      this.setTarget(dude, target);
+      const path = server.world.findPath({
+        height: 4,
+        from: dude.position,
+        to: target,
+        obstacles: this.computeObstacles(dude),
+      });
+      if (path.length <= 4) {
+        return;
+      }
+      dude.path = [dude.position];
+      for (let i = 4, l = path.length; i < l; i += 4) {
+        dude.path.push({
+          x: path[i],
+          y: path[i + 1],
+          z: path[i + 2],
+        });
+      }
+      dude.interpolation = 0;
+      dude.step = 0;
+      server.broadcast({
+        type: 'TARGET',
+        id: dude.id,
+        voxel: dude.path[dude.path.length - 1],
+      });
     });
   }
 
-  setTarget(dude, target) {
+  setDestination(dude, target) {
     const { server } = this;
+
+    const ground = server.world.findGround({
+      avoidTrees: false,
+      height: 4,
+      voxel: target,
+    });
+    if (ground === 0) {
+      return;
+    }
+    target.y = ground + 1;
     const path = server.world.findPath({
       height: 4,
       from: dude.position,

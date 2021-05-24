@@ -150,7 +150,7 @@ class VoxelServer {
         client.dude = dude;
         dude.selected += 1;
         if (message.voxel) {
-          dudes.setTarget(dude, message.voxel);
+          dudes.setDestination(dude, message.voxel);
         }
         break;
       }
