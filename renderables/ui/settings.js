@@ -26,9 +26,7 @@ class Settings extends UI {
       ...options,
       textureWidth: width,
       textureHeight: height,
-      buttons: [
-        ...dudeButtons,
-      ],
+      buttons: options.dudes ? dudeButtons : [],
       labels: [
         {
           x: 8,
@@ -42,12 +40,12 @@ class Settings extends UI {
           text: 'Light',
           textAlign: 'left',
         },
-        {
+        ...(options.dudes ? [{
           x: 8,
           y: 132,
           text: 'Dudes',
           textAlign: 'left',
-        },
+        }] : []),
         {
           x: 128,
           y: 200,

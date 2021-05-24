@@ -92,7 +92,11 @@ class VoxelWorld {
     return colliderBoxes.view.subarray(0, boxes * 6);
   }
 
-  findGround(point) {
+  findGround({
+    avoidTrees,
+    height,
+    voxel,
+  }) {
     const {
       world,
       heightmap,
@@ -102,9 +106,11 @@ class VoxelWorld {
       world.address,
       heightmap.address,
       voxels.address,
-      point.x,
-      point.y,
-      point.z
+      avoidTrees,
+      height,
+      voxel.x,
+      voxel.y,
+      voxel.z
     );
   }
 
@@ -335,23 +341,10 @@ class VoxelWorld {
       world,
       heightmap,
       voxels,
-      width,
-      height,
-      depth,
     } = this;
-    const version = 1;
     return zlib.request({ data: deflated, operation: 'unzlib' })
       .then((buffer) => {
-        const header = new Uint32Array(buffer.buffer, 0, 4);
-        if (
-          header[0] !== version
-          || header[1] !== width
-          || header[2] !== height
-          || header[3] !== depth
-        ) {
-          throw new Error('Bad format, version or dimensions');
-        }
-        voxels.view.set(buffer.subarray(header.byteLength));
+        voxels.view.set(buffer);
         this._heightmap(
           world.address,
           heightmap.address,
@@ -363,18 +356,8 @@ class VoxelWorld {
   save() {
     if (!VoxelWorld.zlib) VoxelWorld.setupZlibWorker();
     const { zlib } = VoxelWorld;
-    const {
-      width,
-      height,
-      depth,
-      voxels,
-    } = this;
-    const version = 1;
-    const header = new Uint32Array([version, width, height, depth]);
-    const buffer = new Uint8Array(header.byteLength + voxels.view.byteLength);
-    buffer.set(new Uint8Array(header.buffer));
-    buffer.set(voxels.view, header.byteLength);
-    return zlib.request({ data: buffer, operation: 'zlib' });
+    const { voxels } = this;
+    return zlib.request({ data: new Uint8Array(voxels.view), operation: 'zlib' });
   }
 
   static getBrush({ shape, size }) {

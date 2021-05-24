@@ -101,12 +101,26 @@ const int findGround(
   const World* world,
   const int* heightmap,
   const unsigned char* voxels,
+  const bool avoidTrees,
+  const int height,
   const int x,
   int y,
   const int z
 ) {
   for (; y >= world->seaLevel; y--) {
-    if (voxels[getVoxel(world, x, y, z)] != TYPE_AIR) {
+    const unsigned char type = voxels[getVoxel(world, x, y, z)];
+    if (type == TYPE_AIR || (avoidTrees && type == TYPE_TREE)) {
+      continue;
+    }
+    bool isValid = true;
+    for (int h = 1; h <= height; h++) {
+      const int voxel = getVoxel(world, x, y + h, z);
+      if (voxels[voxel] != TYPE_AIR) {
+        isValid = false;
+        break;
+      }
+    }
+    if (isValid) {
       return y;
     }
   }

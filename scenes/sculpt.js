@@ -5,7 +5,7 @@ import ColorPicker from '../renderables/ui/colorpicker.js';
 import Settings from '../renderables/ui/settings.js';
 
 class Sculpt extends Gameplay {
-  constructor(scene) {
+  constructor(scene, options) {
     super(scene, {
       ambient: {
         range: { from: 0, to: 128 },
@@ -33,6 +33,7 @@ class Sculpt extends Gameplay {
         depth: 256,
         generator: 'blank',
         scale: 0.03125,
+        server: options.server,
       },
     });
     this.lights.light.target = 1;
@@ -58,6 +59,7 @@ class Sculpt extends Gameplay {
       rotation: new Euler(0, Math.PI, 0),
       width: 0.2,
       height: 0.2,
+      dudes: !options.server,
       lights: this.lights,
     });
     this.brush.color = this.picker.color;
@@ -87,8 +89,12 @@ class Sculpt extends Gameplay {
   }
 
   onLoad(options) {
-    const { player } = this;
+    const { player, server } = this;
     super.onLoad(options);
+
+    if (server) {
+      return;
+    }
 
     const downloader = document.createElement('a');
     downloader.style.display = 'none';
@@ -101,7 +107,7 @@ class Sculpt extends Gameplay {
     loader.onchange = ({ target: { files: [file] } }) => this.load(file);
     loader.style.display = 'none';
     document.body.appendChild(loader);
-
+  
     this.onDragOver = this.onDragOver.bind(this);
     document.addEventListener('dragover', this.onDragOver, false);
     this.onDrop = this.onDrop.bind(this);
@@ -123,11 +129,14 @@ class Sculpt extends Gameplay {
   }
 
   onUnload() {
-    const { brush, downloader, picker, settings, tools } = this;
+    const { brush, downloader, picker, server, settings, tools } = this;
     super.onUnload();
     brush.dispose();
     picker.dispose();
     settings.dispose();
+    if (server) {
+      return;
+    }
     document.body.removeChild(downloader);
     document.body.removeChild(tools);
     document.removeEventListener('dragover', this.onDragOver);
@@ -142,6 +151,7 @@ class Sculpt extends Gameplay {
       lastVoxels,
       player,
       plops,
+      server,
       settings,
       voxel,
       world,
@@ -151,14 +161,16 @@ class Sculpt extends Gameplay {
       return;
     }
     super.onAnimationTick({ animation, camera, isXR });
-    if (settings.spawnDudes) {
-      this.spawn();
-    } else if (dudes.dudes.length) {
-      dudes.dudes.forEach((dude) => {
-        dudes.remove(dude);
-        dude.dispose();
-      });
-      dudes.dudes.length = 0;
+    if (!server) {
+      if (settings.spawnDudes) {
+        this.spawn();
+      } else if (dudes.dudes.length) {
+        dudes.dudes.forEach((dude) => {
+          dudes.remove(dude);
+          dude.dispose();
+        });
+        dudes.dudes.length = 0;
+      }
     }
     if (!isXR) {
       return;
@@ -190,13 +202,27 @@ class Sculpt extends Gameplay {
           } else {
             dudes.select(dude);
           }
+          if (server) {
+            server.request({
+              type: 'SELECT',
+              id: dudes.selected !== dude ? dude.serverId : undefined,
+            });
+          }
         } else if (dudes.selected) {
+          voxel
+            .copy(raycaster.ray.origin)
+            .divideScalar(world.scale)
+            .floor();
+          if (server) {
+            server.request({
+              type: 'TARGET',
+              id: dude.serverId,
+              voxel,
+            });
+          }
           dudes.setDestination(
             dudes.selected,
             voxel
-              .copy(raycaster.ray.origin)
-              .divideScalar(world.scale)
-              .floor()
           );
         }
       }
@@ -315,10 +341,22 @@ class Sculpt extends Gameplay {
   }
 
   load(file) {
-    const { dudes, settings, world } = this;
+    const { dudes, server, settings, world } = this;
+    const version = 1;
     const reader = new FileReader();
     reader.onload = () => {
-      world.load(new Uint8Array(reader.result))
+      const buffer = new Uint8Array(reader.result);
+      const header = new Uint32Array(buffer.buffer, 0, 4);
+      if (
+        header[0] !== version
+        || header[1] !== world.width
+        || header[2] !== world.height
+        || header[3] !== world.depth
+      ) {
+        console.error('Bad format, version or dimensions');
+        return;
+      }
+      world.load(buffer.subarray(header.byteLength))
         .then(() => {
           if (settings.spawnDudes) {
             dudes.dudes.forEach((dude) => {
@@ -336,8 +374,13 @@ class Sculpt extends Gameplay {
 
   save() {
     const { world, downloader } = this;
+    const version = 1;
+    const header = new Uint32Array([version, world.width, world.height, world.depth]);
     world.save()
-      .then((buffer) => {
+      .then((voxels) => {
+        const buffer = new Uint8Array(header.byteLength + voxels.byteLength);
+        buffer.set(new Uint8Array(header.buffer));
+        buffer.set(voxels, header.byteLength);
         const blob = new Blob([buffer], { type: 'application/octet-stream' });
         downloader.download = `${Date.now()}.blocks`;
         downloader.href = URL.createObjectURL(blob);

@@ -1,0 +1,80 @@
+package protocol;
+syntax = "proto3";
+
+message Brush {
+  enum Shape {
+    BOX = 0;
+    SPHERE = 1;
+  }
+  enum Type {
+    AIR = 0;
+    DIRT = 1;
+    LIGHT = 2;
+    STONE = 3;
+  }
+  uint32 color = 1;
+  float noise = 2;
+  Type type = 3;
+  Shape shape = 4;
+  uint32 size = 5;
+}
+
+message Voxel {
+  uint32 x = 1;
+  uint32 y = 2;
+  uint32 z = 3;
+}
+
+message Dude {
+  enum Shape {
+    BOX = 0;
+    CONE = 1;
+  }
+  string id = 1;
+  Voxel position = 2;
+  Voxel target = 3;
+  uint32 primary = 4;
+  uint32 secondary = 5;
+  uint32 skin = 6;
+  float stamina = 7;
+  float height = 8;
+  float waist = 9;
+  float torsoWidth = 10;
+  float torsoHeight = 11;
+  float torsoDepth = 12;
+  Shape headShape = 13;
+  float headWidth = 14;
+  float headHeight = 15;
+  float headDepth = 16;
+  float legsHeight = 17;
+  float armsHeight = 18;
+  float hat = 19;
+}
+
+message World {
+  uint32 width = 1;
+  uint32 height = 2;
+  uint32 depth = 3;
+  bytes voxels = 4;
+}
+
+message Message {
+  enum Type {
+    LOAD = 1;
+    UPDATE = 2;
+    JOIN = 3;
+    LEAVE = 4;
+    SIGNAL = 5;
+    SELECT = 6;
+    SPAWN = 7;
+    TARGET = 8;
+  }
+  Type type = 1;
+  Brush brush = 2;
+  Voxel voxel = 3;
+  string id = 4;
+  string signal = 5;
+  repeated Dude dudes = 6;
+  repeated string peers = 7;
+  World world = 8;
+}

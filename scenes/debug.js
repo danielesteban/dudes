@@ -16,13 +16,16 @@ class Debug extends Gameplay {
 
     super(scene, {
       dudes: {
-        onContact: (contact) => {
-          if (this.projectiles.destroyOnContact(contact)) {
-            contact.triggerMesh.onHit();
-          }
-        },
+        ...(!options.world.server ? {
+          onContact: (contact) => {
+            if (this.projectiles.destroyOnContact(contact)) {
+              contact.triggerMesh.onHit();
+            }
+          },
+        } : {}),
         ...(options && options.dudes ? { ...options.dudes } : {}),
       },
+      billboard: options.billboard,
       projectiles: true,
       lightToggle: true,
       rainToggle: true,
@@ -71,17 +74,19 @@ class Debug extends Gameplay {
   onLoad(options) {
     const { player, world } = this;
     super.onLoad(options);
-    const billboardPos = player.position
-      .clone()
-      .divideScalar(world.scale)
-      .floor()
-      .add({ x: 0, y: 0, z: -31 });
-    const billboard = new Billboard({
-      x: billboardPos.x * world.scale,
-      y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale,
-      z: billboardPos.z * world.scale,
-    });
-    this.add(billboard);
+    if (options.billboard !== false) {
+      const billboardPos = player.position
+        .clone()
+        .divideScalar(world.scale)
+        .floor()
+        .add({ x: 0, y: 0, z: -31 });
+      const billboard = new Billboard({
+        x: billboardPos.x * world.scale,
+        y: world.getHeight(billboardPos.x, billboardPos.z) * world.scale,
+        z: billboardPos.z * world.scale,
+      });
+      this.add(billboard);
+    }
   }
 
   onAnimationTick({ animation, camera, isXR }) {
@@ -92,6 +97,7 @@ class Debug extends Gameplay {
       physics,
       player,
       plops,
+      server,
       world,
     } = this;
     if (!hasLoaded) {
@@ -103,12 +109,20 @@ class Debug extends Gameplay {
       if (dudes.selected && buttons.primaryDown) {
         const hit = physics.raycast(raycaster.ray.origin, raycaster.ray.direction);
         if (hit) {
+          hit.point
+            .divideScalar(world.scale)
+            .addScaledVector(hit.normal, 0.25)
+            .floor();
+          if (server) {
+            server.request({
+              type: 'TARGET',
+              id: dudes.selected.serverId,
+              voxel: hit.point,
+            });
+          }
           dudes.setDestination(
             dudes.selected,
             hit.point
-              .divideScalar(world.scale)
-              .addScaledVector(hit.normal, 0.25)
-              .floor()
           );
           return;
         }
@@ -117,10 +131,19 @@ class Debug extends Gameplay {
         const hit = physics.raycast(raycaster.ray.origin, raycaster.ray.direction, 4);
         if (hit) {
           dudes.select(hit.object);
+          if (server) {
+            server.request({
+              type: 'SELECT',
+              id: hit.object.serverId,
+            });
+          }
           return;
         }
         if (dudes.selected) {
           dudes.unselect();
+          if (server) {
+            server.request({ type: 'SELECT' });
+          }
           return;
         }
       }

@@ -6,7 +6,7 @@ import Marker from '../renderables/marker.js';
 class Dudes extends Group {
   constructor({
     searchRadius,
-    spawn,
+    onSpawn,
     world,
   }) {
     super();
@@ -20,8 +20,8 @@ class Dudes extends Group {
     this.selectionMarker = new Selected();
     this.targetMarker = new Marker();
     this.add(this.targetMarker);
+    this.onSpawn = onSpawn;
     this.world = world;
-    this.spawn(spawn);
   }
 
   dispose() {
@@ -90,7 +90,7 @@ class Dudes extends Group {
         for (let y = 0; y < 4; y += 1) {
           if (
             voxel.x < 0 || voxel.x >= world.width
-            || voxel.y < 0 || y >= world.height
+            || voxel.y < 0 || voxel.y >= world.height
             || voxel.z < 0 || voxel.z >= world.depth
           ) {
             return;
@@ -168,9 +168,13 @@ class Dudes extends Group {
   }
 
   setDestination(dude, to) {
-    const { targetMarker: marker, world } = this;
+    const { targetMarker: marker, selected, world } = this;
 
-    const ground = world.findGround(to);
+    const ground = world.findGround({
+      avoidTrees: false,
+      height: 4,
+      voxel: to,
+    });
     if (ground === 0) {
       return;
     }
@@ -188,7 +192,7 @@ class Dudes extends Group {
     if (path.length <= 4) {
       return;
     }
-    dude.setPath(path, world.scale, marker);
+    dude.setPath(path, world.scale, dude === selected ? marker : false);
   }
 
   spawn({
@@ -306,7 +310,84 @@ class Dudes extends Group {
       dude.updateMatrixWorld();
       this.add(dude);
       dudes.push(dude);
+      this.onSpawn(dude);
     }
+  }
+
+  spawnFromServer(message) {
+    const { dudes, world } = this;
+    const spec = Dude.defaultSpec;
+    message.forEach(({
+      id,
+      position,
+      target,
+      primary,
+      secondary,
+      skin,
+      stamina,
+      height,
+      waist,
+      torsoWidth,
+      torsoHeight,
+      torsoDepth,
+      headShape,
+      headWidth,
+      headHeight,
+      headDepth,
+      legsHeight,
+      armsHeight,
+      hat,
+    }) => {
+      const dude = new Dude({
+        colors: {
+          primary: (new Color()).setHex(primary),
+          secondary: (new Color()).setHex(secondary),
+          skin: (new Color()).setHex(skin),
+        },
+        stamina,
+        height,
+        waist,
+        torso: {
+          width: spec.torso.width * torsoWidth,
+          height: spec.torso.height * torsoHeight,
+          depth: spec.torso.depth * torsoDepth,
+        },
+        head: {
+          shape: headShape === 0 ? 'box' : 'cone',
+          width: spec.head.width * headWidth,
+          height: spec.head.height * headHeight,
+          depth: spec.head.depth * headDepth,
+        },
+        legs: {
+          ...spec.legs,
+          height: spec.legs.height * legsHeight,
+        },
+        arms: {
+          ...spec.arms,
+          height: spec.arms.height * armsHeight,
+        },
+        hat: hat !== 0 ? {
+          ...spec.hat,
+          height: spec.hat.height * hat,
+        } : false,
+      });
+      const light = world.getLight(position.x, position.y + 1, position.z);
+      dude.lighting.light = light >> 8;
+      dude.lighting.sunlight = light & 0xFF;
+      dude.position
+        .set(position.x + 0.5, position.y, position.z + 0.5)
+        .multiplyScalar(world.scale);
+      dude.scale.setScalar(world.scale * 2);
+      dude.searchEnabled = false;
+      dude.serverId = id;
+      dude.updateMatrixWorld();
+      this.add(dude);
+      dudes.push(dude);
+      this.onSpawn(dude);
+      if (target) {
+        this.setDestination(dude, target);
+      }
+    });
   }
 }
 

@@ -1,6 +1,7 @@
 import { Color, FogExp2, Group, Matrix4, Vector3 } from '../vendor/three.js';
 import Ambient from './ambient.js';
 import Dudes from './dudes.js';
+import Server from './server.js';
 import VoxelWorld from './voxels.js';
 import Birds from '../renderables/scenery/birds.js';
 import Dome from '../renderables/scenery/dome.js';
@@ -26,7 +27,7 @@ class Gameplay extends Group {
     this.ambient = new Ambient({
       anchor: this.player.head,
       isRunning: this.player.head.context.state === 'running',
-      range: { from: 0, to: options.world.height * 0.8 },
+      range: { from: 0, to: 128 },
       ...(options.ambient ? options.ambient : {}),
       sounds: [
         ...(options.ambient && options.ambient.sounds ? options.ambient.sounds : [
@@ -138,12 +139,70 @@ class Gameplay extends Group {
 
     Promise.all([
       options.physics !== false ? scene.getPhysics() : Promise.resolve(false),
-      new Promise((resolve) => {
-        const world = new VoxelWorld({
-          ...options.world,
-          onLoad: () => resolve(world),
-        });
-      }),
+      (!options.world.server ? Promise.resolve(options.world) : (
+        new Promise((resolve) => {
+          const color = new Color();
+          const server = new Server({
+            player: this.player,
+            url: options.world.server,
+            onLoad: ({
+              dudes,
+              world: { width, height, depth, voxels },
+            }) => {
+              options.dudes = {
+                ...(options.dudes || {}),
+                server: dudes,
+              };
+              this.add(server);
+              this.server = server;
+              resolve({
+                ...options.world,
+                width,
+                height,
+                depth,
+                voxels,
+              });
+            },
+            onUpdate: (brush, voxel) => {
+              if (this.hasLoaded) {
+                this.updateVoxel({
+                  ...brush,
+                  color: color.setHex(brush.color),
+                }, voxel, false);
+              }
+            },
+            onSpawn: (dudes) => {
+              if (this.hasLoaded) {
+                this.dudes.spawnFromServer(dudes);
+              }
+            },
+            onTarget: (dude, target) => {
+              if (this.hasLoaded) {
+                this.dudes.setDestination(
+                  this.dudes.dudes.find(({ serverId }) => serverId === dude),
+                  target
+                );
+              }
+            },
+          });
+        })
+      ))
+        .then((options) => (
+          new Promise((resolve) => {
+            const world = new VoxelWorld({
+              ...options,
+              onLoad: () => {
+                if (options.voxels) {
+                  world.load(options.voxels)
+                    .then(() => resolve(world));
+                  return;
+                }
+                world.generate();
+                resolve(world);
+              },
+            });
+          })
+        )),
     ])
       .then(([physics, world]) => {
         this.physics = physics;
@@ -157,10 +216,10 @@ class Gameplay extends Group {
       physics,
       player,
       projectiles,
+      server,
       world,
     } = this;
 
-    world.generate();
     world.chunks = new Group();
     world.chunks.matrixAutoUpdate = false;
     world.meshes = [];
@@ -169,6 +228,20 @@ class Gameplay extends Group {
     spawn.y = Math.max(world.seaLevel, world.getHeight(spawn.x, spawn.z) + 1);
     spawn.multiplyScalar(world.scale);
     player.teleport(spawn);
+
+    this.dudes = new Dudes({
+      searchRadius: 64,
+      ...(options.dudes || {}),
+      world,
+      onSpawn: (dude) => {
+        if (options.dudes && options.dudes.onContact) {
+          dude.onContact = options.dudes.onContact;
+        }
+        if (physics) {
+          physics.addMesh(dude, { isKinematic: true, isTrigger: !!dude.onContact });
+        }
+      },
+    });
 
     this.birds = new Birds({ anchor: player });
     this.clouds = new Clouds(spawn);
@@ -182,18 +255,6 @@ class Gameplay extends Group {
     ) : false;
     this.rain = new Rain({ anchor: player, world });
     const starfield = new Starfield(spawn);
-
-    this.dudes = new Dudes({
-      searchRadius: 64,
-      ...(options.dudes || {}),
-      spawn: {
-        count: 32,
-        origin: spawn.clone().divideScalar(world.scale).floor(),
-        radius: 64,
-        ...((options.dudes && options.dudes.spawn) || {}),
-      },
-      world,
-    });
 
     this.add(world.chunks);
     this.add(this.dudes);
@@ -240,14 +301,16 @@ class Gameplay extends Group {
       }
     }
 
-    this.dudes.dudes.forEach((dude) => {
-      if (options.dudes && options.dudes.onContact) {
-        dude.onContact = options.dudes.onContact;
-      }
-      if (physics) {
-        physics.addMesh(dude, { isKinematic: true, isTrigger: !!dude.onContact });
-      }
-    });
+    if (server) {
+      this.dudes.spawnFromServer(options.dudes.server);
+    } else {
+      this.dudes.spawn({
+        count: 32,
+        origin: spawn.clone().divideScalar(world.scale).floor(),
+        radius: 64,
+        ...((options.dudes && options.dudes.spawn) || {}),
+      });
+    }
     if (physics && projectiles) physics.addMesh(projectiles, { mass: 1 });
 
     const loading = document.getElementById('loading');
@@ -284,6 +347,7 @@ class Gameplay extends Group {
       lights,
       player,
       rain,
+      server,
     } = this;
     if (!hasLoaded) {
       return;
@@ -295,6 +359,9 @@ class Gameplay extends Group {
     explosions.forEach((explosion) => explosion.animate(animation));
     Ocean.animate(animation);
     rain.animate(animation);
+    if (server) {
+      server.animate(animation);
+    }
     if (
       lights.light.state !== lights.light.target
       || lights.sunlight.state !== lights.sunlight.target
@@ -447,10 +514,11 @@ class Gameplay extends Group {
     ambient.sounds.find(({ url }) => url === '/sounds/rain.ogg').enabled = rain.visible;
   }
 
-  updateVoxel(brush, voxel) {
+  updateVoxel(brush, voxel, broadcast = true) {
     const {
       chunks,
       dudes,
+      server,
       world,
     } = this;
     const noise = ((brush.color.r + brush.color.g + brush.color.b) / 3) * brush.noise;
@@ -498,6 +566,16 @@ class Gameplay extends Group {
     });
     dudes.revaluatePaths();
     // this.physics.wakeAll();
+    if (server && broadcast) {
+      server.request({
+        type: 'UPDATE',
+        voxel,
+        brush: {
+          ...brush,
+          color: brush.color.getHex(),
+        },
+      })
+    }
   }
 }
 
