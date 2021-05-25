@@ -389,6 +389,6 @@ class Sculpt extends Gameplay {
   }
 }
 
-Sculpt.showInMenu = 'DudeBrush (SinglePlayer)';
+Sculpt.showInMenu = 'DudeBrush (Singleplayer)';
 
 export default Sculpt;
