@@ -22,7 +22,7 @@ VoxelWorld.getWASM = () => {
       return;
     }
     VoxelWorld.loadingWASM = [resolve];
-    return WebAssembly.compile(
+    WebAssembly.compile(
       fs.readFileSync(path.resolve(__dirname, '..', 'core', 'voxels.wasm'))
     )
       .then((wasm) => {
@@ -57,7 +57,9 @@ class VoxelServer {
       client.id = uuid();
       client.send(Message.encode(Message.create({
         type: Message.Type.LOAD,
-        dudes: dudes.dudes.map((dude) => (dude.path ? ({ ...dude, target: dude.path[dude.path.length - 1] }) : dude)),
+        dudes: dudes.dudes.map((dude) => (
+          dude.path ? ({ ...dude, target: dude.path[dude.path.length - 1] }) : dude
+        )),
         peers: clients.map(({ id }) => id),
         world: {
           width: world.width,
@@ -85,7 +87,7 @@ class VoxelServer {
       }
     });
   }
-  
+
   onClose(client) {
     const { clients, dudes, pingInterval } = this;
     if (client.dude) {
@@ -226,4 +228,3 @@ class VoxelServer {
 }
 
 module.exports = VoxelServer;
-

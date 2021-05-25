@@ -18,7 +18,12 @@ worlds.set('sculpt', new VoxelServer({
     maxDudes: 32,
     minDistance: 16,
     searchRadius: 32,
-    spawnRadius: 256 * 0.5,
+    spawnOrigin: {
+      x: 128,
+      y: 48,
+      z: 128,
+    },
+    spawnRadius: 128,
   },
   world: {
     width: 256,

@@ -7,7 +7,14 @@ class Dudes {
     this.maxDudes = options.maxDudes || 32;
     this.minDistance = options.minDistance || 16;
     this.searchRadius = options.searchRadius || 64;
-    this.spawnOrigin = options.spawnOrigin || { x: server.world.width * 0.5, y: server.world.getHeight(server.world.width * 0.5, server.world.depth * 0.5) + 1, z: server.world.depth * 0.5 };
+    this.spawnOrigin = (
+      options.spawnOrigin
+      || {
+        x: server.world.width * 0.5,
+        y: server.world.getHeight(server.world.width * 0.5, server.world.depth * 0.5) + 1,
+        z: server.world.depth * 0.5,
+      }
+    );
     this.spawnRadius = options.spawnRadius || 64;
     this.server = server;
     this.isPaused = true;
@@ -33,7 +40,9 @@ class Dudes {
     this.spawn();
     dudes.forEach((dude) => {
       if (dude.path) {
-        dude.interpolation += delta * dude.speed * (dude.path[dude.step].y !== dude.path[dude.step + 1].y ? 0.6 : 1);
+        dude.interpolation += (
+          delta * dude.speed * (dude.path[dude.step].y !== dude.path[dude.step + 1].y ? 0.6 : 1)
+        );
         if (dude.interpolation >= 1) {
           dude.interpolation = 0;
           dude.step += 1;
@@ -143,7 +152,11 @@ class Dudes {
           ) {
             return;
           }
-          obstacles[position.z * server.world.width * server.world.height + (position.y + y) * server.world.width + position.x] = 1;
+          obstacles[
+            position.z * server.world.width * server.world.height
+            + (position.y + y) * server.world.width
+            + position.x
+          ] = 1;
         }
       }
     }, []);
@@ -204,7 +217,11 @@ class Dudes {
     let isValid = true;
     for (let d = 0, l = dudes.length; d < l; d += 1) {
       const { position: dude } = dudes[d];
-      if (Math.sqrt((position.x - dude.x) ** 2 + (position.y - dude.y) ** 2 + (position.z - dude.z) ** 2) < minDistance) {
+      if (
+        Math.sqrt(
+          (position.x - dude.x) ** 2 + (position.y - dude.y) ** 2 + (position.z - dude.z) ** 2
+        ) < minDistance
+      ) {
         isValid = false;
         break;
       }
