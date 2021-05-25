@@ -65,7 +65,7 @@ class Dudes {
       const path = server.world.findPath({
         height: 4,
         from: dude.position,
-        to: target,
+        to: { x: target[0], y: target[1], z: target[2] },
         obstacles: this.computeObstacles(dude),
       });
       if (path.length <= 4) {
