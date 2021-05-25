@@ -8,6 +8,6 @@ class SculptServer extends Sculpt {
   }
 }
 
-SculptServer.showInMenu = false;
+SculptServer.showInMenu = 'DudeBrush (Multiplayer)';
 
 export default SculptServer;

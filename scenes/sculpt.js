@@ -89,7 +89,7 @@ class Sculpt extends Gameplay {
   }
 
   onLoad(options) {
-    const { player, server } = this;
+    const { server } = this;
     super.onLoad(options);
 
     if (server) {
@@ -107,7 +107,7 @@ class Sculpt extends Gameplay {
     loader.onchange = ({ target: { files: [file] } }) => this.load(file);
     loader.style.display = 'none';
     document.body.appendChild(loader);
-  
+
     this.onDragOver = this.onDragOver.bind(this);
     document.addEventListener('dragover', this.onDragOver, false);
     this.onDrop = this.onDrop.bind(this);
@@ -341,7 +341,7 @@ class Sculpt extends Gameplay {
   }
 
   load(file) {
-    const { dudes, server, settings, world } = this;
+    const { dudes, settings, world } = this;
     const version = 1;
     const reader = new FileReader();
     reader.onload = () => {
@@ -389,6 +389,6 @@ class Sculpt extends Gameplay {
   }
 }
 
-Sculpt.showInMenu = 'DudeBrush VR';
+Sculpt.showInMenu = 'DudeBrush (SinglePlayer)';
 
 export default Sculpt;
