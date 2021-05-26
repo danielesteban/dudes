@@ -93,6 +93,12 @@ class Sculpt extends Gameplay {
     const { server, world } = this;
     super.onLoad(options);
 
+    this.origin = new Vector3(
+      world.width * 0.5 * world.scale,
+      0,
+      world.depth * 0.5 * world.scale
+    );
+
     const voxelizer = new Voxelizer({
       maxWidth: 128,
       maxHeight: 32,
@@ -110,9 +116,9 @@ class Sculpt extends Gameplay {
       seed: 3846496,
     })
       .then((environment) => {
-        environment.position
-          .set(world.width * 0.5, 0, world.depth * 0.5)
-          .multiplyScalar(world.scale);
+        environment.position.set(
+          this.origin.x, 0, this.origin.z
+        );
         this.add(environment);
       });
 
@@ -299,7 +305,7 @@ class Sculpt extends Gameplay {
   }
 
   onLocomotionTick({ animation, camera, isXR }) {
-    const { hasLoaded, player } = this;
+    const { hasLoaded, origin, player } = this;
     if (!hasLoaded) {
       return;
     }
@@ -309,8 +315,22 @@ class Sculpt extends Gameplay {
       isXR,
       movementScale: 1 / 3,
     });
+    const maxY = 24;
+    const maxDistance = 15;
     if (player.position.y < 0) {
       player.move({ x: 0, y: -player.position.y, z: 0 });
+    }
+    if (player.position.y > maxY) {
+      player.move({ x: 0, y: maxY - player.position.y, z: 0 });
+    }
+    origin.y = player.position.y;
+    const distance = player.position.distanceTo(origin);
+    if (distance > maxDistance) {
+      player.aux.vectorA
+        .subVectors(origin, player.position)
+        .normalize()
+        .multiplyScalar(distance - maxDistance);
+      player.move(player.aux.vectorA);
     }
   }
 
