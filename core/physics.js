@@ -757,7 +757,7 @@ class Physics {
     const yy = y * y2, yz = y * z2, zz = z * z2;
     const wx = w * x2, wy = w * y2, wz = w * z2;
 
-    array[index + 0] = (1 - ( yy + zz ));
+    array[index + 0] = (1 - (yy + zz));
     array[index + 1] = (xy + wz);
     array[index + 2] = (xz - wy);
     array[index + 3] = 0;

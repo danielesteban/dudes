@@ -147,7 +147,12 @@ class Gameplay extends Group {
             url: options.world.server,
             onLoad: ({
               dudes,
-              world: { width, height, depth, voxels },
+              world: {
+                width,
+                height,
+                depth,
+                voxels,
+              },
             }) => {
               options.dudes = {
                 ...(options.dudes || {}),
@@ -574,7 +579,7 @@ class Gameplay extends Group {
           ...brush,
           color: brush.color.getHex(),
         },
-      })
+      });
     }
   }
 }

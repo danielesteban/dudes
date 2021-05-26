@@ -115,7 +115,7 @@ class Server extends Group {
       peer: id,
       connection,
       listener: player.head,
-    });;
+    });
     connection.on('error', () => {});
     connection.on('data', (data) => peer.onData(data));
     connection.on('signal', (signal) => (
