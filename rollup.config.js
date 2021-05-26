@@ -22,6 +22,11 @@ export default {
     file: path.join(outputPath, 'main.js'),
     format: 'module',
   },
+  onwarn: (warning, next) => {
+    if (!(warning.importer || warning.id).includes('protobufjs')) {
+      next(warning);
+    }
+  },
   plugins: [
     resolve({ browser: true }),
     commonjs(),
