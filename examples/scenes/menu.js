@@ -1,11 +1,11 @@
-import Gameplay from '../core/gameplay.js';
+import { Gameplay, UI } from 'dudes';
 import Billboard from '../renderables/billboard.js';
-import UI from '../renderables/ui.js';
 
 class Menu extends Gameplay {
   constructor(scene) {
     super(scene, {
       lightToggle: true,
+      dudes: { spawn: { count: 32 } },
       world: {
         width: 256,
         height: 96,

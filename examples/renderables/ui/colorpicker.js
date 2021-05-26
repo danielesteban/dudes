@@ -1,5 +1,5 @@
-import { Color } from '../../vendor/three.js';
-import UI from '../ui.js';
+import { UI } from 'dudes';
+import { Color } from 'three';
 
 class ColorPicker extends UI {
   constructor(options) {

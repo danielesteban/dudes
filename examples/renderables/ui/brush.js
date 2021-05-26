@@ -1,5 +1,4 @@
-import VoxelWorld from '../../core/voxels.js';
-import UI from '../ui.js';
+import { UI } from 'dudes';
 
 class Brush extends UI {
   constructor(options) {
@@ -7,8 +6,8 @@ class Brush extends UI {
     const height = 256;
     const buttonWidth = ((width - 12) / 2) - 4;
     const typeButtons = [
-      { label: 'Block', type: 3 },
-      { label: 'Light', type: 2 },
+      { label: 'Block', type: 'stone' },
+      { label: 'Light', type: 'light' },
     ].map(({ label, type }, i) => {
       const button = {
         x: 8 + (buttonWidth + 4) * i,
@@ -27,8 +26,8 @@ class Brush extends UI {
       return button;
     });
     const shapeButtons = [
-      { label: 'Sphere', shape: VoxelWorld.brushShapes.sphere },
-      { label: 'Box', shape: VoxelWorld.brushShapes.box },
+      { label: 'Sphere', shape: 'sphere' },
+      { label: 'Box', shape: 'box' },
     ].map(({ label, shape }, i) => {
       const button = {
         x: 8 + (buttonWidth + 4) * i,
@@ -111,8 +110,8 @@ class Brush extends UI {
       ],
     });
     this.noise = 0.25;
-    this.type = 3;
-    this.shape = VoxelWorld.brushShapes.sphere;
+    this.type = 'stone';
+    this.shape = 'sphere';
     this.size = 3;
   }
 }

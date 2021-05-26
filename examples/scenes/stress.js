@@ -1,6 +1,5 @@
-import { Color, Vector3 } from '../vendor/three.js';
-import Gameplay from '../core/gameplay.js';
-import VoxelWorld from '../core/voxels.js';
+import { Gameplay } from 'dudes';
+import { Color, Vector3 } from 'three';
 
 class Stress extends Gameplay {
   constructor(scene) {
@@ -15,9 +14,6 @@ class Stress extends Gameplay {
           },
         ],
       },
-      dudes: {
-        spawn: { count: 0 },
-      },
       physics: false,
       world: {
         width: 64,
@@ -31,8 +27,8 @@ class Stress extends Gameplay {
     this.brush = {
       color: new Color(),
       noise: 0.25,
-      type: 3,
-      shape: VoxelWorld.brushShapes.sphere,
+      type: 'stone',
+      shape: 'sphere',
       size: 3,
     };
     this.cursors = [...Array(4)].map(() => ({

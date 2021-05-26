@@ -1,10 +1,7 @@
-import { Box3, Color, Quaternion, Vector3 } from '../vendor/three.js';
-import Voxelizer from '../core/voxelizer.js';
-import VoxelWorld from '../core/voxels.js';
+import { Box, Rope, Voxelizer } from 'dudes';
+import { Box3, Color, Quaternion, Vector3 } from 'three';
 import Ball from '../renderables/ball.js';
-import Box from '../renderables/box.js';
 import Helicopter from '../renderables/helicopter.js';
-import Rope from '../renderables/rope.js';
 import Party from './party.js';
 
 class HeliParty extends Party {
@@ -14,8 +11,8 @@ class HeliParty extends Party {
     const explosionBrush = {
       color: new Color(),
       noise: 0,
-      type: 0,
-      shape: VoxelWorld.brushShapes.sphere,
+      type: 'air',
+      shape: 'sphere',
       size: 3,
     };
     const explosionOrigin = new Vector3();
@@ -24,6 +21,7 @@ class HeliParty extends Party {
     super(scene, {
       dudesAtParty,
       dudesPerBuilding,
+      explosions: true,
       onDudesContact: ({ mesh, triggerMesh: dude, position, normal }) => {
         if (dude.isFalling) {
           if (mesh.isChunk && floorNormal.dot(normal) > 0) {

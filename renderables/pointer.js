@@ -35,7 +35,7 @@ class Pointer extends Line {
     this.visible = false;
   }
 
-  update({ distance, origin }) {
+  update({ distance, origin, target }) {
     const { parent, position, scale } = this;
     if (distance <= 0.1) {
       return;
@@ -44,6 +44,7 @@ class Pointer extends Line {
     scale.z = distance;
     this.updateMatrix();
     this.updateMatrixWorld();
+    this.target = target;
     this.visible = true;
   }
 }

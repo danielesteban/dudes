@@ -84,7 +84,7 @@ class Explosion extends Mesh {
     });
   }
 
-  constructor({ sfx }) {
+  constructor({ sfx, sound }) {
     if (!Explosion.geometry) {
       Explosion.setupGeometry();
     }
@@ -98,13 +98,15 @@ class Explosion extends Mesh {
     this.frustumCulled = false;
     this.matrixAutoUpdate = false;
     this.visible = false;
-    sfx.load('/sounds/blast.ogg')
-      .then((sound) => {
-        sound.filter = sound.context.createBiquadFilter();
-        sound.setFilter(sound.filter);
-        this.add(sound);
-        this.sound = sound;
-      });
+    if (sfx && sound) {
+      sfx.load(sound)
+        .then((sound) => {
+          sound.filter = sound.context.createBiquadFilter();
+          sound.setFilter(sound.filter);
+          this.add(sound);
+          this.sound = sound;
+        });
+    }
   }
 
   animate({ delta }) {

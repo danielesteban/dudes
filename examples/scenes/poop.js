@@ -1,5 +1,5 @@
-import { Color, Vector3 } from '../vendor/three.js';
-import Gameplay from '../core/gameplay.js';
+import { Gameplay } from 'dudes';
+import { Color, Vector3 } from 'three';
 
 class Poop extends Gameplay {
   constructor(scene) {
@@ -7,7 +7,12 @@ class Poop extends Gameplay {
     const vertex = new Vector3();
 
     super(scene, {
+      explosions: true,
+      projectiles: true,
+      lightToggle: true,
+      rainToggle: true,
       dudes: {
+        spawn: { count: 32 },
         onContact: (contact) => {
           if (this.projectiles.destroyOnContact(contact)) {
             const dude = contact.triggerMesh;
@@ -29,9 +34,6 @@ class Poop extends Gameplay {
           }
         },
       },
-      projectiles: true,
-      lightToggle: true,
-      rainToggle: true,
       world: {
         width: 256,
         height: 96,

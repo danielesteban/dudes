@@ -1,6 +1,5 @@
-import { Euler, Group, Vector3 } from '../vendor/three.js';
-import Gameplay from '../core/gameplay.js';
-import Voxelizer from '../core/voxelizer.js';
+import { Euler, Group, Vector3 } from 'three';
+import { Gameplay, Voxelizer } from 'dudes';
 import Brush from '../renderables/ui/brush.js';
 import ColorPicker from '../renderables/ui/colorpicker.js';
 import Settings from '../renderables/ui/settings.js';
@@ -25,7 +24,6 @@ class Sculpt extends Gameplay {
       },
       dudes: {
         searchRadius: 32,
-        spawn: { count: 0 },
       },
       physics: false,
       world: {
@@ -295,7 +293,7 @@ class Sculpt extends Gameplay {
           this.updateVoxel(
             {
               ...brush,
-              type: buttons.trigger ? brush.type : 0,
+              type: buttons.trigger ? brush.type : 'air',
             },
             voxel
           );

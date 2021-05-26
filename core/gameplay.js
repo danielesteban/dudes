@@ -16,7 +16,37 @@ import Spheres from '../renderables/spheres.js';
 import VoxelChunk from '../renderables/chunk.js';
 
 class Gameplay extends Group {
-  constructor(scene, options) {
+  constructor(scene, {
+    ambient = {
+      range: { from: 0, to: 128 },
+      sounds: [
+        {
+          url: '/sounds/sea.ogg',
+          from: -0.5,
+          to: 0.25,
+        },
+        {
+          url: '/sounds/forest.ogg',
+          from: 0,
+          to: 0.75,
+        },
+        {
+          url: '/sounds/wind.ogg',
+          from: 0.5,
+          to: 1.5,
+        },
+      ],
+    },
+    explosionSound = '/sounds/blast.ogg',
+    projectileSound = '/sounds/shot.ogg',
+    rainSound = '/sounds/rain.ogg',
+    explosions = false,
+    physics = true,
+    projectiles = false,
+    lightToggle = false,
+    rainToggle = false,
+    ...options
+  }) {
     super();
     this.matrixAutoUpdate = false;
 
@@ -27,28 +57,11 @@ class Gameplay extends Group {
     this.ambient = new Ambient({
       anchor: this.player.head,
       isRunning: this.player.head.context.state === 'running',
-      range: { from: 0, to: 128 },
-      ...(options.ambient ? options.ambient : {}),
+      ...ambient,
       sounds: [
-        ...(options.ambient && options.ambient.sounds ? options.ambient.sounds : [
-          {
-            url: '/sounds/sea.ogg',
-            from: -0.5,
-            to: 0.25,
-          },
-          {
-            url: '/sounds/forest.ogg',
-            from: 0,
-            to: 0.75,
-          },
-          {
-            url: '/sounds/wind.ogg',
-            from: 0.5,
-            to: 1.5,
-          },
-        ]),
+        ...ambient.sounds,
         {
-          url: '/sounds/rain.ogg',
+          url: rainSound,
           enabled: false,
         },
       ],
@@ -68,18 +81,20 @@ class Gameplay extends Group {
       },
     };
 
-    this.explosions = [...Array(50)].map(() => {
-      const explosion = new Explosion({ sfx: scene.sfx });
-      this.add(explosion);
-      return explosion;
-    });
+    if (explosions) {
+      this.explosions = [...Array(50)].map(() => {
+        const explosion = new Explosion({ sfx: scene.sfx, sound: explosionSound });
+        this.add(explosion);
+        return explosion;
+      });
+    }
 
-    if (options.projectiles) {
+    if (projectiles) {
       this.projectile = 0;
       this.projectiles = new Spheres({
         count: 50,
         sfx: scene.sfx,
-        sound: '/sounds/shot.ogg',
+        sound: projectileSound,
       });
       {
         const matrix = new Matrix4();
@@ -104,7 +119,7 @@ class Gameplay extends Group {
       }
     }
 
-    if (options.lightToggle) {
+    if (lightToggle) {
       const toggle = document.getElementById('light');
       toggle.classList.add('enabled');
       [...toggle.getElementsByTagName('svg')].forEach((svg, i) => {
@@ -124,10 +139,10 @@ class Gameplay extends Group {
       });
     }
 
-    if (options.rainToggle) {
+    if (rainToggle) {
       const toggle = document.getElementById('rain');
       toggle.classList.add('enabled');
-      if (options.lightToggle) {
+      if (lightToggle) {
         toggle.classList.add('light');
       }
       toggle.onclick = () => {
@@ -138,7 +153,7 @@ class Gameplay extends Group {
     }
 
     Promise.all([
-      options.physics !== false ? scene.getPhysics() : Promise.resolve(false),
+      physics ? scene.getPhysics() : Promise.resolve(false),
       (!options.world.server ? Promise.resolve(options.world) : (
         new Promise((resolve) => {
           const color = new Color();
@@ -310,7 +325,7 @@ class Gameplay extends Group {
       this.dudes.spawnFromServer(options.dudes.server);
     } else {
       this.dudes.spawn({
-        count: 32,
+        count: 0,
         origin: spawn.clone().divideScalar(world.scale).floor(),
         radius: 64,
         ...((options.dudes && options.dudes.spawn) || {}),
@@ -361,7 +376,9 @@ class Gameplay extends Group {
     birds.animate(animation);
     clouds.animate(animation);
     dudes.animate(animation, player.head.position);
-    explosions.forEach((explosion) => explosion.animate(animation));
+    if (explosions) {
+      explosions.forEach((explosion) => explosion.animate(animation));
+    }
     Ocean.animate(animation);
     rain.animate(animation);
     if (server) {
@@ -432,6 +449,9 @@ class Gameplay extends Group {
 
   spawnExplosion(position, color, scale = 0.5) {
     const { explosions } = this;
+    if (!explosions) {
+      return;
+    }
     const explosion = explosions.find(({ sound, visible }) => (
       !visible && (!sound || !sound.isPlaying)
     ));
@@ -527,12 +547,17 @@ class Gameplay extends Group {
       world,
     } = this;
     const noise = ((brush.color.r + brush.color.g + brush.color.b) / 3) * brush.noise;
-    VoxelWorld.getBrush(brush).forEach(({ x, y, z }) => (
+    const shape = typeof brush.shape === 'number' ? brush.shape : VoxelWorld.brushShapes[brush.shape];
+    const type = typeof brush.type === 'number' ? brush.type : VoxelWorld.blockTypes[brush.type];
+    VoxelWorld.getBrush({
+      shape,
+      size: brush.size,
+    }).forEach(({ x, y, z }) => (
       world.update({
         x: voxel.x + x,
         y: voxel.y + y,
         z: voxel.z + z,
-        type: brush.type,
+        type,
         r: Math.min(Math.max((brush.color.r + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
         g: Math.min(Math.max((brush.color.g + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
         b: Math.min(Math.max((brush.color.b + (Math.random() - 0.5) * noise) * 0xFF, 0), 0xFF),
@@ -577,6 +602,8 @@ class Gameplay extends Group {
         voxel,
         brush: {
           ...brush,
+          type,
+          shape,
           color: brush.color.getHex(),
         },
       });

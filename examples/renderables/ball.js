@@ -1,10 +1,10 @@
 import {
   BufferAttribute,
-  BufferGeometryUtils,
   IcosahedronGeometry,
   Mesh,
   MeshBasicMaterial,
-} from '../vendor/three.js';
+} from 'three';
+import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 class Ball extends Mesh {
   static setupGeometry() {

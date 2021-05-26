@@ -1,5 +1,4 @@
-import Renderer from './core/renderer.js';
-import Router from './core/router.js';
+import { Renderer, Router } from 'dudes';
 import * as scenes from './scenes/index.js';
 
 const router = new Router();

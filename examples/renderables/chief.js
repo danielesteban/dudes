@@ -1,5 +1,5 @@
-import { Color } from '../vendor/three.js';
-import Dude from './dude.js';
+import { Dude } from 'dudes';
+import { Color } from 'three';
 
 class Chief extends Dude {
   constructor() {

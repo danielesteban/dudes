@@ -1,4 +1,4 @@
-import UI from '../ui.js';
+import { UI } from 'dudes';
 
 class Settings extends UI {
   constructor(options) {

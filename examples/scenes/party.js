@@ -1,13 +1,14 @@
-import { Vector3 } from '../vendor/three.js';
-import Gameplay from '../core/gameplay.js';
-import Music from '../core/music.js';
+import { Gameplay } from 'dudes';
+import { Vector3 } from 'three';
 import Billboard from '../renderables/billboard.js';
 import Chief from '../renderables/chief.js';
+import Music from '../sounds/music.js';
 
 class Party extends Gameplay {
   constructor(scene, {
     dudesAtParty = 22,
     dudesPerBuilding = 1,
+    explosions = false,
     onDudesContact,
   }) {
     const buildings = (3 * 3) - 1;
@@ -36,6 +37,7 @@ class Party extends Gameplay {
           count: dudesPerBuilding * buildings + dudesAtParty,
         },
       },
+      explosions,
       world: {
         width: 192,
         height: 128,

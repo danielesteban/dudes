@@ -10,7 +10,15 @@ import Scene from './scene.js';
 import SetupComposer from './postprocessing.js';
 
 class Renderer {
-  constructor({ dom, router, scenes }) {
+  constructor({
+    dom,
+    router,
+    scenes,
+    postprocessing = (
+      !navigator.userAgent.includes('Mobile')
+      && !navigator.userAgent.includes('Quest')
+    ),
+  }) {
     this.clock = new Clock();
     this.clock.localStartTime = Date.now();
     this.fps = {
@@ -36,7 +44,7 @@ class Renderer {
     window.addEventListener('resize', this.onResize.bind(this), false);
     this.onResize();
 
-    if (!(navigator.userAgent.includes('Mobile') || navigator.userAgent.includes('Quest'))) {
+    if (postprocessing) {
       this.composer = SetupComposer(this.renderer);
     }
 

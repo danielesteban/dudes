@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import alias from '@rollup/plugin-alias';
 import commonjs from '@rollup/plugin-commonjs';
 import copy from 'rollup-plugin-copy';
 import livereload from 'rollup-plugin-livereload';
@@ -17,7 +18,7 @@ const cname = (domain) => ({
 });
 
 export default {
-  input: path.join(__dirname, 'main.js'),
+  input: path.join(__dirname, 'examples', 'main.js'),
   output: {
     file: path.join(outputPath, 'main.js'),
     format: 'module',
@@ -28,6 +29,11 @@ export default {
     }
   },
   plugins: [
+    alias({
+      entries: [
+        { find: 'dudes', replacement: __dirname },
+      ]
+    }),
     resolve({ browser: true }),
     commonjs(),
     copy({
@@ -35,7 +41,7 @@ export default {
         { src: 'node_modules/fflate/umd/index.js', dest: 'dist', rename: 'fflate.js' },
         { src: 'node_modules/three/examples/js/libs/ammo.wasm.*', dest: 'dist' },
         { src: 'screenshot.png', dest: 'dist' },
-        { src: 'sounds/*.ogg', dest: 'dist/sounds' },
+        { src: 'examples/sounds/*.ogg', dest: 'dist/sounds' },
         { src: 'vendor/fflate.worker.js', dest: 'dist' },
       ],
       copyOnce: true,
@@ -43,7 +49,7 @@ export default {
     copy({
       targets: [
         { src: 'core/voxels.wasm', dest: 'dist' },
-        { src: 'index.*', dest: 'dist' },
+        { src: 'examples/index.*', dest: 'dist' },
       ],
     }),
     ...(process.env.ROLLUP_WATCH ? [
@@ -53,7 +59,7 @@ export default {
         port: 8080,
       }),
       livereload(outputPath),
-      watchExternal({ entries: ['index.css', 'index.html', 'core/voxels.wasm'] }),
+      watchExternal({ entries: ['core/voxels.wasm', 'examples/index.css', 'examples/index.html'] }),
     ] : [
       cname('dudes.gatunes.com'),
       terser(),

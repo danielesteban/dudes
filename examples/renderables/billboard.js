@@ -4,7 +4,7 @@ import {
   MeshBasicMaterial,
   PlaneGeometry,
   sRGBEncoding,
-} from '../vendor/three.js';
+} from 'three';
 
 class Billboard extends Mesh {
   static setupGeometry() {

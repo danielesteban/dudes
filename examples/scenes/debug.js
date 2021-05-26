@@ -1,6 +1,5 @@
-import { Color, Vector3 } from '../vendor/three.js';
-import Gameplay from '../core/gameplay.js';
-import VoxelWorld from '../core/voxels.js';
+import { Gameplay } from 'dudes';
+import { Color, Vector3 } from 'three';
 import Billboard from '../renderables/billboard.js';
 
 class Debug extends Gameplay {
@@ -8,14 +7,20 @@ class Debug extends Gameplay {
     const explosionBrush = {
       color: new Color(),
       noise: 0,
-      type: 0,
-      shape: VoxelWorld.brushShapes.sphere,
+      type: 'air',
+      shape: 'sphere',
       size: 3,
     };
     const explosionOrigin = new Vector3();
 
     super(scene, {
+      billboard: options.billboard,
+      explosions: true,
+      projectiles: true,
+      lightToggle: true,
+      rainToggle: true,
       dudes: {
+        spawn: { count: 32 },
         ...((!options.world || !options.world.server) ? {
           onContact: (contact) => {
             if (this.projectiles.destroyOnContact(contact)) {
@@ -25,10 +30,6 @@ class Debug extends Gameplay {
         } : {}),
         ...(options.dudes ? { ...options.dudes } : {}),
       },
-      billboard: options.billboard,
-      projectiles: true,
-      lightToggle: true,
-      rainToggle: true,
       world: {
         width: 400,
         height: 96,
@@ -54,8 +55,8 @@ class Debug extends Gameplay {
     this.brush = {
       color: new Color(),
       noise: 0.15,
-      type: 3,
-      shape: VoxelWorld.brushShapes.box,
+      type: 'stone',
+      shape: 'box',
       size: 1,
     };
 
@@ -209,7 +210,7 @@ class Debug extends Gameplay {
         this.updateVoxel(
           {
             ...brush,
-            type: isRemoving ? 0 : brush.type,
+            type: isRemoving ? 'air' : brush.type,
           },
           hit.point
             .divideScalar(world.scale)

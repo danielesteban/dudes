@@ -1,4 +1,4 @@
-import { PositionalAudio } from '../vendor/three.js';
+import { PositionalAudio } from 'three';
 
 class Music {
   constructor(listener) {

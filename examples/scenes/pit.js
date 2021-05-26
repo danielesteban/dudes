@@ -5,6 +5,7 @@ class Pit extends Debug {
     super(scene, {
       dudes: {
         searchRadius: 16,
+        spawn: { count: 32 },
       },
       world: {
         width: 160,

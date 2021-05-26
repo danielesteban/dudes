@@ -49,13 +49,9 @@ class Voxelizer {
         });
         return;
       }
-      if (typeof generator === 'function') {
-        world.generateModel(generator);
-      } else {
-        world.generator = VoxelWorld.generators[generator];
-        world.seed = seed;
-        world.generate();
-      }
+      world.seed = seed;
+      world.generator = typeof generator === 'function' ? generator : VoxelWorld.generators[generator];
+      world.generate();
       const model = new Group();
       for (let z = 0; z < chunks.z; z += 1) {
         for (let y = 0; y < chunks.y; y += 1) {
