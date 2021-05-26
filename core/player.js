@@ -159,6 +159,25 @@ class Player extends Group {
     attachments.right.length = 0;
   }
 
+  getAudioStream() {
+    if (this.audioStream) {
+      return Promise.resolve(this.audioStream);
+    }
+    if (!this.onAudioStream) {
+      this.onAudioStream = [];
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => {
+          this.audioStream = stream;
+          this.onAudioStream.forEach((resolve) => resolve(stream));
+        })
+        .catch(() => {})
+        .finally(() => {
+          delete this.onAudioStream;
+        });
+    }
+    return new Promise((resolve) => this.onAudioStream.push(resolve));
+  }
+
   move(offset, physics, collider) {
     const {
       controllers,

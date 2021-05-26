@@ -6,6 +6,13 @@ class SculptServer extends Sculpt {
       server: 'wss://dudes.gatunes.com/server/sculpt',
     });
   }
+
+  onLoad(options) {
+    super.onLoad(options);
+    const { player, server } = this;
+    player.getAudioStream()
+      .then(server.onAudioStream.bind(server));
+  }
 }
 
 SculptServer.showInMenu = 'DudeBrush (Multiplayer)';

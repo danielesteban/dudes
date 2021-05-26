@@ -109,7 +109,7 @@ class Server extends Group {
     const { player } = this;
     const connection = new SimplePeer({
       initiator,
-      // stream: player.audioStream,
+      stream: player.audioStream,
     });
     const peer = new Peer({
       peer: id,
@@ -142,6 +142,15 @@ class Server extends Group {
     socket.onmessage = null;
     socket.close();
     this.reset();
+  }
+
+  onAudioStream() {
+    const { player, peers } = this;
+    peers.forEach(({ connection }) => {
+      if (!connection.destroyed) {
+        connection.addStream(player.audioStream);
+      }
+    });
   }
 
   onMessage({ data: buffer }) {
