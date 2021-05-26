@@ -16,14 +16,14 @@ class Debug extends Gameplay {
 
     super(scene, {
       dudes: {
-        ...(!options.world.server ? {
+        ...((!options.world || !options.world.server) ? {
           onContact: (contact) => {
             if (this.projectiles.destroyOnContact(contact)) {
               contact.triggerMesh.onHit();
             }
           },
         } : {}),
-        ...(options && options.dudes ? { ...options.dudes } : {}),
+        ...(options.dudes ? { ...options.dudes } : {}),
       },
       billboard: options.billboard,
       projectiles: true,

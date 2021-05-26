@@ -616,7 +616,7 @@ class Dude extends SkinnedMesh {
     this.idleAction = this.actions.idle;
     this.action = this.idleAction;
     this.action.enabled = true;
-    this.auxVector = new Vector3();
+    this.aux = { vector: new Vector3() };
     this.color = spec.colors.primary;
     this.lighting = {
       light: 0,
@@ -639,7 +639,7 @@ class Dude extends SkinnedMesh {
   animate(animation, gazeAt) {
     const {
       actions,
-      auxVector: vector,
+      aux: { vector },
       lighting,
       mixer,
       position,

@@ -29,11 +29,14 @@ class Bodies extends InstancedMesh {
       material || Bodies.material,
       count
     );
+    this.aux = {
+      matrix: new Matrix4(),
+    };
     const color = new Color();
     for (let i = 0; i < count; i += 1) {
       this.setColorAt(i, color.setHex(0xFFFFFF * Math.random()));
     }
-    this.auxMatrix = new Matrix4();
+    this.matrixAutoUpdate = false;
     this.instanceMatrix.setUsage(DynamicDrawUsage);
     if (sfx && sound && soundCount > 0) {
       Promise.all([...Array(soundCount)].map(() => (
@@ -59,9 +62,9 @@ class Bodies extends InstancedMesh {
   }
 
   getPositionAt(index, position) {
-    const { auxMatrix } = this;
-    this.getMatrixAt(index, auxMatrix);
-    return position.setFromMatrixPosition(auxMatrix);
+    const { aux: { matrix } } = this;
+    this.getMatrixAt(index, matrix);
+    return position.setFromMatrixPosition(matrix);
   }
 
   playSound(position) {

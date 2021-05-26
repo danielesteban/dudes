@@ -1,6 +1,7 @@
 import {
   BufferAttribute,
   DoubleSide,
+  DynamicDrawUsage,
   Group,
   InstancedBufferGeometry,
   InstancedBufferAttribute,
@@ -107,13 +108,16 @@ class Birds extends InstancedMesh {
       Birds.count
     );
     this.anchor = anchor;
-    this.auxObject = new Group();
-    this.auxVector = new Vector3();
-    this.animations = new Float32Array(Birds.count);
+    this.aux = {
+      bird: new Group(),
+      vector: new Vector3(),
+    };
+    this.interpolation = new Float32Array(Birds.count);
     this.origins = new BufferAttribute(new Float32Array(Birds.count * 3), 3);
     this.targets = new BufferAttribute(new Float32Array(Birds.count * 3), 3);
     this.frustumCulled = false;
     this.matrixAutoUpdate = false;
+    this.instanceMatrix.setUsage(DynamicDrawUsage);
     for (let i = 0; i < Birds.count; i += 1) {
       this.resetBird(i);
     }
@@ -127,32 +131,31 @@ class Birds extends InstancedMesh {
   animate({ delta }) {
     const { count, material, radius } = Birds;
     const {
-      auxVector: aux,
       anchor,
-      animations,
-      auxObject: bird,
+      aux: { bird, vector },
       geometry,
+      interpolation,
       origins,
       targets,
     } = this;
     const velocities = geometry.getAttribute('velocity');
     for (let i = 0; i < count; i += 1) {
       const velocity = velocities.getX(i);
-      animations[i] += delta * (0.5 + (velocity * 0.5)) * 0.1;
+      interpolation[i] += delta * (0.5 + (velocity * 0.5)) * 0.1;
       const target = { x: targets.getX(i), y: targets.getY(i), z: targets.getZ(i) };
-      if (animations[i] > 1) {
+      if (interpolation[i] > 1) {
         this.resetBird(i, target);
       } else {
-        aux.lerpVectors(
+        vector.lerpVectors(
           { x: origins.getX(i), y: origins.getY(i), z: origins.getZ(i) },
           target,
-          animations[i]
+          interpolation[i]
         );
-        if (aux.distanceTo(anchor.position) >= radius * 2) {
+        if (vector.distanceTo(anchor.position) >= radius * 2) {
           this.resetBird(i);
         } else {
-          bird.position.copy(aux);
-          bird.lookAt(aux.copy(target));
+          bird.position.copy(vector);
+          bird.lookAt(vector.copy(target));
           const scale = 0.15 + ((1 - velocities.getX(i)) * 0.3);
           bird.scale.set(scale, scale, scale);
           bird.updateMatrix();
@@ -168,16 +171,15 @@ class Birds extends InstancedMesh {
     const { radius } = Birds;
     const {
       anchor,
-      animations,
-      auxObject: bird,
+      aux: { bird, vector: target },
       geometry,
+      interpolation,
       origins,
-      auxVector: target,
       targets,
     } = this;
     const tints = geometry.getAttribute('tint');
     const velocities = geometry.getAttribute('velocity');
-    animations[i] = 0;
+    interpolation[i] = 0;
     target.set(
       anchor.position.x + (Math.random() * (radius * 2 + 1)) - radius,
       Math.max(radius * 0.25, anchor.position.y + (Math.random() - 0.5) * radius * 2),
