@@ -109,11 +109,11 @@ class Sculpt extends Gameplay {
       generator: 'sculpt',
       seed: 3846496,
     })
-      .then((backgroundWorld) => {
-        backgroundWorld.position
+      .then((environment) => {
+        environment.position
           .set(world.width * 0.5, 0, world.depth * 0.5)
           .multiplyScalar(world.scale);
-        this.add(backgroundWorld);
+        this.add(environment);
       });
 
     if (server) {
