@@ -261,6 +261,7 @@ static void generateTerrain(
   unsigned char* voxels,
   int* heightmap,
   const int maxHeight,
+  const int innerRadius,
   const int seed
 ) {
   fnl_state noise = fnlCreateState();
@@ -275,7 +276,7 @@ static void generateTerrain(
         const float dx = x + 0.5f - centerX;
         const float dz = z + 0.5f - centerZ;
         const int distance = sqrt(dx * dx + dz * dz);
-        if (distance > radius) {
+        if ((y != 0 && distance < innerRadius) || distance > radius) {
           continue;
         }
         const float n = fabs(fnlGetNoise3D(&noise, (float) x * 0.5f, (float) y, (float) z * 0.5f));
@@ -728,8 +729,8 @@ static void generateBlank(
         world, voxels, heightmap,
         x, 0, z,
         TYPE_DIRT,
-        0xBBBBBB,
-        0x44
+        0x66BBBB,
+        0x33
       );
     }
   }
@@ -779,7 +780,8 @@ enum Generators {
   GENERATOR_MENU,
   GENERATOR_DEBUG_CITY,
   GENERATOR_PARTY_BUILDINGS,
-  GENERATOR_PIT
+  GENERATOR_PIT,
+  GENERATOR_SCULPT
 };
 
 void generate(
@@ -808,6 +810,7 @@ void generate(
     voxels,
     heightmap,
     world->height / (generator == GENERATOR_PARTY_BUILDINGS ? 3.5f : 2.5f),
+    generator == GENERATOR_SCULPT ? 32 : 0,
     seed
   );
 
@@ -856,13 +859,14 @@ void generate(
   {
     // Trees
     const int grid = 16;
+    const int minY = generator == GENERATOR_SCULPT ? 1 : world->seaLevel / 2;
     for (int z = 0; z < world->depth; z += grid) {
       for (int x = 0; x < world->width; x += grid) {
         const int tx = x + rand() % grid;
         const int tz = z + rand() % grid;
         const int y = heightmap[tz * world->width + tx];
         if (
-          y >= world->seaLevel / 2
+          y >= minY
           && voxels[getVoxel(world, tx, y, tz)] == TYPE_DIRT
           && rand() % 2 == 0
         ) {

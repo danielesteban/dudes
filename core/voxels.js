@@ -451,6 +451,7 @@ VoxelWorld.generators = {
   debugCity: 3,
   partyBuildings: 4,
   pit: 5,
+  sculpt: 6,
 };
 
 export default VoxelWorld;

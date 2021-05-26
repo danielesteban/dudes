@@ -7,12 +7,14 @@ class Voxelizer {
     maxWidth,
     maxHeight,
     maxDepth,
+    seaLevel,
   }) {
     this.loading = [];
     this.world = new VoxelWorld({
       width: maxWidth,
       height: maxHeight,
       depth: maxDepth,
+      seaLevel,
       onLoad: () => {
         const { loading: queue } = this;
         delete this.loading;
@@ -33,6 +35,7 @@ class Voxelizer {
     generator,
     offset,
     scale,
+    seed,
   }) {
     const { chunks, loading, world } = this;
     return new Promise((resolve) => {
@@ -46,7 +49,13 @@ class Voxelizer {
         });
         return;
       }
-      world.generateModel(generator);
+      if (typeof generator === 'function') {
+        world.generateModel(generator);
+      } else {
+        world.generator = VoxelWorld.generators[generator];
+        world.seed = seed;
+        world.generate();
+      }
       const model = new Group();
       for (let z = 0; z < chunks.z; z += 1) {
         for (let y = 0; y < chunks.y; y += 1) {

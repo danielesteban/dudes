@@ -1,5 +1,6 @@
 import { Euler, Group, Vector3 } from '../vendor/three.js';
 import Gameplay from '../core/gameplay.js';
+import Voxelizer from '../core/voxelizer.js';
 import Brush from '../renderables/ui/brush.js';
 import ColorPicker from '../renderables/ui/colorpicker.js';
 import Settings from '../renderables/ui/settings.js';
@@ -89,8 +90,31 @@ class Sculpt extends Gameplay {
   }
 
   onLoad(options) {
-    const { server } = this;
+    const { server, world } = this;
     super.onLoad(options);
+
+    const voxelizer = new Voxelizer({
+      maxWidth: 128,
+      maxHeight: 32,
+      maxDepth: 128,
+      seaLevel: 1,
+    });
+    voxelizer.voxelize({
+      scale: 0.5,
+      offset: {
+        x: voxelizer.world.width * -0.5,
+        y: -1,
+        z: voxelizer.world.depth * -0.5,
+      },
+      generator: 'sculpt',
+      seed: 3846496,
+    })
+      .then((backgroundWorld) => {
+        backgroundWorld.position
+          .set(world.width * 0.5, 0, world.depth * 0.5)
+          .multiplyScalar(world.scale);
+        this.add(backgroundWorld);
+      });
 
     if (server) {
       return;
