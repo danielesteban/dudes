@@ -153,6 +153,81 @@ updateVoxel(
 );
 ```
 
+#### Input state
+
+```js
+onAnimationTick({ animation, camera, isXR }) {
+  const { hasLoaded, player } = this;
+  super.onAnimationTick({ animation, camera, isXR });
+  if (!hasLoaded) {
+    return;
+  }
+
+  // VR controllers input
+  if (isXR) {
+    player.controllers.forEach(({
+      hand, // The hand mesh. Also used to detect controller presence
+      buttons, // Buttons state
+      joystick, // Joystick axes
+      raycaster, // A threejs raycaster with the hand position and direction
+    }) => {
+      if (hand) {
+        console.log(
+          buttons.trigger, // always true while the trigger is pressed
+          buttons.triggerDown, // only true the first frame after the trigger was pressed
+          buttons.triggerUp, // only true the first frame after the trigger was released
+          buttons.grip, // always true while the grip is pressed
+          buttons.gripDown, // only true the first frame after the grip was pressed
+          buttons.gripUp, // only true the first frame after the grip was released
+          buttons.primary, // A/X button
+          buttons.primaryDown,
+          buttons.primaryUp,
+          buttons.secondary, // B/Y button
+          buttons.secondaryDown,
+          buttons.secondaryUp,
+          button.forwards,  // Joystick forwards
+          button.forwardsDown,
+          button.forwardsUp,
+          button.backwards,  // Joystick backwards
+          button.backwardsDown,
+          button.backwardsUp,
+          button.leftwards,  // Joystick leftwards
+          button.leftwardsDown,
+          button.leftwardsUp,
+          button.rightwards,  // Joystick rightwards
+          button.rightwardsDown,
+          button.rightwardsUp,
+        );
+      }
+    });
+  }
+
+  // Desktop input
+  if (!isXR) {
+    const {
+      buttons, // Buttons state
+      keyboard, // Keyboard axes
+      raycaster, // A threejs raycaster with the camera position and direction
+    } = player.desktop;
+      console.log(
+        buttons.primary, // Left mouse button
+        buttons.primaryDown,
+        buttons.primaryUp,
+        buttons.secondary, // Right mouse button
+        buttons.secondaryDown,
+        buttons.secondaryUp,
+        buttons.tertiary, // Middle mouse button (or F)
+        buttons.tertiaryDown,
+        buttons.tertiaryUp,
+        buttons.view, // V
+        buttons.viewDown,
+        buttons.viewUp,
+      );
+  }
+
+}
+```
+
 #### Multiplayer server
 
 ```bash
