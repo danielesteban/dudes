@@ -37,10 +37,22 @@ class VoxelServer {
   constructor(options) {
     this.clients = [];
     this.maxClients = options.maxClients || 16;
+    this.storage = options.storage;
     this.world = new VoxelWorld({
       ...options.world,
       onLoad: () => {
-        this.world.generate();
+        if (this.storage && fs.existsSync(this.storage)) {
+          this.world.voxels.view.set(
+            zlib.inflateSync(fs.readFileSync(this.storage))
+          );
+          this.world._heightmap(
+            this.world.world.address,
+            this.world.heightmap.address,
+            this.world.voxels.address
+          );
+        } else {
+          this.world.generate();
+        }
         this.hasLoaded = true;
         this.dudes = new Dudes(this, options.dudes || {});
       },
@@ -118,7 +130,7 @@ class VoxelServer {
     } catch (e) {
       return;
     }
-    const { clients, dudes, world } = this;
+    const { clients, dudes, storage, world } = this;
     switch (message.type) {
       case Message.Type.SIGNAL: {
         const { id, signal } = message;
@@ -185,6 +197,9 @@ class VoxelServer {
           voxel,
         }, { exclude: client.id });
         dudes.revaluatePaths();
+        if (storage) {
+          this.saveDeferred();
+        }
         break;
       }
       default:
@@ -222,6 +237,41 @@ class VoxelServer {
       client.isAlive = false;
       client.ping(VoxelServer.noop);
     });
+  }
+
+  save() {
+    const { saveTimer, storage, world } = this;
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      delete this.saveTimer;
+    }
+    return new Promise((resolve, reject) => {
+      if (!storage) {
+        reject();
+        return;
+      }
+      zlib.deflate(world.voxels.view, (err, voxels) => {
+        if (err) {
+          reject();
+          return;
+        }
+        fs.writeFile(storage, voxels, (err) => {
+          if (err) {
+            reject();
+            return;
+          }
+          resolve();
+        });
+      });
+    });
+  }
+
+  saveDeferred() {
+    const { saveTimer } = this;
+    if (saveTimer) {
+      return;
+    }
+    this.saveTimer = setTimeout(() => this.save(), 60000);
   }
 
   static noop() {}

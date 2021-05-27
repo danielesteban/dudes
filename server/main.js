@@ -1,3 +1,4 @@
+const path = require('path');
 const WebSocket = require('ws');
 const VoxelServer = require('./server.js');
 
@@ -45,5 +46,20 @@ server.on('connection', (client, req) => {
   }
   world.onClient(client);
 });
+
+const shutdown = () => (
+  server.close(() => (
+    Promise.all(
+      [...worlds.values()]
+        .filter((world) => world.storage)
+        .map((world) => world.save())
+    )
+      .catch(() => {})
+      .finally(() => process.exit(0))
+  ))
+);
+process
+  .on('SIGTERM', shutdown)
+  .on('SIGINT', shutdown);
 
 console.log(`Listening on port ${server.options.port}`);
