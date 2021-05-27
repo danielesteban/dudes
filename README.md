@@ -223,20 +223,20 @@ onAnimationTick({ animation, camera, isXR }) {
       keyboard, // Keyboard axes
       raycaster, // A threejs raycaster with the camera position and direction
     } = player.desktop;
-      console.log(
-        buttons.primary, // Left mouse button
-        buttons.primaryDown,
-        buttons.primaryUp,
-        buttons.secondary, // Right mouse button
-        buttons.secondaryDown,
-        buttons.secondaryUp,
-        buttons.tertiary, // Middle mouse button (or F)
-        buttons.tertiaryDown,
-        buttons.tertiaryUp,
-        buttons.view, // V
-        buttons.viewDown,
-        buttons.viewUp,
-      );
+    console.log(
+      buttons.primary, // Left mouse button
+      buttons.primaryDown,
+      buttons.primaryUp,
+      buttons.secondary, // Right mouse button
+      buttons.secondaryDown,
+      buttons.secondaryUp,
+      buttons.tertiary, // Middle mouse button (or F)
+      buttons.tertiaryDown,
+      buttons.tertiaryUp,
+      buttons.view, // V
+      buttons.viewDown,
+      buttons.viewUp,
+    );
   }
 }
 ```
