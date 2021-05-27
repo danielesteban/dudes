@@ -11,7 +11,7 @@ class VoxelWorld {
     onLoad,
   }) {
     this.chunkSize = chunkSize;
-    this.generator = typeof 'generator' === 'function' ? generator : VoxelWorld.generators[generator];
+    this.generator = typeof generator === 'function' ? generator : VoxelWorld.generators[generator];
     this.seed = seed;
     this.seaLevel = seaLevel;
     this.scale = scale;
@@ -200,7 +200,7 @@ class VoxelWorld {
             if (!result) {
               continue;
             }
-            voxels.view[voxel] = result.type;
+            voxels.view[voxel] = typeof result.type === 'number' ? result.type : VoxelWorld.blockTypes[result.type];
             voxels.view[voxel + 1] = result.r;
             voxels.view[voxel + 2] = result.g;
             voxels.view[voxel + 3] = result.b;

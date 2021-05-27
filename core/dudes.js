@@ -197,7 +197,7 @@ class Dudes extends Group {
 
   spawn({
     algorithm,
-    attempts = Infinity,
+    attempts = 32,
     check,
     count,
     origin,

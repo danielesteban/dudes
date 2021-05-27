@@ -150,7 +150,7 @@ class Helicopter extends Group {
             color = { r: 0x99, g: 0x99, b: 0x99 };
           }
           return {
-            type: 3,
+            type: 'stone',
             r: color.r - Math.random() * 0x11,
             g: color.g - Math.random() * 0x11,
             b: color.b - Math.random() * 0x11,
@@ -181,7 +181,7 @@ class Helicopter extends Group {
             return false;
           }
           return {
-            type: 3,
+            type: 'stone',
             r: 0x33 - Math.random() * 0x11,
             g: 0x33 - Math.random() * 0x11,
             b: 0x33 - Math.random() * 0x11,
