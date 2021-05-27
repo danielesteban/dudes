@@ -32,6 +32,12 @@ class Helicopter extends Group {
     }
   }
 
+  dispose() {
+    const { cockpit, rotor } = this;
+    cockpit.dispose();
+    rotor.dispose();
+  }
+
   animate(animation) {
     const { instruments, rotor } = this;
     instruments.draw();
@@ -188,6 +194,7 @@ class Helicopter extends Group {
         this.add(cockpit);
         rotor.position.set(0, 2.375, 0);
         rotor.scale.set(1, 0.5, 1);
+        rotor.updateMatrix();
         this.rotor = rotor;
         this.add(rotor);
       });

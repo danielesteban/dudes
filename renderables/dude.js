@@ -20,7 +20,6 @@ import {
   UniformsUtils,
   Vector3,
 } from '../vendor/three.js';
-// import Box from './box.js';
 
 class Dude extends SkinnedMesh {
   static createGeometry({
@@ -624,11 +623,6 @@ class Dude extends SkinnedMesh {
     };
     this.physics = this.geometry.physics;
     this.speed = 4 * spec.stamina;
-
-    // const debug = this.physics[0];
-    // const box = new Box(debug.width, debug.height, debug.depth);
-    // box.position.copy(debug.position);
-    // this.add(box);
   }
 
   dispose() {

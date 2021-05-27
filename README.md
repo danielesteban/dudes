@@ -6,7 +6,7 @@
 #### Live examples
 
  * Menu [demo](https://dudes.gatunes.com/) | [source](examples/scenes/menu.js)
- * A Singleplayer VR sculpting tool and import/export [demo](https://dudes.gatunes.com/sculpt) | [source](examples/scenes/sculpt.js)
+ * DudeBrush: A VR sculpting tool with import/export [demo](https://dudes.gatunes.com/sculpt) | [source](examples/scenes/sculpt.js)
    * Multiplayer version: [demo](https://dudes.gatunes.com/sculptserver) | [source](examples/scenes/sculptserver.js)
  * A scene to debug the voxel updates, the physics contact callbacks and the dudes pathfinding. [demo](https://dudes.gatunes.com/debug) | [source](examples/scenes/debug.js)
    * Multiplayer version: [demo](https://dudes.gatunes.com/debugserver) | [source](examples/scenes/debugserver.js)
@@ -16,9 +16,21 @@
  * A stress test [demo](https://dudes.gatunes.com/stress) | [source](examples/scenes/stress.js)
  * Some state-of-the-art poop tech [demo](https://dudes.gatunes.com/poop) | [source](examples/scenes/poop.js)
 
-#### Boilerplate
+#### Hello World / Boilerplate
 
   * [dudes-boilerplate](https://github.com/danielesteban/dudes-boilerplate)
+
+  ```bash
+  # clone the boilerplate
+  git clone https://github.com/danielesteban/dudes-boilerplate.git
+  cd dudes
+  # install dev dependencies
+  npm install
+  # start the dev environment:
+  npm start
+  # edit 'scenes/helloworld.js'
+  # open http://localhost:8080/ in your browser
+  ```
 
 #### Engine dev dependencies
 

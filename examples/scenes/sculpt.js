@@ -117,7 +117,9 @@ class Sculpt extends Gameplay {
         environment.position.set(
           this.origin.x, 0, this.origin.z
         );
+        environment.updateMatrix();
         this.add(environment);
+        this.environment = environment;
       });
 
     if (server) {
@@ -157,9 +159,10 @@ class Sculpt extends Gameplay {
   }
 
   onUnload() {
-    const { brush, downloader, picker, server, settings, tools } = this;
+    const { brush, downloader, environment, picker, server, settings, tools } = this;
     super.onUnload();
     brush.dispose();
+    environment.dispose();
     picker.dispose();
     settings.dispose();
     if (server) {

@@ -347,11 +347,13 @@ class Gameplay extends Group {
       birds,
       dudes,
       rain,
+      world,
     } = this;
     ambient.dispose();
     birds.dispose();
     dudes.dispose();
     rain.dispose();
+    world.meshes.forEach((chunk) => chunk.dispose());
     document.getElementById('light').classList.remove('enabled');
     document.getElementById('rain').classList.remove('enabled');
   }

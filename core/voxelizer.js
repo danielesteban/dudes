@@ -53,6 +53,14 @@ class Voxelizer {
       world.generator = typeof generator === 'function' ? generator : VoxelWorld.generators[generator];
       world.generate();
       const model = new Group();
+      model.dispose = () => {
+        model.children.forEach((child) => {
+          if (child.dispose) {
+            child.dispose();
+          }
+        });
+      };
+      model.matrixAutoUpdate = false;
       for (let z = 0; z < chunks.z; z += 1) {
         for (let y = 0; y < chunks.y; y += 1) {
           for (let x = 0; x < chunks.x; x += 1) {

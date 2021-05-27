@@ -2,7 +2,7 @@ import {
   BoxGeometry,
   Mesh,
   MeshBasicMaterial,
-} from '../vendor/three.js';
+} from 'three';
 
 class Box extends Mesh {
   static setupGeometry() {

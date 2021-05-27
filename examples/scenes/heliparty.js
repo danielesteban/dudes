@@ -1,6 +1,7 @@
-import { Box, Rope, Voxelizer } from 'dudes';
+import { Rope, Voxelizer } from 'dudes';
 import { Box3, Color, Quaternion, Vector3 } from 'three';
 import Ball from '../renderables/ball.js';
+import Box from '../renderables/box.js';
 import Helicopter from '../renderables/helicopter.js';
 import Party from './party.js';
 
@@ -244,6 +245,7 @@ class HeliParty extends Party {
     const { helicopter, player } = this;
     super.onUnload();
     player.remove(helicopter);
+    helicopter.dispose();
   }
 
   onXR() {

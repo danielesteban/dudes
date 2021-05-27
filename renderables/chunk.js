@@ -62,6 +62,11 @@ class VoxelChunk extends Mesh {
     this.matrixAutoUpdate = false;
   }
 
+  dispose() {
+    const { geometry } = this;
+    geometry.dispose();
+  }
+
   update({ bounds, indices, vertices }) {
     const { geometry } = this;
     vertices = new InterleavedBuffer(vertices, 8);
@@ -73,11 +78,6 @@ class VoxelChunk extends Mesh {
       geometry.boundingSphere = new Sphere();
     }
     geometry.boundingSphere.set({ x: bounds[0], y: bounds[1], z: bounds[2] }, bounds[3]);
-  }
-
-  dispose() {
-    const { geometry } = this;
-    geometry.dispose();
   }
 }
 
