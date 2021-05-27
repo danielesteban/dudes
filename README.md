@@ -31,6 +31,20 @@ npm start
 # open http://localhost:8080/ in your browser
 ```
 
+#### Multiplayer server
+
+```bash
+# clone this repo
+git clone https://github.com/danielesteban/dudes.git
+cd dudes/server
+# install dev dependencies
+npm install
+# edit worlds config in server/main.js
+# and start the server:
+npm start
+# set ws://localhost:8081/ as the server in the world config,
+```
+
 #### Gameplay constructor options
 
 ```js
@@ -91,20 +105,6 @@ npm start
   lightToggle: false, // Enable light toggle UI (default: false)
   rainToggle: false,  // Enable rain toggle UI (default: false)
 }
-```
-
-#### Multiplayer server
-
-```bash
-# clone this repo
-git clone https://github.com/danielesteban/dudes.git
-cd dudes/server
-# install dev dependencies
-npm install
-# edit worlds config in server/main.js
-# and start the server:
-npm start
-# set ws://localhost:8081/ as the server in the world config,
 ```
 
 #### Gameplay overridable functions
