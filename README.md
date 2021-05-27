@@ -21,7 +21,7 @@
 ```bash
 # clone the boilerplate
 git clone https://github.com/danielesteban/dudes-boilerplate.git
-cd dudes
+cd dudes-boilerplate
 # install dev dependencies
 npm install
 # start the dev environment:
@@ -35,14 +35,15 @@ npm start
 {
   world: {
     // For singleplayer
-    width: 400,
-    height: 96,
-    depth: 400,
-    scale: 0.5,
-    seaLevel: 6,
-    seed: 987654321, // Uint32 seed for the rng
+    chunkSize: 16,   // Size of the rendering chunks (default: 16)
+    scale: 0.5,      // Scale of the rendering chunks (default: 0.5)
+    width: 256,      // Volume width (should be a multiple of the chunkSize)
+    height: 64,      // Volume height (should be a multiple of the chunkSize)
+    depth: 256,      // Volume depth (should be a multiple of the chunkSize)
+    seaLevel: 6,     // Sea level used in the generation and pathfinding
+    seed: 987654321, // Uint32 seed for the rng. Will use a random one if undefined
     // Built-in generators
-    generator: 'default', // 'blank', 'default', 'menu', 'debugCity', 'partyBuildings', 'pit', 'sculpt'
+    generator: 'default', // 'blank', 'default', 'menu', 'debugCity', 'partyBuildings', 'pit'
     // Custom generator
     generator: (x, y, z) => (y < 6 ? { type: 'stone', r: 0xFF, g: 0, b: 0 }),
 
@@ -57,7 +58,8 @@ npm start
     spawn: {
       count: 32, // Number of dudes to initially spawn (default: 0)
       radius: 64, // The search radius for the spawn algorithm (default: 64)
-      // Optional origin for the spawn algorithm. It defaults to the center of the world if undefined.
+      // Optional origin for the spawn algorithm.
+      // It defaults to the center of the world if undefined
       origin: { x: 0, y: 0, z: 0 },
     },
     // This will be called on every dudes contact if the physics are enabled
