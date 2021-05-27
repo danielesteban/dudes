@@ -61,7 +61,7 @@ npm start
     // Built-in generators
     generator: 'default', // 'blank', 'default', 'menu', 'debugCity', 'partyBuildings', 'pit'
     // Custom generator
-    generator: (x, y, z) => (y < 6 ? { type: 'stone', r: 0xFF, g: 0, b: 0 }),
+    generator: (x, y, z) => (y < 6 ? { type: 'stone', r: 0xFF, g: 0, b: 0 } : false),
 
     // For multiplayer
     server: 'ws://localhost:8081/', // Server url
