@@ -186,6 +186,7 @@ onAnimationTick({ animation, camera, isXR }) {
       raycaster, // A threejs raycaster with the hand position and direction
     }) => {
       if (hand) {
+        console.log(hand.handedness); // 'left' or 'right'
         console.log(
           buttons.trigger, // always true while the trigger is pressed
           buttons.triggerDown, // only true the first frame after the trigger was pressed
@@ -193,24 +194,24 @@ onAnimationTick({ animation, camera, isXR }) {
           buttons.grip, // always true while the grip is pressed
           buttons.gripDown, // only true the first frame after the grip was pressed
           buttons.gripUp, // only true the first frame after the grip was released
-          buttons.primary, // A/X button
+          buttons.primary,       // A/X button
           buttons.primaryDown,
           buttons.primaryUp,
-          buttons.secondary, // B/Y button
+          buttons.secondary,     // B/Y button
           buttons.secondaryDown,
           buttons.secondaryUp,
-          button.forwards,  // Joystick forwards
+          button.forwards,       // Joystick forwards
           button.forwardsDown,
           button.forwardsUp,
-          button.backwards,  // Joystick backwards
+          button.backwards,      // Joystick backwards
           button.backwardsDown,
           button.backwardsUp,
-          button.leftwards,  // Joystick leftwards
+          button.leftwards,      // Joystick leftwards
           button.leftwardsDown,
           button.leftwardsUp,
-          button.rightwards,  // Joystick rightwards
+          button.rightwards,     // Joystick rightwards
           button.rightwardsDown,
-          button.rightwardsUp,
+          button.rightwardsUp
         );
       }
     });
@@ -224,18 +225,18 @@ onAnimationTick({ animation, camera, isXR }) {
       raycaster, // A threejs raycaster with the camera position and direction
     } = player.desktop;
     console.log(
-      buttons.primary, // Left mouse button
+      buttons.primary,      // Left mouse button
       buttons.primaryDown,
       buttons.primaryUp,
-      buttons.secondary, // Right mouse button
+      buttons.secondary,    // Right mouse button
       buttons.secondaryDown,
       buttons.secondaryUp,
-      buttons.tertiary, // Middle mouse button (or F)
+      buttons.tertiary,     // Middle mouse button (or F)
       buttons.tertiaryDown,
       buttons.tertiaryUp,
-      buttons.view, // V
+      buttons.view,         // V
       buttons.viewDown,
-      buttons.viewUp,
+      buttons.viewUp
     );
   }
 }
