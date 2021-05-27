@@ -1,4 +1,3 @@
-import fs from 'fs';
 import path from 'path';
 import alias from '@rollup/plugin-alias';
 import commonjs from '@rollup/plugin-commonjs';
@@ -10,12 +9,6 @@ import { terser } from 'rollup-plugin-terser';
 import { watchExternal } from 'rollup-plugin-watch-external';
 
 const outputPath = path.resolve(__dirname, 'dist');
-
-const cname = (domain) => ({
-  writeBundle() {
-    fs.writeFileSync(path.join(outputPath, 'CNAME'), domain);
-  },
-});
 
 export default {
   input: path.join(__dirname, 'examples', 'main.js'),
@@ -61,7 +54,6 @@ export default {
       livereload(outputPath),
       watchExternal({ entries: ['core/voxels.wasm', 'examples/index.css', 'examples/index.html'] }),
     ] : [
-      cname('dudes.gatunes.com'),
       terser(),
     ]),
   ],
