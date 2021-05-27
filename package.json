@@ -16,7 +16,7 @@
   "files": [
     "core/*.js",
     "core/*.wasm",
-    "renderables/*.js",
+    "renderables",
     "vendor/*.js",
     "index.js",
     "LICENSE",

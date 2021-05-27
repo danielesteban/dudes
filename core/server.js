@@ -99,6 +99,8 @@ class Server extends Group {
     socket.onerror = () => {};
     socket.onclose = () => {
       this.reset();
+      // TODO!!
+      // Handle reconnections here and on the Gameplay class
       // this.reconnectTimer = setTimeout(this.connect.bind(this), 1000);
     };
     socket.onmessage = this.onMessage.bind(this);

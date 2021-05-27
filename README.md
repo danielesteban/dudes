@@ -18,19 +18,150 @@
 
 #### Hello World / Boilerplate
 
-  * [dudes-boilerplate](https://github.com/danielesteban/dudes-boilerplate)
+```bash
+# clone the boilerplate
+git clone https://github.com/danielesteban/dudes-boilerplate.git
+cd dudes
+# install dev dependencies
+npm install
+# start the dev environment:
+npm start
+# open http://localhost:8080/ in your browser
+```
 
-  ```bash
-  # clone the boilerplate
-  git clone https://github.com/danielesteban/dudes-boilerplate.git
-  cd dudes
-  # install dev dependencies
-  npm install
-  # start the dev environment:
-  npm start
-  # edit 'scenes/helloworld.js'
-  # open http://localhost:8080/ in your browser
-  ```
+#### Gameplay constructor options
+
+```js
+{
+  world: {
+    // For singleplayer
+    width: 400,
+    height: 96,
+    depth: 400,
+    scale: 0.5,
+    seaLevel: 6,
+    seed: 987654321, // Uint32 seed for the rng
+    // Built-in generators
+    generator: 'default', // 'blank', 'default', 'menu', 'debugCity', 'partyBuildings', 'pit', 'sculpt'
+    // Custom generator
+    generator: (x, y, z) => (y < 6 ? { type: 'stone', r: 0xFF, g: 0, b: 0 }),
+
+    // For multiplayer
+    server: 'ws://localhost:8081/', // Server url
+
+    // This will be called on every voxels contact if the physics are enabled
+    onContact: (contact) => {},
+  },
+  dudes: {
+    searchRadius: 64, // The search radius for the pathfinding
+    spawn: {
+      count: 32, // Number of dudes to initially spawn (default: 0)
+      radius: 64, // The search radius for the spawn algorithm (default: 64)
+      // Optional origin for the spawn algorithm. It defaults to the center of the world if undefined.
+      origin: { x: 0, y: 0, z: 0 },
+    },
+    // This will be called on every dudes contact if the physics are enabled
+    onContact: (contact) => {},
+  },
+  ambient = {
+    range: { from: 0, to: 128 }, // Ambient sounds altitude range (in meters)
+    sounds: [
+      {
+        url: '/sounds/sea.ogg', // Public url of the sound
+        from: 0,                // Normalized altitude range
+        to: 0.75,
+      },
+      {
+        url: '/sounds/forest.ogg',
+        from: 0.25,
+        to: 1,
+      },
+    ],
+  },
+  explosionSound: '/sounds/blast.ogg', // Public url of the explosion sound
+  projectileSound: '/sounds/shot.ogg', // Public url of the projectile shooting sound
+  rainSound: '/sounds/rain.ogg',       // Public url of the rain sound
+  explosions: false,  // Enable explosions (default: false)
+  physics: true,      // Enable physics (default: true)
+  projectiles: false, // Enable projectiles (default: false)
+  lightToggle: false, // Enable light toggle UI (default: false)
+  rainToggle: false,  // Enable rain toggle UI (default: false)
+}
+```
+
+#### Gameplay overridable functions
+
+```js
+onUnload(options) {
+  super.onLoad(options);
+  // Do the things you want to do at construction
+  // but require the world to be loaded/generated here
+}
+
+onUnload() {
+  super.onUnload();
+  // Dispose additional geometries/materials you created here
+}
+
+onAnimationTick({ animation, camera, isXR }) {
+  const { hasLoaded } = this;
+  super.onAnimationTick({ animation, camera, isXR });
+  if (!hasLoaded) {
+    return;
+  }
+  // Do input handling and custom animations here
+  // This runs right after the physics and before the rendering
+}
+
+onLocomotionTick({ animation, camera, isXR }) {
+  const { hasLoaded } = this;
+  if (!hasLoaded) {
+    return;
+  }
+  // You can use this to implement a custom locomotion
+  // This runs right before the physics
+}
+```
+
+#### Gameplay helper functions
+
+```js
+spawnProjectile(
+  position = { x: 0, y: 0, z: 0 },
+  impulse = { x: 0, y: 10, z: 0 },
+);
+
+spawnExplosion(
+  position = { x: 0, y: 0, z: 0 },
+  color = new Color(),
+  scale = 0.5
+);
+
+updateVoxel(
+  brush = {
+    color: new Color(),
+    noise: 0.1,    // color noise
+    type: 'stone', // block type
+    shape: 'box',  // 'box', 'sphere' 
+    size: 1,       // brush radius
+  },
+  voxel = { x: 0, y: 0, z: 0 }
+);
+```
+
+#### Multiplayer server
+
+```bash
+# clone this repo
+git clone https://github.com/danielesteban/dudes.git
+cd dudes/server
+# install dev dependencies
+npm install
+# edit worlds config in server/main.js
+# and start the server:
+npm start
+# set ws://localhost:8081/ as the server in the world config,
+```
 
 #### Engine dev dependencies
 
