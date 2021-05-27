@@ -144,7 +144,7 @@ updateVoxel(
     color: new Color(),
     noise: 0.1,    // color noise
     type: 'stone', // block type
-    shape: 'box',  // 'box', 'sphere' 
+    shape: 'box',  // 'box', 'sphere'
     size: 1,       // brush radius
   },
   voxel = { x: 0, y: 0, z: 0 }
