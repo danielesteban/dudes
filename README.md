@@ -93,6 +93,20 @@ npm start
 }
 ```
 
+#### Multiplayer server
+
+```bash
+# clone this repo
+git clone https://github.com/danielesteban/dudes.git
+cd dudes/server
+# install dev dependencies
+npm install
+# edit worlds config in server/main.js
+# and start the server:
+npm start
+# set ws://localhost:8081/ as the server in the world config,
+```
+
 #### Gameplay overridable functions
 
 ```js
@@ -224,22 +238,97 @@ onAnimationTick({ animation, camera, isXR }) {
         buttons.viewUp,
       );
   }
-
 }
 ```
 
-#### Multiplayer server
+#### Physics
 
-```bash
-# clone this repo
-git clone https://github.com/danielesteban/dudes.git
-cd dudes/server
-# install dev dependencies
-npm install
-# edit worlds config in server/main.js
-# and start the server:
-npm start
-# set ws://localhost:8081/ as the server in the world config,
+```js
+// A box
+mesh.physics = {
+  shape: 'box',
+  width: 1,
+  height: 1,
+  depth: 1,
+};
+
+// A capsule
+mesh.physics = {
+  shape: 'capsule',
+  radius: 0.5,
+  height: 1,
+};
+
+// A sphere
+mesh.physics = {
+  shape: 'sphere',
+  radius: 0.5,
+};
+
+// A plane
+mesh.physics = {
+  shape: 'plane',
+  constant: 0,
+  normal: { x: 0, y: 1, z: 0 },
+};
+
+physics.addMesh(
+  mesh, // A threejs Mesh (or InstancedMesh) with a physics definition
+  {
+    // Optional flags
+    isKinematic: true,
+    isTrigger: true, // This will call mesh.onContact on every contact
+  }
+);
+
+physics.addConstraint(
+  mesh, // Mesh that was already added to the physics with physics.addMesh
+  instance = 0, // For instanced meshes
+  options = {
+    type: 'p2p',
+    mesh: anotherMesh, // Another mesh already added to the physics
+    pivotInA: { x: 0, y: 0, z: 0 },
+    pivotInB: { x: 0, y: 0, z: 0 },
+  },
+);
+
+physics.addConstraint(
+  mesh, // Mesh that was already added to the physics with physics.addMesh
+  instance = 0, // For instanced meshes
+  options = {
+    type: 'hinge',
+    mesh: anotherMesh, // Another mesh already added to the physics
+    pivotInA: { x: 0, y: 0, z: 0 },
+    pivotInB: { x: 0, y: 0, z: 0 },
+    axisInA: { x: 0, y: 1, z: 0 },
+    axisInB: { x: 0, y: 1, z: 0 },
+    friction: true, // simulate friction using an angular motor
+    limits: { // optional limits
+      low: 0,
+      high: Math.PI * 2,
+    },
+  },
+);
+
+physics.applyImpulse(
+  mesh, // Mesh that was already added to the physics with physics.addMesh
+  instance = 0, // For instanced meshes
+  impulse = { x: 0, y: 10, z: 0 },
+);
+
+physics.setTransform(
+  mesh, // Mesh that was already added to the physics with physics.addMesh
+  instance = 0, // For instanced meshes
+  position = { x: 0, y: 0, z: 0 },
+  rotation = { x: 0, y: 0, z: 0, w: 1 },
+);
+
+physics.raycast(
+  origin = { x: 0, y: 0, z: 0 }, // ray origin
+  direction = { x: 0, y: 0, z: -1 }, // ray direction
+  mask = 1, // collision mask (-1: ALL | 1: STATIC | 2: DYNAMIC | 4: KINEMATIC)
+  far = 64
+);
 ```
 
 #### Engine dev dependencies
