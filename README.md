@@ -18,6 +18,8 @@
 
 #### Hello World / Boilerplate
 
+[https://github.com/danielesteban/dudes-boilerplate](https://github.com/danielesteban/dudes-boilerplate.git)
+
 ```bash
 # clone the boilerplate
 git clone https://github.com/danielesteban/dudes-boilerplate.git
