@@ -3,7 +3,7 @@
   "author": "Daniel Esteban Nombela",
   "license": "MIT",
   "module": "index.js",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "watch": {
     "compile": {
       "extensions": "c",
@@ -23,6 +23,10 @@
     "package.json",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danielesteban/dudes"
+  },
   "scripts": {
     "build": "rollup -c rollup.config.js",
     "compile": "sh core/voxels/compile.sh",
