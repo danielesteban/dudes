@@ -92,7 +92,7 @@ npm start
 #### Gameplay overridable functions
 
 ```js
-onUnload(options) {
+onLoad(options) {
   super.onLoad(options);
   // Do the things you want to do at construction
   // but require the world to be loaded/generated here
