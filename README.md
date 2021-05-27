@@ -344,7 +344,7 @@ On the first build, it will complain about a missing file that you can get here:
 
 To build [wasi-libc](https://github.com/WebAssembly/wasi-libc), you'll need to install [GNU make](https://chocolatey.org/packages/make).
 
-#### Engine local development
+#### Engine dev environment
 
 ```bash
 # clone this repo and it's submodules
