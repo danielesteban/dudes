@@ -68,7 +68,7 @@ npm start
     onContact: (contact) => {},
   },
   ambient = {
-    range: { from: 0, to: 128 }, // Ambient sounds altitude range (in meters)
+    range: { from: 0, to: 128 }, // Ambient sounds altitude range (in worldspace)
     sounds: [
       {
         url: '/sounds/sea.ogg', // Public url of the sound
@@ -145,7 +145,7 @@ updateVoxel(
   brush = {
     color: new Color(),
     noise: 0.1,    // color noise
-    type: 'stone', // block type
+    type: 'stone', // 'air', 'dirt', 'light', 'stone'
     shape: 'box',  // 'box', 'sphere'
     size: 1,       // brush radius
   },
