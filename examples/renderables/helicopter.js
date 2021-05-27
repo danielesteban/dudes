@@ -43,6 +43,7 @@ class Helicopter extends Group {
     instruments.draw();
     if (rotor) {
       rotor.rotation.y += animation.delta * 5;
+      rotor.updateMatrix();
     }
   }
 

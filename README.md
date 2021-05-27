@@ -331,6 +331,45 @@ physics.raycast(
 );
 ```
 
+#### Voxelizer
+
+```js
+import { Voxelizer } from 'dudes';
+
+const voxelizer = new Voxelizer({
+  maxWidth: 256,
+  maxHeight: 32,
+  maxDepth: 256,
+});
+voxelizer.voxelize({
+  colliders: true,
+  scale: 0.5,
+  offset: {
+    x: voxelizer.world.width * -0.5,
+    y: -1,
+    z: voxelizer.world.depth * -0.5,
+  },
+  generator: (x, y, z) => {
+    const r = Math.sqrt((x - 128.5) ** 2 + ((y - 16.5) * 2) ** 2 + (z - 128.5) ** 2);
+    if (
+      r > 32 && r < 64 && y < 16
+    ) {
+      return {
+        type: 'stone',
+        r: 0xBB - Math.random() * 0x33,
+        g: 0x66 - Math.random() * 0x33,
+        b: 0x44 - Math.random() * 0x22,
+      };
+    }
+    return false;
+  },
+})
+  .then((mesh) => {
+    this.add(mesh);
+    physics.addMesh(mesh.collider);
+  });
+```
+
 #### Engine dev dependencies
 
 To build the C code, you'll need to install LLVM:

@@ -101,17 +101,17 @@ class Sculpt extends Gameplay {
       maxWidth: 128,
       maxHeight: 32,
       maxDepth: 128,
-      seaLevel: 1,
     });
     voxelizer.voxelize({
       scale: 0.5,
+      seaLevel: 1,
       offset: {
         x: voxelizer.world.width * -0.5,
         y: -1,
         z: voxelizer.world.depth * -0.5,
       },
       generator: 'sculpt',
-      seed: 3846496,
+      seed: 123456789,
     })
       .then((environment) => {
         environment.position.set(

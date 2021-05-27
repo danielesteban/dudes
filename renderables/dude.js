@@ -541,7 +541,6 @@ class Dude extends SkinnedMesh {
           ].join('\n')
         ),
       fragmentShader,
-      skinning: true,
       vertexColors: true,
       fog: true,
     });
