@@ -9,6 +9,7 @@ class Server extends Group {
     player,
     url,
     onLoad,
+    onPeerMessage,
     onSpawn,
     onTarget,
     onUpdate,
@@ -18,6 +19,7 @@ class Server extends Group {
     this.player = player;
     this.url = url;
     this.onLoad = onLoad;
+    this.onPeerMessage = onPeerMessage;
     this.onSpawn = onSpawn;
     this.onTarget = onTarget;
     this.onUpdate = onUpdate;
@@ -89,6 +91,29 @@ class Server extends Group {
     });
   }
 
+  broadcast(message) {
+    const { peers } = this;
+    const isRaw = message instanceof Uint8Array;
+    const encoded = !isRaw ? (new TextEncoder()).encode(JSON.stringify(message)) : message;
+    const payload = new Uint8Array(1 + encoded.byteLength);
+    payload[0] = isRaw ? 0x02 : 0x03;
+    payload.set(new Uint8Array(encoded.buffer), 1);
+    peers.forEach((peer) => {
+      const { connection } = peer;
+      if (
+        connection
+        && connection._channel
+        && connection._channel.readyState === 'open'
+      ) {
+        try {
+          connection.send(payload);
+        } catch (e) {
+          // console.log(e);
+        }
+      }
+    });
+  }
+
   connect() {
     const { url } = this;
     if (this.socket) {
@@ -119,7 +144,7 @@ class Server extends Group {
       listener: player.head,
     });
     connection.on('error', () => {});
-    connection.on('data', (data) => peer.onData(data));
+    connection.on('data', (data) => this.onPeerData(peer, data));
     connection.on('signal', (signal) => (
       this.request({
         type: 'SIGNAL',
@@ -209,6 +234,28 @@ class Server extends Group {
         this.onTarget(message.id, message.voxel);
         break;
       default:
+        break;
+    }
+  }
+
+  onPeerData(peer, data) {
+    switch (data[0]) {
+      case 0x02:
+        this.onPeerMessage(peer, new Uint8Array(data.slice(1)));
+        break;
+      case 0x03:
+        if (onPeerMessage) {
+          let message = data.slice(1);
+          try {
+            message = JSON.parse(message);
+          } catch (e) {
+            break;
+          }
+          this.onPeerMessage(peer, message);
+        }
+        break;
+      default:
+        peer.onData(data);
         break;
     }
   }

@@ -204,6 +204,7 @@ class Gameplay extends Group {
                 );
               }
             },
+            onPeerMessage: this.onPeerMessage.bind(this),
           });
         })
       ))
@@ -417,6 +418,21 @@ class Gameplay extends Group {
     }
   }
 
+  onPeerMessage(peer, message) {
+    const { buffer } = message;
+    if (!buffer) {
+      return;
+    }
+    if (buffer.byteLength === 24) {
+      const [x, y, z, ix, iy, iz] = new Float32Array(buffer);
+      this.spawnProjectile(
+        { x, y, z },
+        { x: ix, y: iy, z: iz },
+        false
+      );
+    }
+  }
+
   remesh() {
     const { chunks, world } = this;
     for (let z = 0, i = 0; z < chunks.z; z += 1) {
@@ -467,8 +483,8 @@ class Gameplay extends Group {
     }
   }
 
-  spawnProjectile(position, impulse) {
-    const { physics, projectile, projectiles } = this;
+  spawnProjectile(position, impulse, broadcast = true) {
+    const { physics, projectile, projectiles, server } = this;
     if (!physics || !projectiles) {
       return;
     }
@@ -476,6 +492,12 @@ class Gameplay extends Group {
     physics.setTransform(projectiles, projectile, position);
     physics.applyImpulse(projectiles, projectile, impulse);
     projectiles.playSound(position);
+    if (server && broadcast) {
+      server.broadcast(new Uint8Array(new Float32Array([
+        position.x, position.y, position.z,
+        impulse.x, impulse.y, impulse.z,
+      ]).buffer));
+    }
   }
 
   updateCollider(collider, boxes, force) {
