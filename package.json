@@ -3,7 +3,7 @@
   "author": "Daniel Esteban Nombela",
   "license": "MIT",
   "module": "index.js",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "watch": {
     "compile": {
       "extensions": "c",
