@@ -200,18 +200,18 @@ onAnimationTick({ animation, camera, isXR }) {
           buttons.secondary,     // B/Y button
           buttons.secondaryDown,
           buttons.secondaryUp,
-          button.forwards,       // Joystick forwards
-          button.forwardsDown,
-          button.forwardsUp,
-          button.backwards,      // Joystick backwards
-          button.backwardsDown,
-          button.backwardsUp,
-          button.leftwards,      // Joystick leftwards
-          button.leftwardsDown,
-          button.leftwardsUp,
-          button.rightwards,     // Joystick rightwards
-          button.rightwardsDown,
-          button.rightwardsUp
+          buttons.forwards,       // Joystick forwards
+          buttons.forwardsDown,
+          buttons.forwardsUp,
+          buttons.backwards,      // Joystick backwards
+          buttons.backwardsDown,
+          buttons.backwardsUp,
+          buttons.leftwards,      // Joystick leftwards
+          buttons.leftwardsDown,
+          buttons.leftwardsUp,
+          buttons.rightwards,     // Joystick rightwards
+          buttons.rightwardsDown,
+          buttons.rightwardsUp
         );
       }
     });
@@ -343,7 +343,6 @@ const voxelizer = new Voxelizer({
   maxDepth: 256,
 });
 voxelizer.voxelize({
-  colliders: true,
   scale: 0.5,
   offset: {
     x: voxelizer.world.width * -0.5,
@@ -367,7 +366,6 @@ voxelizer.voxelize({
 })
   .then((mesh) => {
     this.add(mesh);
-    physics.addMesh(mesh.collider);
   });
 ```
 
