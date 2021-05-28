@@ -5,16 +5,16 @@
 
 #### Live examples
 
- * Menu [demo](https://dudes.gatunes.com/) | [source](examples/scenes/menu.js)
- * DudeBrush: A VR sculpting tool with import/export [demo](https://dudes.gatunes.com/sculpt) | [source](examples/scenes/sculpt.js)
-   * Multiplayer version: [demo](https://dudes.gatunes.com/sculptserver) | [source](examples/scenes/sculptserver.js)
- * A scene to debug the voxel updates, the physics contact callbacks and the dudes pathfinding. [demo](https://dudes.gatunes.com/debug) | [source](examples/scenes/debug.js)
-   * Multiplayer version: [demo](https://dudes.gatunes.com/debugserver) | [source](examples/scenes/debugserver.js)
- * A helicopter gameplay where you help "The Chief" fly dudes up to the party. [demo](https://dudes.gatunes.com/heli) | [source](examples/scenes/heliparty.js)
- * A rave party where you can change the song by showing both thumbs down to "The Chief". [demo](https://dudes.gatunes.com/party) | [source](examples/scenes/party.js)
- * A worldgen happy accident [demo](https://dudes.gatunes.com/pit) | [source](examples/scenes/pit.js)
- * A stress test [demo](https://dudes.gatunes.com/stress) | [source](examples/scenes/stress.js)
- * Some state-of-the-art poop tech [demo](https://dudes.gatunes.com/poop) | [source](examples/scenes/poop.js)
+ * [demo](https://dudes.gatunes.com/) | [source](examples/scenes/menu.js) - Menu
+ * [demo](https://dudes.gatunes.com/sculpt) | [source](examples/scenes/sculpt.js) - DudeBrush: A VR sculpting tool with import/export 
+   * [demo](https://dudes.gatunes.com/sculptserver) | [source](examples/scenes/sculptserver.js) - Multiplayer version
+ * [demo](https://dudes.gatunes.com/debug) | [source](examples/scenes/debug.js) - A scene to debug the voxel updates, the physics contact callbacks and the dudes pathfinding.
+   * [demo](https://dudes.gatunes.com/debugserver) | [source](examples/scenes/debugserver.js) - Multiplayer version
+ * [demo](https://dudes.gatunes.com/heli) | [source](examples/scenes/heliparty.js) - A helicopter gameplay where you help "The Chief" fly dudes up to the party.
+ * [demo](https://dudes.gatunes.com/party) | [source](examples/scenes/party.js) - A rave party where you can change the song by showing both thumbs down to "The Chief".
+ * [demo](https://dudes.gatunes.com/pit) | [source](examples/scenes/pit.js) - A worldgen happy accident
+ * [demo](https://dudes.gatunes.com/stress) | [source](examples/scenes/stress.js) - A stress test
+ * [demo](https://dudes.gatunes.com/poop) | [source](examples/scenes/poop.js) - Some state-of-the-art poop tech
 
 #### Hello World / Boilerplate
 
