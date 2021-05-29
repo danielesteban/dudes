@@ -77,6 +77,7 @@ class VoxelServer {
           width: world.width,
           height: world.height,
           depth: world.depth,
+          seaLevel: world.seaLevel,
           voxels,
         },
       })).finish(), VoxelServer.noop);

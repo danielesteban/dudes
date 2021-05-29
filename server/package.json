@@ -3,7 +3,7 @@
   "author": "Daniel Esteban Nombela",
   "license": "MIT",
   "bin": "./main.js",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "files": [
     "*.js",
     "*.proto",
@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "colorsys": "^1.0.22",
-    "dudes": "^0.1.15",
+    "dudes": "^0.1.18",
     "esm": "^3.2.25",
     "protobufjs": "^6.11.2",
     "uuid": "^8.3.2",

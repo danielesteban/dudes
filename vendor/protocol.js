@@ -703,6 +703,7 @@ export const protocol = $root.protocol = (() => {
         World.prototype.width = 0;
         World.prototype.height = 0;
         World.prototype.depth = 0;
+        World.prototype.seaLevel = 0;
         World.prototype.voxels = $util.newBuffer([]);
 
         World.create = function create(properties) {
@@ -718,8 +719,10 @@ export const protocol = $root.protocol = (() => {
                 writer.uint32(16).uint32(message.height);
             if (message.depth != null && Object.hasOwnProperty.call(message, "depth"))
                 writer.uint32(24).uint32(message.depth);
+            if (message.seaLevel != null && Object.hasOwnProperty.call(message, "seaLevel"))
+                writer.uint32(32).uint32(message.seaLevel);
             if (message.voxels != null && Object.hasOwnProperty.call(message, "voxels"))
-                writer.uint32(34).bytes(message.voxels);
+                writer.uint32(42).bytes(message.voxels);
             return writer;
         };
 
@@ -744,6 +747,9 @@ export const protocol = $root.protocol = (() => {
                     message.depth = reader.uint32();
                     break;
                 case 4:
+                    message.seaLevel = reader.uint32();
+                    break;
+                case 5:
                     message.voxels = reader.bytes();
                     break;
                 default:
@@ -772,6 +778,9 @@ export const protocol = $root.protocol = (() => {
             if (message.depth != null && message.hasOwnProperty("depth"))
                 if (!$util.isInteger(message.depth))
                     return "depth: integer expected";
+            if (message.seaLevel != null && message.hasOwnProperty("seaLevel"))
+                if (!$util.isInteger(message.seaLevel))
+                    return "seaLevel: integer expected";
             if (message.voxels != null && message.hasOwnProperty("voxels"))
                 if (!(message.voxels && typeof message.voxels.length === "number" || $util.isString(message.voxels)))
                     return "voxels: buffer expected";
@@ -788,6 +797,8 @@ export const protocol = $root.protocol = (() => {
                 message.height = object.height >>> 0;
             if (object.depth != null)
                 message.depth = object.depth >>> 0;
+            if (object.seaLevel != null)
+                message.seaLevel = object.seaLevel >>> 0;
             if (object.voxels != null)
                 if (typeof object.voxels === "string")
                     $util.base64.decode(object.voxels, message.voxels = $util.newBuffer($util.base64.length(object.voxels)), 0);
@@ -804,6 +815,7 @@ export const protocol = $root.protocol = (() => {
                 object.width = 0;
                 object.height = 0;
                 object.depth = 0;
+                object.seaLevel = 0;
                 if (options.bytes === String)
                     object.voxels = "";
                 else {
@@ -818,6 +830,8 @@ export const protocol = $root.protocol = (() => {
                 object.height = message.height;
             if (message.depth != null && message.hasOwnProperty("depth"))
                 object.depth = message.depth;
+            if (message.seaLevel != null && message.hasOwnProperty("seaLevel"))
+                object.seaLevel = message.seaLevel;
             if (message.voxels != null && message.hasOwnProperty("voxels"))
                 object.voxels = options.bytes === String ? $util.base64.encode(message.voxels, 0, message.voxels.length) : options.bytes === Array ? Array.prototype.slice.call(message.voxels) : message.voxels;
             return object;

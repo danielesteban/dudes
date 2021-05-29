@@ -55,7 +55,8 @@ message World {
   uint32 width = 1;
   uint32 height = 2;
   uint32 depth = 3;
-  bytes voxels = 4;
+  uint32 seaLevel = 4;
+  bytes voxels = 5;
 }
 
 message Message {

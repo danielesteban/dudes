@@ -168,6 +168,7 @@ class Gameplay extends Group {
                 width,
                 height,
                 depth,
+                seaLevel,
                 voxels,
               },
             }) => {
@@ -182,6 +183,7 @@ class Gameplay extends Group {
                 width,
                 height,
                 depth,
+                seaLevel,
                 voxels,
               });
             },

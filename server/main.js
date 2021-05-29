@@ -20,9 +20,9 @@ const config = (
       world: {
         width: 400,
         height: 96,
-        depth: 400
-      }
-    }
+        depth: 400,
+      },
+    },
   ]
 );
 config.forEach(({ id, ...config }) => {
