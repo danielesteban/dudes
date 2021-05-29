@@ -44,7 +44,6 @@ To host it on your own server:
 npm install -g dudes-server
 # start the server:
 dudes-server
-# set ws://localhost:8081/ as the server in the client world config,
 ```
 
 See the [config options](server#configjson-options) in the server README.
