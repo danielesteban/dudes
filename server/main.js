@@ -1,38 +1,31 @@
+const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 const VoxelServer = require('./server.js');
 
+if (process.argv.length > 3) {
+  console.log('Usage: dudes-server ./config.json', '\n');
+  process.exit(1);
+}
+
 const worlds = new Map();
-worlds.set('default', new VoxelServer({
-  maxClients: 32,
-  world: {
-    width: 400,
-    height: 96,
-    depth: 400,
-    generator: 'debugCity',
-    seed: 123456789,
-  },
-}));
-worlds.set('sculpt', new VoxelServer({
-  maxClients: 32,
-  dudes: {
-    maxDudes: 32,
-    minDistance: 16,
-    searchRadius: 32,
-    spawnOrigin: {
-      x: 128,
-      y: 48,
-      z: 128,
-    },
-    spawnRadius: 128,
-  },
-  world: {
-    width: 256,
-    height: 96,
-    depth: 256,
-    generator: 'blank',
-  },
-}));
+const config = (
+  process.argv[2] ? (
+    JSON.parse(fs.readFileSync(process.argv[2]))
+  ) : [
+    {
+      id: 'default',
+      world: {
+        width: 400,
+        height: 96,
+        depth: 400
+      }
+    }
+  ]
+);
+config.forEach(({ id, ...config }) => {
+  worlds.set(id, new VoxelServer(config));
+});
 
 const server = new WebSocket.Server({
   clientTracking: false,

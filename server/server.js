@@ -4,7 +4,7 @@ const protobuf = require('protobufjs');
 const { v4: uuid } = require('uuid');
 const zlib = require('zlib');
 const requireESM = require('esm')(module);
-const { default: VoxelWorld } = requireESM(path.resolve(__dirname, '..', 'core', 'voxels.js'));
+const { default: VoxelWorld } = requireESM('dudes/core/voxels.js');
 const Dudes = require('./dudes.js');
 
 const Message = protobuf
@@ -23,7 +23,7 @@ VoxelWorld.getWASM = () => {
     }
     VoxelWorld.loadingWASM = [resolve];
     WebAssembly.compile(
-      fs.readFileSync(path.resolve(__dirname, '..', 'core', 'voxels.wasm'))
+      fs.readFileSync(path.resolve(__dirname, 'node_modules', 'dudes', 'core', 'voxels.wasm'))
     )
       .then((wasm) => {
         VoxelWorld.wasm = wasm;

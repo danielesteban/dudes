@@ -34,15 +34,32 @@ npm start
 #### Multiplayer server
 
 ```bash
-# clone this repo
-git clone https://github.com/danielesteban/dudes.git
-cd dudes/server
-# install dev dependencies
-npm install
-# edit worlds config in server/main.js
-# and start the server:
-npm start
-# set ws://localhost:8081/ as the server in the world config,
+# install the server
+npm install -g dudes-server
+# create an optional config.json
+# [
+#   {
+#      "id": "default",
+#      "world": {
+#        "width": 400,
+#        "height": 96,
+#        "depth": 400
+#      }
+#   },
+#   {
+#     "id": "sculpt",
+#     "world": {
+#       "width": 256,
+#       "height": 96,
+#       "depth": 256,
+#       "generator": "blank"
+#     }
+#   }
+# ]
+#
+# start the server:
+dudes-server ./config.json
+# set ws://localhost:8081/ as the server in the client world config,
 ```
 
 #### Gameplay constructor options

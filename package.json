@@ -4,15 +4,6 @@
   "license": "MIT",
   "module": "index.js",
   "version": "0.1.15",
-  "watch": {
-    "compile": {
-      "extensions": "c",
-      "patterns": [
-        "core/voxels"
-      ],
-      "runOnChangeOnly": false
-    }
-  },
   "files": [
     "core/*.js",
     "core/*.wasm",
@@ -27,6 +18,15 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/danielesteban/dudes"
+  },
+  "watch": {
+    "compile": {
+      "extensions": "c",
+      "patterns": [
+        "core/voxels"
+      ],
+      "runOnChangeOnly": false
+    }
   },
   "scripts": {
     "build": "rollup -c rollup.config.js",
