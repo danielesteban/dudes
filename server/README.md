@@ -7,16 +7,6 @@ dudes-server
 
 [https://glitch.com/edit/#!/dudes-server](https://glitch.com/edit/#!/dudes-server)
 
-#### To host it on your own server:
-
-```bash
-# install the server
-npm install -g dudes-server
-# start the server:
-dudes-server
-# set ws://localhost:8081/ as the server in the client world config,
-```
-
 #### Config.json options
 
 ```
@@ -52,4 +42,36 @@ The id "default" will also be served at '/'.
     },
   }
 ]
+```
+
+#### To host it on your own server:
+
+```bash
+# install the server
+npm install -g dudes-server
+# start the server:
+dudes-server
+# set ws://localhost:8081/ as the server in the client world config,
+```
+
+#### To use it as a node module:
+
+```js
+const WebSocket = require('ws');
+const VoxelServer = require('dudes-server');
+
+const world = new VoxelServer({
+  world: {
+    width: 400,
+    height: 96,
+    depth: 400,
+  },
+});
+
+const server = new WebSocket.Server();
+server.on('connection', (client) => (
+  world.onClient(client)
+));
+
+console.log(`Listening on port ${server.options.port}`);
 ```
