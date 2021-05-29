@@ -4,7 +4,7 @@
   "license": "MIT",
   "bin": "./main.js",
   "main": "server.js",
-  "version": "0.1.22",
+  "version": "0.1.23",
   "files": [
     "*.js",
     "*.proto",
