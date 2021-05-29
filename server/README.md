@@ -53,6 +53,24 @@ npm install -g dudes-server
 dudes-server ./config.json
 ```
 
+#### Docker compose:
+
+```yaml
+# docker-compose.yml
+version: '3'
+services:
+  server:
+    image: 'danigatunes/dudes-server'
+    restart: always
+    ports:
+     - "127.0.0.1:8081:8081"
+    volumes:
+     - "./data:/data"
+
+# place config.json in ./data
+# run: docker-compose up -d
+```
+
 #### To use it as a node module:
 
 ```js
