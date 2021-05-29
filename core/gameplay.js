@@ -418,13 +418,9 @@ class Gameplay extends Group {
     }
   }
 
-  onPeerMessage(peer, message) {
-    const { buffer } = message;
-    if (!buffer) {
-      return;
-    }
-    if (buffer.byteLength === 24) {
-      const [x, y, z, ix, iy, iz] = new Float32Array(buffer);
+  onPeerMessage(peer, type, data) {
+    if (type === 0x01 && data && data.length === 24) {
+      const [x, y, z, ix, iy, iz] = new Float32Array(data.buffer);
       this.spawnProjectile(
         { x, y, z },
         { x: ix, y: iy, z: iz },
@@ -493,7 +489,7 @@ class Gameplay extends Group {
     physics.applyImpulse(projectiles, projectile, impulse);
     projectiles.playSound(position);
     if (server && broadcast) {
-      server.broadcast(new Uint8Array(new Float32Array([
+      server.broadcast(0x01, new Uint8Array(new Float32Array([
         position.x, position.y, position.z,
         impulse.x, impulse.y, impulse.z,
       ]).buffer));

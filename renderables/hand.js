@@ -152,7 +152,6 @@ class Hand extends SkinnedMesh {
   static setupMaterial() {
     Hand.material = new MeshBasicMaterial({
       color: 0x0A0A0A,
-      skinning: true,
       vertexColors: true,
     });
   }

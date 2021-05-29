@@ -91,12 +91,18 @@ class Server extends Group {
     });
   }
 
-  broadcast(message) {
+  broadcast(type, data) {
     const { peers } = this;
-    const isRaw = message instanceof Uint8Array;
-    const encoded = !isRaw ? (new TextEncoder()).encode(JSON.stringify(message)) : message;
+    let encoded;
+    if (typeof type !== 'number') {
+      type = 0x02;
+      encoded = (new TextEncoder()).encode(JSON.stringify(type));
+    } else {
+      type += 0x03;
+      encoded = data;
+    }
     const payload = new Uint8Array(1 + encoded.byteLength);
-    payload[0] = isRaw ? 0x02 : 0x03;
+    payload[0] = type;
     payload.set(new Uint8Array(encoded.buffer), 1);
     peers.forEach((peer) => {
       const { connection } = peer;
@@ -240,10 +246,11 @@ class Server extends Group {
 
   onPeerData(peer, data) {
     switch (data[0]) {
-      case 0x02:
-        this.onPeerMessage(peer, new Uint8Array(data.slice(1)));
+      case 0x00:
+      case 0x01:
+        peer.onData(data);
         break;
-      case 0x03:
+      case 0x02:
         if (onPeerMessage) {
           let message = data.slice(1);
           try {
@@ -255,7 +262,7 @@ class Server extends Group {
         }
         break;
       default:
-        peer.onData(data);
+        this.onPeerMessage(peer, data[0] - 0x03, new Uint8Array(data.slice(1)));
         break;
     }
   }
@@ -263,7 +270,10 @@ class Server extends Group {
   request(message) {
     const { socket } = this;
     message.type = protocol.Message.Type[message.type];
-    socket.send(protocol.Message.encode(protocol.Message.create(message)).finish());
+    const encoded = protocol.Message.encode(protocol.Message.create(message)).finish();
+    try {
+      socket.send(encoded);
+    } catch (e) {}
   }
 
   reset() {
