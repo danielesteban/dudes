@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 const VoxelServer = require('./server.js');
@@ -13,7 +12,7 @@ if (process.argv.length > 3) {
 const worlds = new Map();
 const config = (
   process.argv[2] ? (
-    JSON.parse(fs.readFileSync(process.argv[2]))
+    require(path.resolve(process.argv[2]))
   ) : [
     {
       id: 'default',
