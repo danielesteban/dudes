@@ -50,8 +50,7 @@ The id "default" will also be served at '/'.
 # install the server
 npm install -g dudes-server
 # start the server:
-dudes-server
-# set ws://localhost:8081/ as the server in the client world config,
+dudes-server ./config.json
 ```
 
 #### To use it as a node module:
