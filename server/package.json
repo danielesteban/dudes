@@ -7,7 +7,9 @@
   "files": [
     "*.js",
     "*.proto",
-    "package.json"
+    "LICENSE",
+    "package.json",
+    "README.md"
   ],
   "homepage": "https://dudes.gatunes.com",
   "repository": {

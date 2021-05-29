@@ -37,37 +37,15 @@ Remix this project on glitch and host it for free:
 
 [https://glitch.com/edit/#!/dudes-server](https://glitch.com/edit/#!/dudes-server)
 
-To host it in your own server:
+To host it on your own server:
 
 ```bash
 # install the server
 npm install -g dudes-server
-# create an optional config.json
-# [
-#   {
-#      "id": "default",
-#      "world": {
-#        "width": 400,
-#        "height": 96,
-#        "depth": 400
-#      }
-#   },
-#   {
-#     "id": "sculpt",
-#     "world": {
-#       "width": 256,
-#       "height": 96,
-#       "depth": 256,
-#       "generator": "blank"
-#     }
-#   }
-# ]
-#
 # start the server:
-dudes-server ./config.json
+dudes-server
 # set ws://localhost:8081/ as the server in the client world config,
 ```
-
 
 #### Gameplay constructor options
 
@@ -94,7 +72,7 @@ dudes-server ./config.json
     onContact: (contact) => {},
   },
   dudes: {
-    searchRadius: 64, // The search radius for the pathfinding
+    searchRadius: 64, // The search radius for the pathfinding (default: 64)
     spawn: {
       count: 32, // Number of dudes to initially spawn (default: 0)
       radius: 64, // The search radius for the spawn algorithm (default: 64)
