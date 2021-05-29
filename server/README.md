@@ -53,7 +53,7 @@ npm install -g dudes-server
 dudes-server ./config.json
 ```
 
-#### Docker compose:
+#### Docker image:
 
 ```yaml
 # docker-compose.yml
