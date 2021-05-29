@@ -33,6 +33,12 @@ npm start
 
 #### Multiplayer server
 
+Remix this project on glitch and host it for free:
+
+[https://glitch.com/edit/#!/dudes-server](https://glitch.com/edit/#!/dudes-server)
+
+To host it in your own server:
+
 ```bash
 # install the server
 npm install -g dudes-server
@@ -61,6 +67,7 @@ npm install -g dudes-server
 dudes-server ./config.json
 # set ws://localhost:8081/ as the server in the client world config,
 ```
+
 
 #### Gameplay constructor options
 
