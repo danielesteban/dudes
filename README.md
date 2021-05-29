@@ -47,7 +47,7 @@ dudes-server
 # set ws://localhost:8081/ as the server in the client world config,
 ```
 
-See the [server README](server#configjson-options) for config options. 
+See the [config options](server#configjson-options) in the server README.
 
 #### Gameplay constructor options
 
