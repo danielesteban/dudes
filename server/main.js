@@ -10,21 +10,22 @@ if (process.argv.length > 3) {
 }
 
 const worlds = new Map();
-const config = (
-  process.argv[2] ? (
-    require(path.resolve(process.argv[2]))
-  ) : [
-    {
-      id: 'default',
-      world: {
-        width: 400,
-        height: 96,
-        depth: 400,
-      },
-    },
-  ]
-);
-config.forEach(({ id, ...config }) => {
+const config = process.argv[2] ? (
+  require(path.resolve(process.argv[2]))
+) : ({
+  world: {
+    width: 400,
+    height: 96,
+    depth: 400,
+  },
+});
+(
+  Array.isArray(config) ? (
+    config
+  ) : (
+    [{ id: 'default', ...config }]
+  )
+).forEach(({ id, ...config }) => {
   worlds.set(id, new VoxelServer(config));
 });
 
