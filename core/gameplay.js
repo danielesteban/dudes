@@ -274,6 +274,15 @@ class Gameplay extends Group {
         }
       },
     });
+    this.dudes.hitOnContact = ({ triggerMesh: dude }) => {
+      dude.onHit();
+      if (server) {
+        server.request({
+          type: 'HIT',
+          id: dude.serverId,
+        });
+      }
+    };
 
     this.birds = new Birds({ anchor: player });
     this.clouds = new Clouds(spawn);

@@ -23,14 +23,7 @@ class Debug extends Gameplay {
         spawn: { count: 32 },
         onContact: (contact) => {
           if (this.projectiles.destroyOnContact(contact)) {
-            const { triggerMesh: dude } = contact;
-            dude.onHit();
-            if (this.server) {
-              this.server.request({
-                type: 'HIT',
-                id: dude.serverId,
-              });
-            }
+            this.dudes.hitOnContact(contact);
           }
         },
         ...(options.dudes ? { ...options.dudes } : {}),
