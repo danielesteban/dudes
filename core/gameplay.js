@@ -108,13 +108,15 @@ class Gameplay extends Group {
           if (mesh !== this.projectiles) {
             return false;
           }
+          const isFromServer = this.projectiles.isFromServer[projectile];
+          if (isFromServer) this.projectiles.isFromServer[projectile] = false;
           this.spawnExplosion(position, this.projectiles.getColorAt(projectile, color));
           this.physics.setTransform(
             this.projectiles,
             projectile,
             vector.set(0, 0.2, -1000 - projectile)
           );
-          return true;
+          return !isFromServer;
         };
       }
     }
@@ -194,12 +196,19 @@ class Gameplay extends Group {
             onSpawn: (dudes) => {
               if (this.hasLoaded) {
                 this.dudes.spawnFromServer(dudes);
+              } else {
+                options.dudes.server.push(...dudes);
               }
             },
             onTarget: (dude, target) => {
               if (this.hasLoaded) {
+                dude = this.dudes.dudes.find(({ serverId }) => serverId === dude);
+                if (!target) {
+                  dude.onHit();
+                  return;
+                }
                 this.dudes.setDestination(
-                  this.dudes.dudes.find(({ serverId }) => serverId === dude),
+                  dude,
                   target
                 );
               }
@@ -424,7 +433,7 @@ class Gameplay extends Group {
       this.spawnProjectile(
         { x, y, z },
         { x: ix, y: iy, z: iz },
-        false
+        true
       );
     }
   }
@@ -479,7 +488,7 @@ class Gameplay extends Group {
     }
   }
 
-  spawnProjectile(position, impulse, broadcast = true) {
+  spawnProjectile(position, impulse, fromServer = false) {
     const { physics, projectile, projectiles, server } = this;
     if (!physics || !projectiles) {
       return;
@@ -488,7 +497,12 @@ class Gameplay extends Group {
     physics.setTransform(projectiles, projectile, position);
     physics.applyImpulse(projectiles, projectile, impulse);
     projectiles.playSound(position);
-    if (server && broadcast) {
+    if (!server) {
+      return;
+    }
+    if (fromServer) {
+      projectiles.isFromServer[projectile] = true;
+    } else {
       server.broadcast(0x01, new Uint8Array(new Float32Array([
         position.x, position.y, position.z,
         impulse.x, impulse.y, impulse.z,

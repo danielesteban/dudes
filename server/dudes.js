@@ -98,8 +98,17 @@ class Dudes {
     });
   }
 
-  setDestination(dude, target) {
+  setDestination(dude, target, exclude) {
     const { server } = this;
+
+    if (!target) {
+      delete dude.path;
+      server.broadcast({
+        type: 'TARGET',
+        id: dude.id,
+      }, { exclude });
+      return;
+    }
 
     const ground = server.world.findGround({
       avoidTrees: false,
@@ -133,7 +142,7 @@ class Dudes {
       type: 'TARGET',
       id: dude.id,
       voxel: dude.path[dude.path.length - 1],
-    });
+    }, { exclude });
   }
 
   computeObstacles(exclude) {

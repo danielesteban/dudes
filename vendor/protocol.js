@@ -946,6 +946,7 @@ export const protocol = $root.protocol = (() => {
                 case 6:
                 case 7:
                 case 8:
+                case 9:
                     break;
                 }
             if (message.brush != null && message.hasOwnProperty("brush")) {
@@ -1013,17 +1014,21 @@ export const protocol = $root.protocol = (() => {
             case 5:
                 message.type = 5;
                 break;
-            case "SELECT":
+            case "HIT":
             case 6:
                 message.type = 6;
                 break;
-            case "SPAWN":
+            case "SELECT":
             case 7:
                 message.type = 7;
                 break;
-            case "TARGET":
+            case "SPAWN":
             case 8:
                 message.type = 8;
+                break;
+            case "TARGET":
+            case 9:
+                message.type = 9;
                 break;
             }
             if (object.brush != null) {
@@ -1117,9 +1122,10 @@ export const protocol = $root.protocol = (() => {
             values[valuesById[3] = "JOIN"] = 3;
             values[valuesById[4] = "LEAVE"] = 4;
             values[valuesById[5] = "SIGNAL"] = 5;
-            values[valuesById[6] = "SELECT"] = 6;
-            values[valuesById[7] = "SPAWN"] = 7;
-            values[valuesById[8] = "TARGET"] = 8;
+            values[valuesById[6] = "HIT"] = 6;
+            values[valuesById[7] = "SELECT"] = 7;
+            values[valuesById[8] = "SPAWN"] = 8;
+            values[valuesById[9] = "TARGET"] = 9;
             return values;
         })();
 

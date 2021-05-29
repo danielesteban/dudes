@@ -38,6 +38,7 @@ class Bodies extends InstancedMesh {
     }
     this.matrixAutoUpdate = false;
     this.instanceMatrix.setUsage(DynamicDrawUsage);
+    this.isFromServer = Array(count).fill(false);
     if (sfx && sound && soundCount > 0) {
       Promise.all([...Array(soundCount)].map(() => (
         sfx.load(sound)

@@ -65,9 +65,10 @@ message Message {
     JOIN = 3;
     LEAVE = 4;
     SIGNAL = 5;
-    SELECT = 6;
-    SPAWN = 7;
-    TARGET = 8;
+    HIT = 6;
+    SELECT = 7;
+    SPAWN = 8;
+    TARGET = 9;
   }
   Type type = 1;
   Brush brush = 2;

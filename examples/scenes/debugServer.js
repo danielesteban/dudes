@@ -4,8 +4,8 @@ class DebugServer extends Debug {
   constructor(scene) {
     super(scene, {
       world: {
-        // server: 'ws://localhost:8081/',
-        server: 'wss://dudes.gatunes.com/server/',
+        server: 'ws://localhost:8081/',
+        // server: 'wss://dudes.gatunes.com/server/',
       },
     });
   }

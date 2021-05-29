@@ -21,13 +21,18 @@ class Debug extends Gameplay {
       rainToggle: true,
       dudes: {
         spawn: { count: 32 },
-        ...((!options.world || !options.world.server) ? {
-          onContact: (contact) => {
-            if (this.projectiles.destroyOnContact(contact)) {
-              contact.triggerMesh.onHit();
+        onContact: (contact) => {
+          if (this.projectiles.destroyOnContact(contact)) {
+            const { triggerMesh: dude } = contact;
+            dude.onHit();
+            if (this.server) {
+              this.server.request({
+                type: 'HIT',
+                id: dude.serverId,
+              });
             }
-          },
-        } : {}),
+          }
+        },
         ...(options.dudes ? { ...options.dudes } : {}),
       },
       world: {

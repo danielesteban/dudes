@@ -148,6 +148,17 @@ class VoxelServer {
         })).finish(), VoxelServer.noop);
         break;
       }
+      case Message.Type.HIT: {
+        if (!message.id) {
+          return;
+        }
+        const dude = dudes.dudes.find(({ id: dude }) => (dude === message.id));
+        if (!dude) {
+          return;
+        }
+        dudes.setDestination(dude, undefined, client.id);
+        break;
+      }
       case Message.Type.SELECT:
       case Message.Type.TARGET: {
         if (client.dude) {
@@ -163,9 +174,7 @@ class VoxelServer {
         }
         client.dude = dude;
         dude.selected += 1;
-        if (message.voxel) {
-          dudes.setDestination(dude, message.voxel);
-        }
+        dudes.setDestination(dude, message.voxel, client.id);
         break;
       }
       case Message.Type.UPDATE: {
