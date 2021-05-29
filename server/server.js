@@ -23,7 +23,7 @@ VoxelWorld.getWASM = () => {
     }
     VoxelWorld.loadingWASM = [resolve];
     WebAssembly.compile(
-      fs.readFileSync(path.resolve(__dirname, 'node_modules', 'dudes', 'core', 'voxels.wasm'))
+      fs.readFileSync(require.resolve('dudes/core/voxels.wasm'))
     )
       .then((wasm) => {
         VoxelWorld.wasm = wasm;

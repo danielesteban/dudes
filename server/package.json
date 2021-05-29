@@ -3,7 +3,7 @@
   "author": "Daniel Esteban Nombela",
   "license": "MIT",
   "bin": "./main.js",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "files": [
     "*.js",
     "*.proto",
