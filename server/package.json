@@ -4,7 +4,7 @@
   "license": "MIT",
   "bin": "./main.js",
   "main": "server.js",
-  "version": "0.1.24",
+  "version": "0.1.25",
   "files": [
     "*.js",
     "*.proto",
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "colorsys": "^1.0.22",
-    "dudes": "^0.1.20",
+    "dudes": "^0.1.25",
     "esm": "^3.2.25",
     "protobufjs": "^6.11.2",
     "uuid": "^8.3.2",

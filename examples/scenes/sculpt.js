@@ -22,6 +22,7 @@ class Sculpt extends Gameplay {
           },
         ],
       },
+      audioStream: !!options.server,
       dudes: {
         searchRadius: 32,
       },

@@ -102,6 +102,7 @@ See the [config options](server#configjson-options) in the server README.
   explosionSound: '/sounds/blast.ogg', // Public url of the explosion sound
   projectileSound: '/sounds/shot.ogg', // Public url of the projectile shooting sound
   rainSound: '/sounds/rain.ogg',       // Public url of the rain sound
+  audioStream: false, // Request player audio stream (for voice chat) (default: false)
   explosions: false,  // Enable explosions (default: false)
   physics: true,      // Enable physics (default: true)
   projectiles: false, // Enable projectiles (default: false)

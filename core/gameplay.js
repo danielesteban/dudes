@@ -353,6 +353,15 @@ class Gameplay extends Group {
       });
     }
     if (physics && projectiles) physics.addMesh(projectiles, { mass: 1 });
+    
+    if (options.audioStream) {
+      player.getAudioStream()
+        .then((stream) => {
+          if (server) {
+            server.onAudioStream();
+          }
+        });
+    }
 
     const loading = document.getElementById('loading');
     if (loading) {
