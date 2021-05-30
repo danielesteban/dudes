@@ -511,9 +511,8 @@ class Gameplay extends Group {
     if (!server) {
       return;
     }
-    if (fromServer) {
-      projectiles.isFromServer[projectile] = true;
-    } else {
+    projectiles.isFromServer[projectile] = fromServer;
+    if (!fromServer) {
       server.broadcast(0x01, new Uint8Array(new Float32Array([
         position.x, position.y, position.z,
         impulse.x, impulse.y, impulse.z,
