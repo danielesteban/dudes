@@ -1,4 +1,5 @@
 dudes-server
+[![npm-version](https://img.shields.io/npm/v/dudes-server.svg)](https://www.npmjs.com/package/dudes-server)
 ==
 
 > Multiplayer server for the [dudes engine](https://github.com/danielesteban/dudes#readme)

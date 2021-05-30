@@ -1,4 +1,5 @@
 [dudes!](https://dudes.gatunes.com/)
+[![npm-version](https://img.shields.io/npm/v/dudes.svg)](https://www.npmjs.com/package/dudes)
 ==
 
 [![screenshot](https://github.com/danielesteban/dudes/raw/master/screenshot.png)](https://dudes.gatunes.com/)
