@@ -1,6 +1,8 @@
 import { Renderer, Router } from 'dudes';
 import * as scenes from './scenes/index.js';
 
+Renderer.patchThreeJSFog();
+
 const router = new Router();
 const renderer = new Renderer({
   dom: {

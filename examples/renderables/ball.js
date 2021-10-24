@@ -4,7 +4,7 @@ import {
   Mesh,
   MeshBasicMaterial,
 } from 'three';
-import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 class Ball extends Mesh {
   static setupGeometry() {
@@ -21,7 +21,7 @@ class Ball extends Mesh {
       color.setXYZ(i, light, light, light);
     }
     sphere.setAttribute('color', color);
-    Ball.geometry = BufferGeometryUtils.mergeVertices(sphere);
+    Ball.geometry = mergeVertices(sphere);
     Ball.geometry.physics = {
       shape: 'sphere',
       radius: sphere.parameters.radius,

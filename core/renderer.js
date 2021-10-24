@@ -147,41 +147,43 @@ class Renderer {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
   }
+
+  static patchThreeJSFog() {
+    // Tweak ThreeJS fog + allow fog density override
+    ShaderChunk.fog_pars_vertex = ShaderChunk.fog_pars_vertex.replace(
+      'varying float vFogDepth;',
+      'varying vec3 vFogPosition;'
+    );
+
+    ShaderChunk.fog_vertex = ShaderChunk.fog_vertex.replace(
+      'vFogDepth = - mvPosition.z;',
+      'vFogPosition = - mvPosition.xyz;'
+    );
+
+    ShaderChunk.fog_pars_fragment = ShaderChunk.fog_pars_fragment.replace(
+      'varying float vFogDepth;',
+      'varying vec3 vFogPosition;'
+    );
+
+    ShaderChunk.fog_fragment = ShaderChunk.fog_fragment
+      .replace(
+        '#ifdef USE_FOG',
+        [
+          '#ifdef USE_FOG',
+          '  float vFogDepth = length(vFogPosition);',
+        ].join('\n')
+      )
+      .replace(
+        'float fogFactor = 1.0 - exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );',
+        [
+          '#ifdef FOG_DENSITY',
+          '  float fogFactor = 1.0 - exp( - FOG_DENSITY * FOG_DENSITY * vFogDepth * vFogDepth );',
+          '#else',
+          '  float fogFactor = 1.0 - exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );',
+          '#endif',
+        ].join('\n')
+      );
+  }
 }
-
-// Tweak ThreeJS fog + allow fog density override
-ShaderChunk.fog_pars_vertex = ShaderChunk.fog_pars_vertex.replace(
-  'varying float fogDepth;',
-  'varying vec3 fogPosition;'
-);
-
-ShaderChunk.fog_vertex = ShaderChunk.fog_vertex.replace(
-  'fogDepth = - mvPosition.z;',
-  'fogPosition = - mvPosition.xyz;'
-);
-
-ShaderChunk.fog_pars_fragment = ShaderChunk.fog_pars_fragment.replace(
-  'varying float fogDepth;',
-  'varying vec3 fogPosition;'
-);
-
-ShaderChunk.fog_fragment = ShaderChunk.fog_fragment
-  .replace(
-    '#ifdef USE_FOG',
-    [
-      '#ifdef USE_FOG',
-      '  float fogDepth = length(fogPosition);',
-    ].join('\n')
-  )
-  .replace(
-    'float fogFactor = 1.0 - exp( - fogDensity * fogDensity * fogDepth * fogDepth );',
-    [
-      '#ifdef FOG_DENSITY',
-      '  float fogFactor = 1.0 - exp( - FOG_DENSITY * FOG_DENSITY * fogDepth * fogDepth );',
-      '#else',
-      '  float fogFactor = 1.0 - exp( - fogDensity * fogDensity * fogDepth * fogDepth );',
-      '#endif',
-    ].join('\n')
-  );
 
 export default Renderer;
